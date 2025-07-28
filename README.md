@@ -1,69 +1,206 @@
-# CodeIgniter 4 Application Starter
+# Barind Post - Bengali News Portal
 
-## What is CodeIgniter?
+A modern Bengali news portal built with CodeIgniter 4, featuring a comprehensive content management system with user roles, categories, tags, and featured content management.
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+## Features
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+### Public Site
+- **Homepage** with featured and latest news
+- **Category-based sections** for organized content browsing
+- **Tag-based filtering** for related content discovery
+- **Search functionality** across titles, subtitles, and content
+- **Responsive design** for mobile and desktop viewing
+- **Bengali language support** with proper UTF-8 encoding
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+### Admin Panel
+- **User Management** with role-based access control
+- **News Management** with rich text editing and image uploads
+- **Category Management** for content organization
+- **Tag Management** for content tagging and filtering
+- **Featured Content** toggle for highlighting important articles
+- **Image Management** with upload and selection capabilities
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+### Technical Features
+- **CodeIgniter 4** framework for robust PHP development
+- **MySQL Database** with proper UTF-8 support for Bengali text
+- **Docker Support** for easy development and deployment
+- **Role-based Authentication** system
+- **File Upload** handling with security measures
+- **SEO-friendly URLs** with slug-based routing
 
-## Installation & updates
+## Prerequisites
 
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
+- **Docker** and **Docker Compose** (recommended for development)
+- **PHP 8.1+** (if running locally)
+- **MySQL 8.0+** (if running locally)
+- **Composer** (if running locally)
 
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+## Quick Start with Docker
 
-## Setup
+1. **Clone the repository**:
+   ```bash
+   git clone <repository-url>
+   cd barind-post
+   ```
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+2. **Start the application**:
+   ```bash
+   docker-compose up -d
+   ```
 
-## Important Change with index.php
+3. **Access the application**:
+   - **Public Site**: http://localhost
+   - **Admin Panel**: http://localhost/admin
+   - **Database**: localhost:3306 (root/toor)
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+4. **Default Admin Credentials**:
+   - Check the database seeder or create an admin user through the registration process
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+## Local Development Setup
 
-**Please** read the user guide for a better explanation of how CI4 works!
+If you prefer to run without Docker:
 
-## Repository Management
+1. **Install dependencies**:
+   ```bash
+   composer install
+   ```
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+2. **Configure environment**:
+   ```bash
+   cp env .env
+   # Edit .env with your database and application settings
+   ```
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+3. **Set up database**:
+   - Create a MySQL database
+   - Import `dbscript.sql` to set up the schema
+   - Update database credentials in `.env`
+
+4. **Set permissions**:
+   ```bash
+   chmod -R 755 writable/
+   ```
+
+5. **Start development server**:
+   ```bash
+   php spark serve
+   ```
+
+## Project Structure
+
+```
+barind-post/
+├── app/
+│   ├── Controllers/          # Application controllers
+│   │   ├── Admin.php        # Admin panel functionality
+│   │   ├── PublicSite.php   # Public site functionality
+│   │   └── Auth.php         # Authentication handling
+│   ├── Models/              # Database models
+│   │   ├── NewsModel.php    # News article management
+│   │   ├── UserModel.php    # User management
+│   │   ├── CategoryModel.php # Category management
+│   │   └── TagModel.php     # Tag management
+│   ├── Views/               # View templates
+│   │   ├── admin/           # Admin panel views
+│   │   └── public/          # Public site views
+│   └── Config/              # Configuration files
+├── public/                  # Public assets and uploads
+├── docker/                  # Docker configuration
+├── writable/                # Writable directories
+└── vendor/                  # Composer dependencies
+```
+
+## Database Schema
+
+The application uses the following main tables:
+- `users` - User accounts and authentication
+- `roles` - User role definitions
+- `news` - News articles with content and metadata
+- `categories` - Content categories
+- `tags` - Content tags
+- `news_tags` - Many-to-many relationship between news and tags
+
+## Configuration
+
+### Environment Variables
+
+Key configuration options in `.env`:
+
+```env
+# Application
+CI_ENVIRONMENT = development
+app.baseURL = 'http://localhost'
+
+# Database
+database.default.hostname = localhost
+database.default.database = barindpost
+database.default.username = barinduser
+database.default.password = barindpass
+database.default.DBDriver = MySQLi
+
+# Security
+encryption.key = your-32-character-encryption-key
+```
+
+### File Uploads
+
+- Upload directory: `public/uploads/news/`
+- Supported formats: JPG, PNG, WebP, GIF
+- Maximum file size: Configured in PHP settings
+
+## Development
+
+### Running Tests
+```bash
+composer test
+```
+
+### Database Migrations
+```bash
+php spark migrate
+```
+
+### Database Seeding
+```bash
+php spark db:seed RoleSeeder
+```
+
+## Deployment
+
+For production deployment, see [DEPLOYMENT.md](DEPLOYMENT.md) for detailed cPanel deployment instructions.
+
+### Production Checklist
+- [ ] Set `CI_ENVIRONMENT = production`
+- [ ] Configure secure database credentials
+- [ ] Set up HTTPS
+- [ ] Configure proper file permissions
+- [ ] Enable caching
+- [ ] Set up backup strategy
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+For support and questions:
+- Check the [CodeIgniter 4 documentation](https://codeigniter.com/user_guide/)
+- Review the deployment guide in [DEPLOYMENT.md](DEPLOYMENT.md)
+- Check error logs in `writable/logs/`
 
 ## Server Requirements
 
-PHP version 8.1 or higher is required, with the following extensions installed:
+- **PHP**: 8.1 or higher
+- **Extensions**: intl, mbstring, json, mysqli, curl, gd
+- **Database**: MySQL 8.0+ or MariaDB 10.3+
+- **Web Server**: Apache (with mod_rewrite) or Nginx
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
-
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - If you are still using PHP 7.4 or 8.0, you should upgrade immediately.
-> - The end of life date for PHP 8.1 will be December 31, 2025.
-
-Additionally, make sure that the following extensions are enabled in your PHP:
-
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
-# barind-post
+> **Note**: PHP 7.4 and 8.0 are end-of-life. Please upgrade to PHP 8.1+ for security and performance.
