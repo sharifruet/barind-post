@@ -1,0 +1,388 @@
+ERROR - 2025-07-26 04:45:32 --> mysqli_sql_exception: Unknown column 'featured' in 'where clause' in /var/www/html/vendor/codeigniter4/framework/system/Database/MySQLi/Connection.php:327
+Stack trace:
+#0 /var/www/html/vendor/codeigniter4/framework/system/Database/MySQLi/Connection.php(327): mysqli->query('SELECT *\nFROM `...', 0)
+#1 /var/www/html/vendor/codeigniter4/framework/system/Database/BaseConnection.php(738): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *\nFROM `...')
+#2 /var/www/html/vendor/codeigniter4/framework/system/Database/BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *\nFROM `...')
+#3 /var/www/html/vendor/codeigniter4/framework/system/Database/BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *\nFROM `...', Array, false)
+#4 /var/www/html/vendor/codeigniter4/framework/system/Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+#5 /var/www/html/vendor/codeigniter4/framework/system/BaseModel.php(679): CodeIgniter\Model->doFindAll(6, 0)
+#6 /var/www/html/app/Controllers/PublicSite.php(20): CodeIgniter\BaseModel->findAll(6)
+#7 /var/www/html/vendor/codeigniter4/framework/system/CodeIgniter.php(933): App\Controllers\PublicSite->home()
+#8 /var/www/html/vendor/codeigniter4/framework/system/CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PublicSite))
+#9 /var/www/html/vendor/codeigniter4/framework/system/CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#10 /var/www/html/vendor/codeigniter4/framework/system/Boot.php(334): CodeIgniter\CodeIgniter->run()
+#11 /var/www/html/vendor/codeigniter4/framework/system/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#12 /var/www/html/public/index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#13 {main}
+CRITICAL - 2025-07-26 04:45:32 --> CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'featured' in 'where clause'
+[Method: GET, Route: /]
+in SYSTEMPATH/Database/BaseConnection.php on line 692.
+ 1 SYSTEMPATH/Database/BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `news`
+WHERE `featured` = :featured:
+AND `status` = :status:
+ORDER BY `published_at` DESC
+ LIMIT 6', [...], false)
+ 2 SYSTEMPATH/Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH/BaseModel.php(679): CodeIgniter\Model->doFindAll(6, 0)
+ 4 APPPATH/Controllers/PublicSite.php(20): CodeIgniter\BaseModel->findAll(6)
+ 5 SYSTEMPATH/CodeIgniter.php(933): App\Controllers\PublicSite->home()
+ 6 SYSTEMPATH/CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PublicSite))
+ 7 SYSTEMPATH/CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH/Boot.php(334): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-07-26 04:45:32 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'featured' in 'where clause'
+in SYSTEMPATH/Database/MySQLi/Connection.php on line 332.
+ 1 SYSTEMPATH/Database/BaseConnection.php(738): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `news`
+WHERE `featured` = 1
+AND `status` = \'published\'
+ORDER BY `published_at` DESC
+ LIMIT 6')
+ 2 SYSTEMPATH/Database/BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `news`
+WHERE `featured` = 1
+AND `status` = \'published\'
+ORDER BY `published_at` DESC
+ LIMIT 6')
+ 3 SYSTEMPATH/Database/BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `news`
+WHERE `featured` = :featured:
+AND `status` = :status:
+ORDER BY `published_at` DESC
+ LIMIT 6', [...], false)
+ 4 SYSTEMPATH/Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH/BaseModel.php(679): CodeIgniter\Model->doFindAll(6, 0)
+ 6 APPPATH/Controllers/PublicSite.php(20): CodeIgniter\BaseModel->findAll(6)
+ 7 SYSTEMPATH/CodeIgniter.php(933): App\Controllers\PublicSite->home()
+ 8 SYSTEMPATH/CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PublicSite))
+ 9 SYSTEMPATH/CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH/Boot.php(334): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-07-26 04:45:32 --> [Caused by] mysqli_sql_exception: Unknown column 'featured' in 'where clause'
+in SYSTEMPATH/Database/MySQLi/Connection.php on line 327.
+ 1 SYSTEMPATH/Database/MySQLi/Connection.php(327): mysqli->query('SELECT *
+FROM `news`
+WHERE `featured` = 1
+AND `status` = \'published\'
+ORDER BY `published_at` DESC
+ LIMIT 6', 0)
+ 2 SYSTEMPATH/Database/BaseConnection.php(738): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `news`
+WHERE `featured` = 1
+AND `status` = \'published\'
+ORDER BY `published_at` DESC
+ LIMIT 6')
+ 3 SYSTEMPATH/Database/BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `news`
+WHERE `featured` = 1
+AND `status` = \'published\'
+ORDER BY `published_at` DESC
+ LIMIT 6')
+ 4 SYSTEMPATH/Database/BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `news`
+WHERE `featured` = :featured:
+AND `status` = :status:
+ORDER BY `published_at` DESC
+ LIMIT 6', [...], false)
+ 5 SYSTEMPATH/Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH/BaseModel.php(679): CodeIgniter\Model->doFindAll(6, 0)
+ 7 APPPATH/Controllers/PublicSite.php(20): CodeIgniter\BaseModel->findAll(6)
+ 8 SYSTEMPATH/CodeIgniter.php(933): App\Controllers\PublicSite->home()
+ 9 SYSTEMPATH/CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PublicSite))
+10 SYSTEMPATH/CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 SYSTEMPATH/Boot.php(334): CodeIgniter\CodeIgniter->run()
+12 SYSTEMPATH/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+13 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-07-26 04:45:36 --> mysqli_sql_exception: Unknown column 'featured' in 'where clause' in /var/www/html/vendor/codeigniter4/framework/system/Database/MySQLi/Connection.php:327
+Stack trace:
+#0 /var/www/html/vendor/codeigniter4/framework/system/Database/MySQLi/Connection.php(327): mysqli->query('SELECT *\nFROM `...', 0)
+#1 /var/www/html/vendor/codeigniter4/framework/system/Database/BaseConnection.php(738): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *\nFROM `...')
+#2 /var/www/html/vendor/codeigniter4/framework/system/Database/BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *\nFROM `...')
+#3 /var/www/html/vendor/codeigniter4/framework/system/Database/BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *\nFROM `...', Array, false)
+#4 /var/www/html/vendor/codeigniter4/framework/system/Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+#5 /var/www/html/vendor/codeigniter4/framework/system/BaseModel.php(679): CodeIgniter\Model->doFindAll(6, 0)
+#6 /var/www/html/app/Controllers/PublicSite.php(20): CodeIgniter\BaseModel->findAll(6)
+#7 /var/www/html/vendor/codeigniter4/framework/system/CodeIgniter.php(933): App\Controllers\PublicSite->home()
+#8 /var/www/html/vendor/codeigniter4/framework/system/CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PublicSite))
+#9 /var/www/html/vendor/codeigniter4/framework/system/CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#10 /var/www/html/vendor/codeigniter4/framework/system/Boot.php(334): CodeIgniter\CodeIgniter->run()
+#11 /var/www/html/vendor/codeigniter4/framework/system/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#12 /var/www/html/public/index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#13 {main}
+CRITICAL - 2025-07-26 04:45:36 --> CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'featured' in 'where clause'
+[Method: GET, Route: /]
+in SYSTEMPATH/Database/BaseConnection.php on line 692.
+ 1 SYSTEMPATH/Database/BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `news`
+WHERE `featured` = :featured:
+AND `status` = :status:
+ORDER BY `published_at` DESC
+ LIMIT 6', [...], false)
+ 2 SYSTEMPATH/Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH/BaseModel.php(679): CodeIgniter\Model->doFindAll(6, 0)
+ 4 APPPATH/Controllers/PublicSite.php(20): CodeIgniter\BaseModel->findAll(6)
+ 5 SYSTEMPATH/CodeIgniter.php(933): App\Controllers\PublicSite->home()
+ 6 SYSTEMPATH/CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PublicSite))
+ 7 SYSTEMPATH/CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH/Boot.php(334): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-07-26 04:45:36 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'featured' in 'where clause'
+in SYSTEMPATH/Database/MySQLi/Connection.php on line 332.
+ 1 SYSTEMPATH/Database/BaseConnection.php(738): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `news`
+WHERE `featured` = 1
+AND `status` = \'published\'
+ORDER BY `published_at` DESC
+ LIMIT 6')
+ 2 SYSTEMPATH/Database/BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `news`
+WHERE `featured` = 1
+AND `status` = \'published\'
+ORDER BY `published_at` DESC
+ LIMIT 6')
+ 3 SYSTEMPATH/Database/BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `news`
+WHERE `featured` = :featured:
+AND `status` = :status:
+ORDER BY `published_at` DESC
+ LIMIT 6', [...], false)
+ 4 SYSTEMPATH/Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH/BaseModel.php(679): CodeIgniter\Model->doFindAll(6, 0)
+ 6 APPPATH/Controllers/PublicSite.php(20): CodeIgniter\BaseModel->findAll(6)
+ 7 SYSTEMPATH/CodeIgniter.php(933): App\Controllers\PublicSite->home()
+ 8 SYSTEMPATH/CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PublicSite))
+ 9 SYSTEMPATH/CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH/Boot.php(334): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-07-26 04:45:36 --> [Caused by] mysqli_sql_exception: Unknown column 'featured' in 'where clause'
+in SYSTEMPATH/Database/MySQLi/Connection.php on line 327.
+ 1 SYSTEMPATH/Database/MySQLi/Connection.php(327): mysqli->query('SELECT *
+FROM `news`
+WHERE `featured` = 1
+AND `status` = \'published\'
+ORDER BY `published_at` DESC
+ LIMIT 6', 0)
+ 2 SYSTEMPATH/Database/BaseConnection.php(738): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `news`
+WHERE `featured` = 1
+AND `status` = \'published\'
+ORDER BY `published_at` DESC
+ LIMIT 6')
+ 3 SYSTEMPATH/Database/BaseConnection.php(652): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `news`
+WHERE `featured` = 1
+AND `status` = \'published\'
+ORDER BY `published_at` DESC
+ LIMIT 6')
+ 4 SYSTEMPATH/Database/BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `news`
+WHERE `featured` = :featured:
+AND `status` = :status:
+ORDER BY `published_at` DESC
+ LIMIT 6', [...], false)
+ 5 SYSTEMPATH/Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH/BaseModel.php(679): CodeIgniter\Model->doFindAll(6, 0)
+ 7 APPPATH/Controllers/PublicSite.php(20): CodeIgniter\BaseModel->findAll(6)
+ 8 SYSTEMPATH/CodeIgniter.php(933): App\Controllers\PublicSite->home()
+ 9 SYSTEMPATH/CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PublicSite))
+10 SYSTEMPATH/CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 SYSTEMPATH/Boot.php(334): CodeIgniter\CodeIgniter->run()
+12 SYSTEMPATH/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+13 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-07-26 22:22:04 --> TypeError: count(): Argument #1 ($value) must be of type Countable|array, null given
+[Method: GET, Route: section/national]
+in APPPATH/Views/public/header.php on line 12.
+ 1 APPPATH/Views/public/section.php(46): include()
+ 2 SYSTEMPATH/View/View.php(224): include('/var/www/html/app/Views/public/section.php')
+ 3 SYSTEMPATH/View/View.php(227): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH/Common.php(1173): CodeIgniter\View\View->render('public/section', [], true)
+ 5 APPPATH/Controllers/PublicSite.php(54): view('public/section', [...])
+ 6 SYSTEMPATH/CodeIgniter.php(933): App\Controllers\PublicSite->section('national')
+ 7 SYSTEMPATH/CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PublicSite))
+ 8 SYSTEMPATH/CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH/Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-07-26 22:22:04 --> [Caused by] ErrorException: Undefined variable $categories
+in APPPATH/Views/public/header.php on line 12.
+ 1 APPPATH/Views/public/header.php(12): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined variable $categories', '/var/www/html/app/Views/public/header.php', 12)
+ 2 APPPATH/Views/public/section.php(46): include('/var/www/html/app/Views/public/header.php')
+ 3 SYSTEMPATH/View/View.php(224): include('/var/www/html/app/Views/public/section.php')
+ 4 SYSTEMPATH/View/View.php(227): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 5 SYSTEMPATH/Common.php(1173): CodeIgniter\View\View->render('public/section', [], true)
+ 6 APPPATH/Controllers/PublicSite.php(54): view('public/section', [...])
+ 7 SYSTEMPATH/CodeIgniter.php(933): App\Controllers\PublicSite->section('national')
+ 8 SYSTEMPATH/CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PublicSite))
+ 9 SYSTEMPATH/CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH/Boot.php(334): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-07-26 22:22:10 --> TypeError: count(): Argument #1 ($value) must be of type Countable|array, null given
+[Method: GET, Route: section/politics]
+in APPPATH/Views/public/header.php on line 12.
+ 1 APPPATH/Views/public/section.php(46): include()
+ 2 SYSTEMPATH/View/View.php(224): include('/var/www/html/app/Views/public/section.php')
+ 3 SYSTEMPATH/View/View.php(227): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH/Common.php(1173): CodeIgniter\View\View->render('public/section', [], true)
+ 5 APPPATH/Controllers/PublicSite.php(54): view('public/section', [...])
+ 6 SYSTEMPATH/CodeIgniter.php(933): App\Controllers\PublicSite->section('politics')
+ 7 SYSTEMPATH/CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PublicSite))
+ 8 SYSTEMPATH/CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH/Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-07-26 22:22:10 --> [Caused by] ErrorException: Undefined variable $categories
+in APPPATH/Views/public/header.php on line 12.
+ 1 APPPATH/Views/public/header.php(12): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined variable $categories', '/var/www/html/app/Views/public/header.php', 12)
+ 2 APPPATH/Views/public/section.php(46): include('/var/www/html/app/Views/public/header.php')
+ 3 SYSTEMPATH/View/View.php(224): include('/var/www/html/app/Views/public/section.php')
+ 4 SYSTEMPATH/View/View.php(227): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 5 SYSTEMPATH/Common.php(1173): CodeIgniter\View\View->render('public/section', [], true)
+ 6 APPPATH/Controllers/PublicSite.php(54): view('public/section', [...])
+ 7 SYSTEMPATH/CodeIgniter.php(933): App\Controllers\PublicSite->section('politics')
+ 8 SYSTEMPATH/CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PublicSite))
+ 9 SYSTEMPATH/CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH/Boot.php(334): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-07-26 22:22:17 --> TypeError: count(): Argument #1 ($value) must be of type Countable|array, null given
+[Method: GET, Route: section/international]
+in APPPATH/Views/public/header.php on line 12.
+ 1 APPPATH/Views/public/section.php(46): include()
+ 2 SYSTEMPATH/View/View.php(224): include('/var/www/html/app/Views/public/section.php')
+ 3 SYSTEMPATH/View/View.php(227): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH/Common.php(1173): CodeIgniter\View\View->render('public/section', [], true)
+ 5 APPPATH/Controllers/PublicSite.php(54): view('public/section', [...])
+ 6 SYSTEMPATH/CodeIgniter.php(933): App\Controllers\PublicSite->section('international')
+ 7 SYSTEMPATH/CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PublicSite))
+ 8 SYSTEMPATH/CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH/Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-07-26 22:22:17 --> [Caused by] ErrorException: Undefined variable $categories
+in APPPATH/Views/public/header.php on line 12.
+ 1 APPPATH/Views/public/header.php(12): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined variable $categories', '/var/www/html/app/Views/public/header.php', 12)
+ 2 APPPATH/Views/public/section.php(46): include('/var/www/html/app/Views/public/header.php')
+ 3 SYSTEMPATH/View/View.php(224): include('/var/www/html/app/Views/public/section.php')
+ 4 SYSTEMPATH/View/View.php(227): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 5 SYSTEMPATH/Common.php(1173): CodeIgniter\View\View->render('public/section', [], true)
+ 6 APPPATH/Controllers/PublicSite.php(54): view('public/section', [...])
+ 7 SYSTEMPATH/CodeIgniter.php(933): App\Controllers\PublicSite->section('international')
+ 8 SYSTEMPATH/CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PublicSite))
+ 9 SYSTEMPATH/CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH/Boot.php(334): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-07-26 22:22:30 --> TypeError: count(): Argument #1 ($value) must be of type Countable|array, null given
+[Method: GET, Route: news/barendra-rain-worry]
+in APPPATH/Views/public/header.php on line 12.
+ 1 APPPATH/Views/public/news.php(34): include()
+ 2 SYSTEMPATH/View/View.php(224): include('/var/www/html/app/Views/public/news.php')
+ 3 SYSTEMPATH/View/View.php(227): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH/Common.php(1173): CodeIgniter\View\View->render('public/news', [], true)
+ 5 APPPATH/Controllers/PublicSite.php(65): view('public/news', [...])
+ 6 SYSTEMPATH/CodeIgniter.php(933): App\Controllers\PublicSite->news('barendra-rain-worry')
+ 7 SYSTEMPATH/CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PublicSite))
+ 8 SYSTEMPATH/CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH/Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-07-26 22:22:30 --> [Caused by] ErrorException: Undefined variable $categories
+in APPPATH/Views/public/header.php on line 12.
+ 1 APPPATH/Views/public/header.php(12): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined variable $categories', '/var/www/html/app/Views/public/header.php', 12)
+ 2 APPPATH/Views/public/news.php(34): include('/var/www/html/app/Views/public/header.php')
+ 3 SYSTEMPATH/View/View.php(224): include('/var/www/html/app/Views/public/news.php')
+ 4 SYSTEMPATH/View/View.php(227): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 5 SYSTEMPATH/Common.php(1173): CodeIgniter\View\View->render('public/news', [], true)
+ 6 APPPATH/Controllers/PublicSite.php(65): view('public/news', [...])
+ 7 SYSTEMPATH/CodeIgniter.php(933): App\Controllers\PublicSite->news('barendra-rain-worry')
+ 8 SYSTEMPATH/CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PublicSite))
+ 9 SYSTEMPATH/CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH/Boot.php(334): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-07-26 22:32:01 --> Error connecting to the database: mysqli_sql_exception: Connection refused in /var/www/html/vendor/codeigniter4/framework/system/Database/MySQLi/Connection.php:202
+Stack trace:
+#0 /var/www/html/vendor/codeigniter4/framework/system/Database/MySQLi/Connection.php(202): mysqli->real_connect('db', 'barinduser', 'barindpass', 'barindpost', 3306, '', 0)
+#1 /var/www/html/vendor/codeigniter4/framework/system/Database/BaseConnection.php(421): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#2 /var/www/html/vendor/codeigniter4/framework/system/Database/BaseConnection.php(620): CodeIgniter\Database\BaseConnection->initialize()
+#3 /var/www/html/vendor/codeigniter4/framework/system/Database/BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *\nFROM `...', Array, false)
+#4 /var/www/html/vendor/codeigniter4/framework/system/Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+#5 /var/www/html/vendor/codeigniter4/framework/system/BaseModel.php(679): CodeIgniter\Model->doFindAll(6, 0)
+#6 /var/www/html/app/Controllers/PublicSite.php(26): CodeIgniter\BaseModel->findAll(6)
+#7 /var/www/html/vendor/codeigniter4/framework/system/CodeIgniter.php(933): App\Controllers\PublicSite->home()
+#8 /var/www/html/vendor/codeigniter4/framework/system/CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PublicSite))
+#9 /var/www/html/vendor/codeigniter4/framework/system/CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#10 /var/www/html/vendor/codeigniter4/framework/system/Boot.php(334): CodeIgniter\CodeIgniter->run()
+#11 /var/www/html/vendor/codeigniter4/framework/system/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#12 /var/www/html/public/index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#13 {main}
+
+Next CodeIgniter\Database\Exceptions\DatabaseException: Connection refused in /var/www/html/vendor/codeigniter4/framework/system/Database/MySQLi/Connection.php:246
+Stack trace:
+#0 /var/www/html/vendor/codeigniter4/framework/system/Database/BaseConnection.php(421): CodeIgniter\Database\MySQLi\Connection->connect(false)
+#1 /var/www/html/vendor/codeigniter4/framework/system/Database/BaseConnection.php(620): CodeIgniter\Database\BaseConnection->initialize()
+#2 /var/www/html/vendor/codeigniter4/framework/system/Database/BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *\nFROM `...', Array, false)
+#3 /var/www/html/vendor/codeigniter4/framework/system/Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+#4 /var/www/html/vendor/codeigniter4/framework/system/BaseModel.php(679): CodeIgniter\Model->doFindAll(6, 0)
+#5 /var/www/html/app/Controllers/PublicSite.php(26): CodeIgniter\BaseModel->findAll(6)
+#6 /var/www/html/vendor/codeigniter4/framework/system/CodeIgniter.php(933): App\Controllers\PublicSite->home()
+#7 /var/www/html/vendor/codeigniter4/framework/system/CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PublicSite))
+#8 /var/www/html/vendor/codeigniter4/framework/system/CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#9 /var/www/html/vendor/codeigniter4/framework/system/Boot.php(334): CodeIgniter\CodeIgniter->run()
+#10 /var/www/html/vendor/codeigniter4/framework/system/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#11 /var/www/html/public/index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#12 {main}
+CRITICAL - 2025-07-26 22:32:01 --> CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Connection refused
+[Method: GET, Route: /]
+in SYSTEMPATH/Database/BaseConnection.php on line 467.
+ 1 SYSTEMPATH/Database/BaseConnection.php(620): CodeIgniter\Database\BaseConnection->initialize()
+ 2 SYSTEMPATH/Database/BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `news`
+WHERE `featured` = :featured:
+AND `status` = :status:
+ORDER BY `published_at` DESC
+ LIMIT 6', [...], false)
+ 3 SYSTEMPATH/Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 4 SYSTEMPATH/BaseModel.php(679): CodeIgniter\Model->doFindAll(6, 0)
+ 5 APPPATH/Controllers/PublicSite.php(26): CodeIgniter\BaseModel->findAll(6)
+ 6 SYSTEMPATH/CodeIgniter.php(933): App\Controllers\PublicSite->home()
+ 7 SYSTEMPATH/CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PublicSite))
+ 8 SYSTEMPATH/CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH/Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-07-26 22:32:07 --> TypeError: count(): Argument #1 ($value) must be of type Countable|array, null given
+[Method: GET, Route: section/national]
+in APPPATH/Views/public/header.php on line 15.
+ 1 APPPATH/Views/public/section.php(46): include()
+ 2 SYSTEMPATH/View/View.php(224): include('/var/www/html/app/Views/public/section.php')
+ 3 SYSTEMPATH/View/View.php(227): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH/Common.php(1173): CodeIgniter\View\View->render('public/section', [], true)
+ 5 APPPATH/Controllers/PublicSite.php(54): view('public/section', [...])
+ 6 SYSTEMPATH/CodeIgniter.php(933): App\Controllers\PublicSite->section('national')
+ 7 SYSTEMPATH/CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PublicSite))
+ 8 SYSTEMPATH/CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH/Boot.php(334): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-07-26 22:32:07 --> [Caused by] ErrorException: Undefined variable $categories
+in APPPATH/Views/public/header.php on line 15.
+ 1 APPPATH/Views/public/header.php(15): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined variable $categories', '/var/www/html/app/Views/public/header.php', 15)
+ 2 APPPATH/Views/public/section.php(46): include('/var/www/html/app/Views/public/header.php')
+ 3 SYSTEMPATH/View/View.php(224): include('/var/www/html/app/Views/public/section.php')
+ 4 SYSTEMPATH/View/View.php(227): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 5 SYSTEMPATH/Common.php(1173): CodeIgniter\View\View->render('public/section', [], true)
+ 6 APPPATH/Controllers/PublicSite.php(54): view('public/section', [...])
+ 7 SYSTEMPATH/CodeIgniter.php(933): App\Controllers\PublicSite->section('national')
+ 8 SYSTEMPATH/CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PublicSite))
+ 9 SYSTEMPATH/CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH/Boot.php(334): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
