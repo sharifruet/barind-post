@@ -85,7 +85,7 @@ class App extends BaseConfig
      | DO NOT CHANGE THIS UNLESS YOU FULLY UNDERSTAND THE REPERCUSSIONS!!
      |
      */
-    public string $permittedURIChars = 'a-z 0-9~%.:_\-';
+    public string $permittedURIChars = '';
 
     /**
      * --------------------------------------------------------------------------
@@ -454,15 +454,8 @@ class App extends BaseConfig
      * --------------------------------------------------------------------------
      *
      * Enables the Response's Content Secure Policy to restrict the sources that
-     * can be used for images, scripts, CSS files, audio, video, etc. If enabled,
-     * the Response object will populate default values for the policy from the
-     * `ContentSecurityPolicy.php` file. Controllers can always add to those
-     * restrictions at run time.
-     *
-     * For a better understanding of CSP, see these documents:
-     *
-     * @see http://www.html5rocks.com/en/tutorials/security/content-security-policy/
-     * @see http://www.w3.org/TR/CSP/
+     * can be used for images, scripts, CSS files, audio, and more. If you are
+     * using CSP, you should comment out the `$CSPEnabled` line below.
      */
-    public bool $CSPEnabled = false;
+    public bool $CSPEnabled = false; // Set to false to disable CSP for cPanel compatibility
 }

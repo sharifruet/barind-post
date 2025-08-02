@@ -54,14 +54,14 @@ class ContentSecurityPolicy extends BaseConfig
      *
      * @var list<string>|string
      */
-    public $scriptSrc = ['self', 'unsafe-inline', 'unsafe-eval', 'https://cdn.jsdelivr.net', 'https://code.jquery.com'];
+    public $scriptSrc = ['self', 'unsafe-inline', 'unsafe-eval', 'https://cdn.jsdelivr.net', 'https://code.jquery.com', 'https://cdn.ckeditor.com', 'https://cdnjs.cloudflare.com'];
 
     /**
      * Lists allowed stylesheets' URLs.
      *
      * @var list<string>|string
      */
-    public $styleSrc = ['self', 'unsafe-inline', 'https://cdn.jsdelivr.net', 'https://fonts.googleapis.com'];
+    public $styleSrc = ['self', 'unsafe-inline', 'https://cdn.jsdelivr.net', 'https://fonts.googleapis.com', 'https://fonts.gstatic.com', 'https://cdn.ckeditor.com', 'https://cdnjs.cloudflare.com'];
 
     /**
      * Defines the origins from which images can be loaded.
@@ -99,7 +99,7 @@ class ContentSecurityPolicy extends BaseConfig
      *
      * @var list<string>|string
      */
-    public $fontSrc = ['*'];
+    public $fontSrc = ['self', 'data:', 'https://cdn.jsdelivr.net', 'https://fonts.gstatic.com', 'https://fonts.googleapis.com', 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/fonts/', 'https://cdn.ckeditor.com', 'https://cdnjs.cloudflare.com'];
 
     /**
      * Lists valid endpoints for submission from `<form>` tags.

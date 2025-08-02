@@ -1,30 +1,54 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm mb-4">
     <div class="container">
         <a class="navbar-brand d-flex flex-column align-items-start" href="/">
-            <div class="d-flex align-items-center">
-                <img src="<?= base_url('public/logo.png') ?>" alt="Barind Post Logo" style="height:40px;width:auto;margin-right:10px;">
+            <div class="d-flex align-items-center position-relative">
+                <img src="<?= base_url('public/logo.png') ?>" alt="Barind Post Logo" style="height:55px;width:auto;margin-right:12px;">
                 <span>বারিন্দ পোস্ট</span>
+                <span style="font-size:0.7rem; color:#fff; background-color:#dc3545; padding:2px 8px; border-radius:12px; font-weight:500; position:absolute; bottom:-8px; right:-5px;">পরীক্ষামূলক সংস্করণ</span>
             </div>
-            <span style="font-size:0.7rem; color:#dc3545; margin-left:50px; margin-top:-2px;">পরীক্ষামূলক সংস্করণ</span>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
-                <?php $maxMenu = 6; $catCount = count($categories); ?>
-                <?php foreach (array_slice($categories, 0, $maxMenu) as $cat): ?>
+                <!-- Home menu item -->
+                <li class="nav-item">
+                    <a class="nav-link fw-semibold" href="/">
+                        <i class="fas fa-home"></i>
+                    </a>
+                </li>
+                
+                <?php 
+                // Define the main menu categories
+                $mainMenuCategories = ['জাতীয়', 'রাজনীতি', 'অর্থনীতি', 'আন্তর্জাতিক', 'খেলাধুলা', 'বিনোদন'];
+                
+                // Separate categories into main menu and dropdown
+                $mainMenuItems = [];
+                $dropdownItems = [];
+                
+                foreach ($categories as $cat) {
+                    if (in_array($cat['name'], $mainMenuCategories)) {
+                        $mainMenuItems[] = $cat;
+                    } else {
+                        $dropdownItems[] = $cat;
+                    }
+                }
+                
+                // Show main menu categories
+                foreach ($mainMenuItems as $cat): ?>
                     <li class="nav-item">
                         <a class="nav-link fw-semibold" href="/section/<?= esc($cat['slug']) ?>"><?= esc($cat['name'], 'raw') ?></a>
                     </li>
                 <?php endforeach; ?>
-                <?php if ($catCount > $maxMenu): ?>
+                
+                <?php if (!empty($dropdownItems)): ?>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="moreMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             +
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="moreMenu">
-                            <?php foreach (array_slice($categories, $maxMenu) as $cat): ?>
+                            <?php foreach ($dropdownItems as $cat): ?>
                                 <li><a class="dropdown-item" href="/section/<?= esc($cat['slug']) ?>"><?= esc($cat['name'], 'raw') ?></a></li>
                             <?php endforeach; ?>
                         </ul>

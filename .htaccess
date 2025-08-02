@@ -17,12 +17,17 @@ RewriteRule ^(.*)$ index.php/$1 [L]
 
 # Security headers
 <IfModule mod_headers.c>
+    # Completely remove any existing CSP headers first
+    Header unset Content-Security-Policy
+    Header unset X-Content-Security-Policy
+    Header unset X-WebKit-CSP
+    
     Header always set X-Content-Type-Options nosniff
     Header always set X-Frame-Options DENY
     Header always set X-XSS-Protection "1; mode=block"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
-    # Allow external images and resources
-    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://code.jquery.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; img-src 'self' data: https: http:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self'; frame-src 'none'; object-src 'none';"
+    # Allow all sources - CSP disabled for maximum compatibility
+    Header always set Content-Security-Policy "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;"
 </IfModule>
 
 # Prevent access to sensitive files

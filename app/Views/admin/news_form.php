@@ -65,7 +65,8 @@
         </div>
         <div class="col-md-6">
             <label class="form-label">Slug</label>
-            <input type="text" name="slug" class="form-control" value="<?= $isEdit ? esc($news['slug']) : '' ?>">
+            <input type="text" name="slug" id="slug" class="form-control" value="<?= $isEdit ? esc($news['slug']) : '' ?>">
+            <small class="form-text text-muted">Auto-generated from title. You can edit it if needed.</small>
         </div>
         <div class="col-md-4">
             <label class="form-label">Source</label>
@@ -124,11 +125,107 @@
 #existingImagesGrid img { max-width: 100px; max-height: 100px; cursor: pointer; border: 2px solid transparent; border-radius: 4px; }
 #existingImagesGrid img.selected { border-color: #007bff; }
 </style>
-<!-- Remove TinyMCE, add CKEditor 5 -->
-<script src="https://cdn.ckeditor.com/ckeditor5/40.2.0/classic/ckeditor.js"></script>
+<!-- CKEditor 5 with multiple fallback sources -->
 <script>
-ClassicEditor.create(document.querySelector('#content'))
-  .catch(error => { console.error(error); });
+// Function to load CKEditor with multiple fallback sources
+function loadCKEditor() {
+    const sources = [
+        'https://cdn.ckeditor.com/ckeditor5/40.2.0/classic/ckeditor.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/ckeditor5/40.2.0/classic/ckeditor.js',
+        'https://unpkg.com/@ckeditor/ckeditor5-build-classic@40.2.0/build/ckeditor.js'
+    ];
+    
+    let currentSource = 0;
+    
+    function tryLoad() {
+        if (currentSource >= sources.length) {
+            // All sources failed, use fallback
+            console.log('All CKEditor sources failed, using fallback textarea');
+            const textarea = document.querySelector('#content');
+            if (textarea) {
+                textarea.style.minHeight = '400px';
+                textarea.style.fontFamily = 'monospace';
+                textarea.style.padding = '15px';
+                textarea.style.border = '1px solid #ccc';
+                textarea.style.borderRadius = '4px';
+                textarea.placeholder = 'Enter your content here... (Rich text editor unavailable)';
+                
+                // Add some basic formatting buttons
+                const toolbar = document.createElement('div');
+                toolbar.style.marginBottom = '10px';
+                toolbar.innerHTML = `
+                    <button type="button" class="btn btn-sm btn-outline-secondary me-1" onclick="formatText('bold')"><strong>B</strong></button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary me-1" onclick="formatText('italic')"><em>I</em></button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary me-1" onclick="formatText('underline')"><u>U</u></button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary me-1" onclick="insertText('<br>')">Line Break</button>
+                `;
+                textarea.parentNode.insertBefore(toolbar, textarea);
+            }
+            return;
+        }
+        
+        const script = document.createElement('script');
+        script.src = sources[currentSource];
+        script.onload = function() {
+            console.log('CKEditor loaded from:', sources[currentSource]);
+            // Try to create CKEditor
+            if (typeof ClassicEditor !== 'undefined') {
+                ClassicEditor.create(document.querySelector('#content'))
+                    .then(editor => {
+                        console.log('CKEditor initialized successfully');
+                    })
+                    .catch(error => {
+                        console.error('CKEditor initialization failed:', error);
+                        tryLoad(); // Try next source
+                    });
+            } else {
+                tryLoad(); // Try next source
+            }
+        };
+        script.onerror = function() {
+            console.log('Failed to load CKEditor from:', sources[currentSource]);
+            currentSource++;
+            tryLoad();
+        };
+        document.head.appendChild(script);
+    }
+    
+    tryLoad();
+}
+
+// Load CKEditor when page is ready
+document.addEventListener('DOMContentLoaded', loadCKEditor);
+
+// Basic text formatting functions for fallback
+function formatText(type) {
+    const textarea = document.querySelector('#content');
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+    
+    let formattedText = '';
+    switch(type) {
+        case 'bold':
+            formattedText = `<strong>${selectedText}</strong>`;
+            break;
+        case 'italic':
+            formattedText = `<em>${selectedText}</em>`;
+            break;
+        case 'underline':
+            formattedText = `<u>${selectedText}</u>`;
+            break;
+    }
+    
+    textarea.value = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
+    textarea.focus();
+}
+
+function insertText(text) {
+    const textarea = document.querySelector('#content');
+    const start = textarea.selectionStart;
+    textarea.value = textarea.value.substring(0, start) + text + textarea.value.substring(start);
+    textarea.focus();
+}
 </script>
 <script>
 // JS for image selection modal
@@ -166,6 +263,37 @@ closeModalBtn.addEventListener('click', function() {
 // Optional: close modal on outside click
 modal.addEventListener('click', function(e) {
   if (e.target === modal) modal.classList.remove('show');
+});
+</script>
+<script>
+// Auto-generate slug from title
+document.querySelector('input[name="title"]').addEventListener('input', function() {
+    const title = this.value;
+    const slug = title
+        .toLowerCase()
+        .replace(/[\u0980-\u09FF]/g, function(match) {
+            // Bengali to English transliteration
+            const bengaliToEnglish = {
+                'অ': 'a', 'আ': 'aa', 'ই': 'i', 'ঈ': 'ii', 'উ': 'u', 'ঊ': 'uu',
+                'ঋ': 'ri', 'এ': 'e', 'ঐ': 'oi', 'ও': 'o', 'ঔ': 'ou',
+                'ক': 'k', 'খ': 'kh', 'গ': 'g', 'ঘ': 'gh', 'ঙ': 'ng',
+                'চ': 'ch', 'ছ': 'chh', 'জ': 'j', 'ঝ': 'jh', 'ঞ': 'ny',
+                'ট': 't', 'ঠ': 'th', 'ড': 'd', 'ঢ': 'dh', 'ণ': 'n',
+                'ত': 't', 'থ': 'th', 'দ': 'd', 'ধ': 'dh', 'ন': 'n',
+                'প': 'p', 'ফ': 'ph', 'ব': 'b', 'ভ': 'bh', 'ম': 'm',
+                'য': 'y', 'র': 'r', 'ল': 'l', 'শ': 'sh', 'ষ': 'sh',
+                'স': 's', 'হ': 'h', 'ড়': 'r', 'ঢ়': 'rh', 'য়': 'y',
+                'ৎ': 't', 'ং': 'ng', 'ঃ': 'h', 'ঁ': 'n',
+                'া': 'a', 'ি': 'i', 'ী': 'i', 'ু': 'u', 'ূ': 'u',
+                'ৃ': 'ri', 'ে': 'e', 'ৈ': 'oi', 'ো': 'o', 'ৌ': 'ou',
+                '্': '', 'ঁ': 'n'
+            };
+            return bengaliToEnglish[match] || match;
+        })
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/[\s-]+/g, '-')
+        .trim('-');
+    document.getElementById('slug').value = slug;
 });
 </script>
 <?= $this->endSection() ?> 

@@ -23,6 +23,7 @@ $routes->post('/admin/users/add', 'Admin::addUser');
 $routes->post('/admin/users/delete', 'Admin::deleteUser');
 
 $routes->get('/admin/news', 'Admin::newsList');
+$routes->get('/test', 'Admin::test');
 $routes->get('/admin/news/create', 'Admin::newsCreate');
 $routes->post('/admin/news/create', 'Admin::newsStore');
 $routes->get('/admin/news/edit/(:num)', 'Admin::newsEdit/$1');
@@ -47,6 +48,7 @@ $routes->post('/admin/categories/edit/(:num)', 'Admin::updateCategory/$1');
 
 // Public Site Routes
 $routes->get('/section/(:segment)', 'PublicSite::section/$1');
-$routes->get('/news/(:segment)', 'PublicSite::news/$1');
+$routes->get('/news/(:any)', 'PublicSite::news/$1');
+$routes->get('/news-bn/(:any)', 'PublicSite::newsByTitle/$1');
 $routes->get('/tag/(:segment)', 'PublicSite::tag/$1');
 $routes->get('/search', 'PublicSite::search');

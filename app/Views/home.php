@@ -4,8 +4,14 @@
     <meta charset="UTF-8">
     <title>Barind Post - Home</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f8f9fa; }
+        body { 
+            font-family: 'Noto Sans Bengali', 'Noto Sans', Arial, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background: #f8f9fa; 
+        }
         header { background: #343a40; color: #fff; padding: 1rem 2rem; }
         .container { max-width: 900px; margin: 2rem auto; background: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         h1 { margin-top: 0; }

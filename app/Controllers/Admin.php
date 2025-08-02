@@ -14,6 +14,11 @@ class Admin extends BaseAdminController
         return view('admin/dashboard');
     }
 
+    public function test()
+    {
+        return 'Test route is working!';
+    }
+
     public function roles()
     {
         $roleModel = new RoleModel();
@@ -101,6 +106,12 @@ class Admin extends BaseAdminController
         $data = $this->request->getPost();
         $data['author_id'] = session('user_id');
         
+        // Generate English slug only if not provided (frontend handles most cases)
+        if (empty($data['slug'])) {
+            // Simple fallback slug generation
+            $data['slug'] = strtolower(trim(preg_replace('/[^a-zA-Z0-9\s-]+/', '-', $data['title']), '-'));
+        }
+        
         // Handle featured checkbox - if not checked, set to false
         $data['featured'] = $this->request->getPost('featured') ? 1 : 0;
         
@@ -152,6 +163,12 @@ class Admin extends BaseAdminController
     {
         $newsModel = new NewsModel();
         $data = $this->request->getPost();
+        
+        // Generate English slug only if not provided (frontend handles most cases)
+        if (empty($data['slug'])) {
+            // Simple fallback slug generation
+            $data['slug'] = strtolower(trim(preg_replace('/[^a-zA-Z0-9\s-]+/', '-', $data['title']), '-'));
+        }
         
         // Handle featured checkbox - if not checked, set to false
         $data['featured'] = $this->request->getPost('featured') ? 1 : 0;

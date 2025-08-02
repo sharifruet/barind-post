@@ -29,13 +29,33 @@ class PublicSite extends Controller
         $latestNews = $newsModel->where('featured', 0)
                                 ->where('status', 'published')
                                 ->orderBy('published_at', 'DESC')
-                                ->findAll(10);
+                                ->findAll(25);
+        
+        // Get major categories and their news
+        $majorCategories = ['national', 'politics', 'economy', 'international'];
+        $categoryNews = [];
+        
+        foreach ($majorCategories as $slug) {
+            $category = $categoryModel->where('slug', $slug)->first();
+            if ($category) {
+                $news = $newsModel->where('category_id', $category['id'])
+                                ->where('status', 'published')
+                                ->orderBy('published_at', 'DESC')
+                                ->findAll(4); // Get 4 latest news from each category
+                
+                $categoryNews[] = [
+                    'category' => $category,
+                    'news' => $news
+                ];
+            }
+        }
         
         $categories = $categoryModel->findAll();
         
         return view('public/home', [
             'featuredNews' => $featuredNews,
             'latestNews' => $latestNews,
+            'categoryNews' => $categoryNews,
             'categories' => $categories
         ]);
     }
@@ -62,10 +82,53 @@ class PublicSite extends Controller
         $newsModel = new NewsModel();
         $categoryModel = new CategoryModel();
         $categories = $categoryModel->findAll();
+        
+        // Try multiple approaches to find the news
+        $news = null;
+        
+        // First try with the original slug
         $news = $newsModel->where('slug', $slug)->where('status', 'published')->first();
+        
+        // If not found, try with URL decoded slug
+        if (!$news) {
+            $decodedSlug = urldecode($slug);
+            $news = $newsModel->where('slug', $decodedSlug)->where('status', 'published')->first();
+        }
+        
+        // If still not found, try with raw URL decoded slug
+        if (!$news) {
+            $rawSlug = rawurldecode($slug);
+            $news = $newsModel->where('slug', $rawSlug)->where('status', 'published')->first();
+        }
+        
+        // If still not found, try to find by title (for Bengali slugs)
+        if (!$news) {
+            $news = $newsModel->where('title', $slug)->where('status', 'published')->first();
+        }
+        
         if (!$news) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
+        
+        return view('public/news', ['news' => $news, 'categories' => $categories]);
+    }
+
+    public function newsByTitle($title)
+    {
+        $newsModel = new NewsModel();
+        $categoryModel = new CategoryModel();
+        $categories = $categoryModel->findAll();
+        
+        // URL decode the title
+        $decodedTitle = urldecode($title);
+        
+        // Find news by title
+        $news = $newsModel->where('title', $decodedTitle)->where('status', 'published')->first();
+        
+        if (!$news) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+        
         return view('public/news', ['news' => $news, 'categories' => $categories]);
     }
 
