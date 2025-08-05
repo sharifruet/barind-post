@@ -1,5 +1,39 @@
 <?php
-$title = 'বারিন্দ পোস্ট - হোম';
+$title = 'বারিন্দ পোস্ট - রাজশাহীর শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল';
+$meta_description = 'বারিন্দ পোস্ট রাজশাহী অঞ্চলের একটি শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল। সর্বশেষ সংবাদ, রাজনীতি, অর্থনীতি, খেলাধুলা, বিনোদন ও অন্যান্য গুরুত্বপূর্ণ খবর জানুন।';
+$meta_keywords = 'বারিন্দ পোস্ট, রাজশাহী সংবাদ, বাংলাদেশ সংবাদ, অনলাইন নিউজ, বাংলা সংবাদ, সর্বশেষ খবর';
+
+// Open Graph and Twitter Card data
+$og_title = $title;
+$og_description = $meta_description;
+$og_type = 'website';
+$og_image = base_url('public/logo.png');
+$twitter_card = 'summary_large_image';
+$twitter_title = $og_title;
+$twitter_description = $og_description;
+$twitter_image = $og_image;
+
+// Structured data for homepage
+$structured_data = [
+    "@context" => "https://schema.org",
+    "@type" => "WebPage",
+    "name" => "বারিন্দ পোস্ট",
+    "description" => $meta_description,
+    "url" => base_url(),
+    "mainEntity" => [
+        "@type" => "NewsMediaOrganization",
+        "name" => "বারিন্দ পোস্ট",
+        "url" => base_url(),
+        "logo" => base_url('public/logo.png'),
+        "description" => "রাজশাহী অঞ্চলের একটি শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল"
+    ]
+];
+
+$customScripts = '
+<script type="application/ld+json">
+' . json_encode($structured_data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . '
+</script>
+';
 
 // Define default colors for categories
 $categoryColors = [
@@ -45,6 +79,7 @@ $customStyles = '
             border-radius: 1rem;
             font-size: 0.8rem;
             font-weight: 600;
+            z-index: 10;
         }
         .category-section {
             border-top: 2px solid #f8f9fa;
@@ -71,6 +106,176 @@ $customStyles = '
         }
         .single-featured .featured-img {
             height: 400px;
+        }
+        
+        /* Featured news layout styles */
+        .featured-hero {
+            position: relative;
+            height: 500px;
+            overflow: hidden;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .featured-hero:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+        }
+        
+        .featured-hero img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .featured-hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            z-index: 10;
+        }
+        
+        .featured-hero-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+        
+        .featured-hero-title a {
+            color: #212529 !important;
+            text-decoration: none;
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.8);
+        }
+        
+        .featured-hero-title a:hover {
+            color: #0d6efd !important;
+            text-decoration: underline;
+        }
+        
+        /* Ensure inline styles work on overlay */
+        .featured-hero-overlay[style*="background-color"] {
+            z-index: 15 !important;
+        }
+        
+        /* Alternative: Use CSS class for background colors */
+        .featured-hero-overlay.bg-beige {
+            background-color: beige !important;
+            z-index: 15 !important;
+        }
+        
+        .featured-hero-overlay.bg-light {
+            background-color: #f8f9fa !important;
+            z-index: 15 !important;
+        }
+        
+        .featured-hero-lead {
+            font-size: 1.1rem;
+            line-height: 1.5;
+            opacity: 0.95;
+            color: #6c757d;
+            text-shadow: 1px 1px 3px rgba(255,255,255,0.8);
+        }
+        
+        /* Responsive adjustments for featured hero */
+        @media (max-width: 768px) {
+            .featured-hero {
+                height: 300px;
+                margin-bottom: 1rem;
+            }
+            
+            .featured-hero-title {
+                font-size: 1.5rem;
+            }
+            
+            .featured-hero-title a {
+                font-size: 1.5rem;
+            }
+            
+            .featured-hero-lead {
+                font-size: 0.9rem;
+            }
+            
+            .featured-hero-overlay {
+                padding: 1rem;
+                justify-content: center;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .featured-hero {
+                height: 250px;
+            }
+            
+            .featured-hero-title {
+                font-size: 1.3rem;
+            }
+            
+            .featured-hero-title a {
+                font-size: 1.3rem;
+            }
+            
+            .featured-hero-lead {
+                font-size: 0.85rem;
+            }
+            
+            .featured-hero-overlay {
+                padding: 0.75rem;
+            }
+        }
+        
+        .featured-sidebar {
+            height: 500px;
+            overflow-y: auto;
+        }
+        
+        .featured-sidebar-card {
+            height: 240px;
+            margin-bottom: 1rem;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .featured-sidebar-card:last-child {
+            margin-bottom: 0;
+        }
+        
+        .featured-sidebar-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .featured-sidebar-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            padding: 1rem;
+            color: white;
+        }
+        
+        .featured-sidebar-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+        
+        .featured-sidebar-lead {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            opacity: 0.9;
         }
         
         /* Sidebar news styles */
@@ -137,58 +342,72 @@ $customStyles = '
     include __DIR__.'/ad_placeholder.php'; 
     ?>
     <?php if (!empty($featuredNews)): ?>
-        <?php
-        $featuredCount = count($featuredNews);
-        $rowClass = 'row g-4 mb-5';
-        
-        if ($featuredCount == 1) {
-            // If only 1 news, show 1 per row with special styling
-            $colClass = 'col-12';
-            $rowClass = 'row g-4 mb-5 single-featured';
-        } elseif ($featuredCount % 4 == 0) {
-            // If divisible by 4, show 4 per row
-            $colClass = 'col-12 col-sm-6 col-md-3';
-        } elseif ($featuredCount > 4) {
-            // If more than 4, show 4 per row (first row will have 4, remaining will wrap)
-            $colClass = 'col-12 col-sm-6 col-md-3';
-        } else {
-            // For 2, 3, 4 news, show 3 per row
-            $colClass = 'col-12 col-sm-6 col-md-4';
-        }
-        ?>
         <h2 class="mb-4">বিশেষ সংবাদ</h2>
-        <div class="<?= $rowClass ?>">
-            <?php foreach ($featuredNews as $news): ?>
-                <div class="<?= $colClass ?>">
-                    <div class="card news-card h-100 border-0 shadow-sm position-relative">
-                        <div class="featured-badge">বিশেষ</div>
-                        <?php if (!empty($news['image_url'])): ?>
-                            <img src="<?= esc($news['image_url']) ?>" class="card-img-top featured-img" alt="">
-                        <?php endif; ?>
-                        <div class="card-body">
-                            <h5 class="card-title">
-                                <a href="/news/<?= esc($news['slug']) ?>" class="text-decoration-none text-dark fw-semibold"><?= esc($news['title'], 'raw') ?></a>
-                            </h5>
-                            <p class="card-text small text-muted mb-1">
-                                <?= date('M d, Y', strtotime($news['published_at'])) ?>
-                            </p>
-                            <p class="card-text">
-                                <?= esc($news['lead_text'], 'raw') ?>
-                            </p>
-                        </div>
+        <div class="row g-4 mb-5">
+            <?php 
+            $firstNews = array_shift($featuredNews); // Get first news for hero section
+            ?>
+            
+            <!-- Hero Featured News (50% width) -->
+            <div class="col-12 col-md-6">
+                <div class="featured-hero">
+                    <?php if (!empty($firstNews['image_url'])): ?>
+                        <img src="<?= esc(get_image_url($firstNews['image_url'])) ?>" style="width:100%;"  alt="<?= esc($firstNews['image_alt_text'] ?? '') ?>">
+                    <?php endif; ?>
+                    <div class="featured-hero-overlay">
+                        <h3 class="featured-hero-title">
+                            <a href="/news/<?= esc($firstNews['slug']) ?>" class="text-decoration-none text-dark"><?= esc($firstNews['title'], 'raw') ?></a>
+                        </h3>
+                        <div class="featured-hero-lead"><?= esc($firstNews['lead_text'], 'raw') ?></div>
                     </div>
                 </div>
-            <?php endforeach; ?>
+            </div>
+            
+            <!-- Remaining Featured News (50% width, 2 columns) -->
+            <div class="col-12 col-md-6">
+                <div class="row g-3">
+                    <?php foreach ($featuredNews as $news): ?>
+                        <div class="col-6 col-md-6">
+                            <div class="card news-card h-100 border-0 shadow-sm position-relative">
+                                <div class="featured-badge">বিশেষ</div>
+                                <?php if (!empty($news['image_url'])): ?>
+                                    <img src="<?= esc(get_image_url($news['image_url'])) ?>" class="card-img-top featured-img" alt="<?= esc($news['image_alt_text'] ?? '') ?>">
+                                <?php endif; ?>
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        <a href="/news/<?= esc($news['slug']) ?>" class="text-decoration-none text-dark fw-semibold"><?= esc($news['title'], 'raw') ?></a>
+                                    </h5>
+                                    <p class="card-text small text-muted mb-1">
+                                        <?= date('M d, Y', strtotime($news['published_at'])) ?>
+                                    </p>
+                                    <p class="card-text">
+                                        <?= esc($news['lead_text'], 'raw') ?>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
         </div>
     <?php endif; ?>
 
 
     <div class="mb-4">
-        <?php foreach ($categories as $cat): ?>
-            <a href="/section/<?= esc($cat['slug']) ?>" class="btn btn-outline-primary category-pill px-3 py-1 mt-1">
+        <?php 
+        // Define important categories to show on homepage
+        $importantCategories = ['জাতীয়', 'রাজনীতি', 'অর্থনীতি', 'আন্তর্জাতিক', 'খেলাধুলা', 'বিনোদন', 'শিক্ষা', 'স্বাস্থ্য', 'প্রযুক্তি', 'পরিবেশ', 'কৃষি', 'সংস্কৃতি', 'ধর্ম'];
+        
+        foreach ($categories as $cat): 
+            if (in_array($cat['name'], $importantCategories)):
+        ?>
+            <a href="/section/<?= esc($cat['slug']) ?>" class="btn btn-outline-danger category-pill px-3 py-1 mt-1">
                 <?= esc($cat['name'], 'raw') ?>
             </a>
-        <?php endforeach; ?>
+        <?php 
+            endif;
+        endforeach; 
+        ?>
     </div>
     <h2 class="mb-4">সর্বশেষ সংবাদ</h2>
     <div class="row">
@@ -202,7 +421,7 @@ $customStyles = '
                     <div class="col-md-4">
                         <div class="card news-card h-100 border-0 shadow-sm">
                             <?php if (!empty($news['image_url'])): ?>
-                                <img src="<?= esc($news['image_url']) ?>" class="card-img-top news-img" alt="">
+                                <img src="<?= esc(get_image_url($news['image_url'])) ?>" class="card-img-top news-img" alt="<?= esc($news['image_alt_text'] ?? '') ?>">
                             <?php endif; ?>
                             <div class="card-body">
                                 <h5 class="card-title">
@@ -260,7 +479,7 @@ $customStyles = '
                             <span class="category-indicator" style="background-color: <?= getCategoryColor($categorySection['category']['name'], $categoryColors) ?>;"></span>
                             <?= esc($categorySection['category']['name'], 'raw') ?>
                         </h2>
-                        <a href="/section/<?= esc($categorySection['category']['slug']) ?>" class="btn btn-outline-primary btn-sm view-all-btn">
+                        <a href="/section/<?= esc($categorySection['category']['slug']) ?>" class="btn btn-outline-danger btn-sm view-all-btn">
                             সব দেখুন <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
@@ -269,7 +488,7 @@ $customStyles = '
                             <div class="col-md-3">
                                 <div class="card news-card h-100 border-0 shadow-sm">
                                     <?php if (!empty($news['image_url'])): ?>
-                                        <img src="<?= esc($news['image_url']) ?>" class="card-img-top news-img" alt="">
+                                        <img src="<?= esc(get_image_url($news['image_url'])) ?>" class="card-img-top news-img" alt="<?= esc($news['image_alt_text'] ?? '') ?>">
                                     <?php endif; ?>
                                     <div class="card-body">
                                         <h6 class="card-title">

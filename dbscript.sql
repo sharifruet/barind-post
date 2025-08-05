@@ -79,6 +79,8 @@ CREATE TABLE IF NOT EXISTS news (
     updated_at DATETIME NULL,
     published_at DATETIME NULL,
     image_url VARCHAR(255),
+    image_caption TEXT,
+    image_alt_text VARCHAR(255),
     slug VARCHAR(255),
     source VARCHAR(255),
     dateline VARCHAR(255),
@@ -265,6 +267,29 @@ CREATE TABLE IF NOT EXISTS news_tags (
     FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
 );
 
+-- Create images table for reusable image management
+DROP TABLE IF EXISTS images;
+
+CREATE TABLE IF NOT EXISTS images (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    image_name VARCHAR(255) NOT NULL,
+    image_path VARCHAR(500) NOT NULL,
+    original_filename VARCHAR(255) NOT NULL,
+    file_size INT UNSIGNED NOT NULL,
+    mime_type VARCHAR(100) NOT NULL,
+    width INT UNSIGNED NULL,
+    height INT UNSIGNED NULL,
+    caption TEXT NULL,
+    alt_text VARCHAR(255) NULL,
+    uploaded_by INT UNSIGNED NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_uploaded_by (uploaded_by),
+    INDEX idx_created_at (created_at),
+    UNIQUE KEY unique_image_path (image_path)
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- Create news_views table
 CREATE TABLE IF NOT EXISTS news_views (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -274,3 +299,18 @@ CREATE TABLE IF NOT EXISTS news_views (
     FOREIGN KEY (news_id) REFERENCES news(id) ON DELETE CASCADE
 );
 
+-- Create contacts table for contact form submissions
+DROP TABLE IF EXISTS contacts;
+CREATE TABLE IF NOT EXISTS contacts (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    phone VARCHAR(20),
+    subject VARCHAR(100) NOT NULL,
+    message TEXT NOT NULL,
+    newsletter_subscribed BOOLEAN DEFAULT FALSE,
+    status ENUM('unread', 'read', 'replied') DEFAULT 'unread',
+    ip_address VARCHAR(45),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

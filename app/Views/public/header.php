@@ -57,7 +57,7 @@
             </ul>
             <form class="d-flex" method="get" action="/search">
                 <input class="form-control me-2" type="search" name="q" placeholder="সংবাদ খুঁজুন..." aria-label="Search" value="<?= esc($query ?? '', 'raw') ?>">
-                <button class="btn btn-outline-primary" type="submit">খুঁজুন</button>
+                <button class="btn btn-outline-danger" type="submit">খুঁজুন</button>
             </form>
         </div>
     </div>

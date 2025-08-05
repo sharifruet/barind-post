@@ -36,7 +36,7 @@ $customStyles = '
                 <div class="col-md-4">
                     <div class="card news-card h-100 border-0 shadow-sm">
                         <?php if (!empty($item['image_url'])): ?>
-                            <img src="<?= esc($item['image_url']) ?>" class="card-img-top news-img" alt="">
+                            <img src="<?= esc(get_image_url($item['image_url'])) ?>" class="card-img-top news-img" alt="<?= esc($item['image_alt_text'] ?? '') ?>">
                         <?php endif; ?>
                         <div class="card-body">
                             <h5 class="card-title">
@@ -61,9 +61,9 @@ $customStyles = '
             <p class="text-muted">Try different keywords or browse our categories</p>
             <div class="mt-3">
                 <?php foreach ($categories as $cat): ?>
-                    <a href="/section/<?= esc($cat['slug']) ?>" class="btn btn-outline-primary me-2 mb-2">
-                        <?= esc($cat['name']) ?>
-                    </a>
+                                    <a href="/section/<?= esc($cat['slug']) ?>" class="btn btn-outline-danger me-2 mb-2">
+                    <?= esc($cat['name']) ?>
+                </a>
                 <?php endforeach; ?>
             </div>
         </div>

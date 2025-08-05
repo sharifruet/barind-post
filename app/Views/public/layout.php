@@ -3,8 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title><?= isset($title) ? esc($title) : 'বারিন্দ পোস্ট' ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO Meta Tags -->
+    <title><?= isset($title) ? esc($title) : 'বারিন্দ পোস্ট - রাজশাহীর শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল' ?></title>
+    <meta name="description" content="<?= isset($meta_description) ? esc($meta_description) : 'বারিন্দ পোস্ট রাজশাহী অঞ্চলের একটি শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল। সর্বশেষ সংবাদ, রাজনীতি, অর্থনীতি, খেলাধুলা, বিনোদন ও অন্যান্য গুরুত্বপূর্ণ খবর জানুন।' ?>">
+    <meta name="keywords" content="<?= isset($meta_keywords) ? esc($meta_keywords) : 'বারিন্দ পোস্ট, রাজশাহী সংবাদ, বাংলাদেশ সংবাদ, অনলাইন নিউজ, বাংলা সংবাদ' ?>">
+    <meta name="author" content="বারিন্দ পোস্ট">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="bn">
+    <meta name="revisit-after" content="1 days">
+    <meta name="distribution" content="global">
+    <meta name="rating" content="general">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="<?= current_url() ?>">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="<?= isset($og_title) ? esc($og_title) : (isset($title) ? esc($title) : 'বারিন্দ পোস্ট') ?>">
+    <meta property="og:description" content="<?= isset($og_description) ? esc($og_description) : (isset($meta_description) ? esc($meta_description) : 'বারিন্দ পোস্ট রাজশাহী অঞ্চলের একটি শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল।') ?>">
+    <meta property="og:type" content="<?= isset($og_type) ? esc($og_type) : 'website' ?>">
+    <meta property="og:url" content="<?= current_url() ?>">
+    <meta property="og:site_name" content="বারিন্দ পোস্ট">
+    <meta property="og:locale" content="bn_BD">
+    <?php if (isset($og_image)): ?>
+    <meta property="og:image" content="<?= esc($og_image) ?>">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <?php endif; ?>
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="<?= isset($twitter_card) ? esc($twitter_card) : 'summary_large_image' ?>">
+    <meta name="twitter:title" content="<?= isset($twitter_title) ? esc($twitter_title) : (isset($title) ? esc($title) : 'বারিন্দ পোস্ট') ?>">
+    <meta name="twitter:description" content="<?= isset($twitter_description) ? esc($twitter_description) : (isset($meta_description) ? esc($meta_description) : 'বারিন্দ পোস্ট রাজশাহী অঞ্চলের একটি শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল।') ?>">
+    <?php if (isset($og_image)): ?>
+    <meta name="twitter:image" content="<?= esc($og_image) ?>">
+    <?php endif; ?>
+    
+    <!-- Additional SEO Meta Tags -->
+    <meta name="theme-color" content="#dc3545">
+    <meta name="msapplication-TileColor" content="#dc3545">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="বারিন্দ পোস্ট">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -14,6 +67,32 @@
     
     <!-- Bengali Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "NewsMediaOrganization",
+        "name": "বারিন্দ পোস্ট",
+        "url": "<?= base_url() ?>",
+        "logo": "<?= base_url('public/logo.png') ?>",
+        "description": "রাজশাহী অঞ্চলের একটি শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল",
+        "foundingDate": "2024",
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "রাজশাহী",
+            "addressCountry": "BD"
+        },
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "customer service",
+            "email": "info@barindpost.com"
+        },
+        "sameAs": [
+            "https://www.facebook.com/barindpost"
+        ]
+    }
+    </script>
     
     <style>
         /* Bengali font support */
@@ -50,10 +129,21 @@
         }
         
         .footer {
-            background: #222;
-            color: #fff;
+            background: #f8f9fa;
+            color: #333;
             padding: 2rem 0 1rem 0;
             margin-top: 3rem;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .footer-link {
+            color: #333 !important;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-link:hover {
+            color: #dc3545 !important;
+            text-decoration: underline !important;
         }
         
         /* Ad placeholder styles */

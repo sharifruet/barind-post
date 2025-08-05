@@ -1,3 +1,8 @@
+<?php 
+$userRole = session('user_role');
+$isReporter = $userRole === 'reporter';
+?>
+
 <nav class="col-md-2 d-none d-md-block sidebar py-4">
     <div class="position-sticky">
         <ul class="nav flex-column">
@@ -14,11 +19,21 @@
                 <a class="nav-link<?= (url_is('admin/tags*')) ? ' active' : '' ?>" href="/admin/tags"><i class="fas fa-tags me-2"></i>Manage Tags</a>
             </li>
             <li class="nav-item mb-2">
-                <a class="nav-link<?= (url_is('admin/users*')) ? ' active' : '' ?>" href="/admin/users"><i class="fas fa-users me-2"></i>Manage Users</a>
+                <a class="nav-link<?= (url_is('admin/contacts*')) ? ' active' : '' ?>" href="/admin/contacts"><i class="fas fa-envelope me-2"></i>Contact Messages</a>
             </li>
-            <li class="nav-item mb-2">
-                <a class="nav-link<?= (url_is('admin/roles*')) ? ' active' : '' ?>" href="/admin/roles"><i class="fas fa-shield-alt me-2"></i>Manage Roles</a>
-            </li>
+            <?php if ($userRole === 'admin'): ?>
+                <li class="nav-item mb-2">
+                    <a class="nav-link<?= (url_is('admin/photo-card-generator*')) ? ' active' : '' ?>" href="/admin/photo-card-generator"><i class="fas fa-image me-2"></i>Photo Card Generator</a>
+                </li>
+            <?php endif; ?>
+            <?php if (!$isReporter): ?>
+                <li class="nav-item mb-2">
+                    <a class="nav-link<?= (url_is('admin/users*')) ? ' active' : '' ?>" href="/admin/users"><i class="fas fa-users me-2"></i>Manage Users</a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link<?= (url_is('admin/roles*')) ? ' active' : '' ?>" href="/admin/roles"><i class="fas fa-shield-alt me-2"></i>Manage Roles</a>
+                </li>
+            <?php endif; ?>
             <li class="nav-item mt-4">
                 <a class="nav-link text-danger" href="/logout"><i class="fas fa-sign-out-alt me-2"></i>Logout</a>
             </li>

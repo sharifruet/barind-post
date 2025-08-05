@@ -31,8 +31,26 @@ $routes->post('/admin/news/edit/(:num)', 'Admin::newsUpdate/$1');
 $routes->post('/admin/news/delete/(:num)', 'Admin::newsDelete/$1');
 $routes->post('/admin/news/toggle-featured/(:num)', 'Admin::toggleFeatured/$1');
 
+// Photo Card Generation Routes (Admin only)
+$routes->get('/admin/photo-card-generator', 'Admin::photoCardGenerator');
+$routes->post('/admin/photo-card-generator/generate', 'Admin::generatePhotoCard');
+$routes->get('/admin/photo-card-test', 'Admin::photoCardTest');
+
 // Add route for listing news images
 $routes->get('/admin/news/images-list', 'Admin::newsImagesList');
+
+// Image Upload Routes
+$routes->post('/image-upload/upload', 'ImageUpload::upload');
+$routes->post('/image-upload/update-caption', 'ImageUpload::updateCaption');
+$routes->post('/image-upload/delete', 'ImageUpload::delete');
+$routes->post('/image-upload/set-featured', 'ImageUpload::setFeatured');
+$routes->get('/image-upload/get-images/(:num)', 'ImageUpload::getImages/$1');
+$routes->get('/image-upload/existing-images', 'ImageUpload::getExistingImages');
+
+// Reusable Image Routes
+$routes->get('/image-upload/all-images', 'ImageUpload::getAllImages');
+$routes->post('/image-upload/link-image', 'ImageUpload::linkImage');
+$routes->post('/image-upload/remove-from-news', 'ImageUpload::removeFromNews');
 
 $routes->get('/admin/tags', 'Admin::tags');
 $routes->post('/admin/tags/add', 'Admin::addTag');
@@ -46,9 +64,23 @@ $routes->post('/admin/categories/delete', 'Admin::deleteCategory');
 $routes->get('/admin/categories/edit/(:num)', 'Admin::editCategory/$1');
 $routes->post('/admin/categories/edit/(:num)', 'Admin::updateCategory/$1');
 
+// Admin Contacts Routes
+$routes->get('/admin/contacts', 'Admin::contacts');
+$routes->get('/admin/contacts/list', 'Admin::getContacts');
+$routes->get('/admin/contacts/(:num)', 'Admin::getContact/$1');
+$routes->post('/admin/contacts/(:num)/reply', 'Admin::replyToContact/$1');
+$routes->delete('/admin/contacts/(:num)', 'Admin::deleteContact/$1');
+$routes->get('/admin/contacts/export', 'Admin::exportContacts');
+
 // Public Site Routes
 $routes->get('/section/(:segment)', 'PublicSite::section/$1');
 $routes->get('/news/(:any)', 'PublicSite::news/$1');
 $routes->get('/news-bn/(:any)', 'PublicSite::newsByTitle/$1');
 $routes->get('/tag/(:segment)', 'PublicSite::tag/$1');
 $routes->get('/search', 'PublicSite::search');
+$routes->get('/privacy', 'PublicSite::privacy');
+$routes->get('/terms', 'PublicSite::terms');
+$routes->get('/contact', 'PublicSite::contact');
+$routes->post('/contact', 'PublicSite::submitContact');
+$routes->get('/ads', 'PublicSite::ads');
+$routes->get('/barind-post', 'PublicSite::about');

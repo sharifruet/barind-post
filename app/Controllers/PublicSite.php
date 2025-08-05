@@ -86,10 +86,10 @@ class PublicSite extends Controller
         // Try multiple approaches to find the news
         $news = null;
         
-        // First try with the original slug
+        // First try with the original slug (works for unique codes and Bengali slugs)
         $news = $newsModel->where('slug', $slug)->where('status', 'published')->first();
         
-        // If not found, try with URL decoded slug
+        // If not found, try with URL decoded slug (for Bengali slugs)
         if (!$news) {
             $decodedSlug = urldecode($slug);
             $news = $newsModel->where('slug', $decodedSlug)->where('status', 'published')->first();
@@ -106,9 +106,18 @@ class PublicSite extends Controller
             $news = $newsModel->where('title', $slug)->where('status', 'published')->first();
         }
         
+        // If still not found, try with URL decoded title
+        if (!$news) {
+            $decodedTitle = urldecode($slug);
+            $news = $newsModel->where('title', $decodedTitle)->where('status', 'published')->first();
+        }
+        
         if (!$news) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
+        
+        // Track the view
+        $this->trackNewsView($news['id']);
         
         return view('public/news', ['news' => $news, 'categories' => $categories]);
     }
@@ -128,6 +137,9 @@ class PublicSite extends Controller
         if (!$news) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
+        
+        // Track the view
+        $this->trackNewsView($news['id']);
         
         return view('public/news', ['news' => $news, 'categories' => $categories]);
     }
@@ -179,6 +191,191 @@ class PublicSite extends Controller
             'query' => $query,
             'news' => $news,
             'categories' => $categories
+        ]);
+    }
+
+    public function privacy()
+    {
+        $categoryModel = new CategoryModel();
+        $categories = $categoryModel->findAll();
+        
+        return view('public/privacy', [
+            'categories' => $categories
+        ]);
+    }
+
+    public function terms()
+    {
+        $categoryModel = new CategoryModel();
+        $categories = $categoryModel->findAll();
+        
+        return view('public/terms', [
+            'categories' => $categories
+        ]);
+    }
+
+    public function contact()
+    {
+        $categoryModel = new CategoryModel();
+        $categories = $categoryModel->findAll();
+        
+        return view('public/contact', [
+            'categories' => $categories
+        ]);
+    }
+
+    public function submitContact()
+    {
+        // Check if it's a POST request
+        if ($this->request->getMethod() !== 'post') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Invalid request method']);
+        }
+
+        // Get form data
+        $name = $this->request->getPost('name');
+        $email = $this->request->getPost('email');
+        $phone = $this->request->getPost('phone');
+        $subject = $this->request->getPost('subject');
+        $message = $this->request->getPost('message');
+        $newsletter = $this->request->getPost('newsletter') ? 1 : 0;
+
+        // Validate required fields
+        if (empty($name) || empty($email) || empty($subject) || empty($message)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'সব প্রয়োজনীয় তথ্য পূরণ করুন']);
+        }
+
+        // Validate email
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'সঠিক ইমেইল ঠিকানা দিন']);
+        }
+
+        try {
+            // Save to database (you'll need to create a contacts table)
+            $db = \Config\Database::connect();
+            
+            $data = [
+                'name' => $name,
+                'email' => $email,
+                'phone' => $phone,
+                'subject' => $subject,
+                'message' => $message,
+                'newsletter_subscribed' => $newsletter,
+                'created_at' => date('Y-m-d H:i:s'),
+                'ip_address' => $this->request->getIPAddress()
+            ];
+
+            $db->table('contacts')->insert($data);
+
+            // Send email notification (optional)
+            // $this->sendContactEmail($data);
+
+            return $this->response->setJSON([
+                'success' => true, 
+                'message' => 'আপনার বার্তা সফলভাবে পাঠানো হয়েছে। আমরা শীঘ্রই আপনার সাথে যোগাযোগ করব।'
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false, 
+                'message' => 'দুঃখিত, একটি সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।'
+            ]);
+        }
+    }
+
+    public function ads()
+    {
+        $categoryModel = new CategoryModel();
+        $categories = $categoryModel->findAll();
+        
+        return view('public/ads', [
+            'categories' => $categories
+        ]);
+    }
+
+    public function about()
+    {
+        $categoryModel = new CategoryModel();
+        $categories = $categoryModel->findAll();
+        return view('public/about', ['categories' => $categories]);
+    }
+
+    public function sitemap()
+    {
+        $newsModel = new NewsModel();
+        $categoryModel = new CategoryModel();
+        
+        // Get all published news
+        $news = $newsModel->where('status', 'published')
+                         ->orderBy('published_at', 'DESC')
+                         ->findAll();
+        
+        // Get all categories
+        $categories = $categoryModel->findAll();
+        
+        $this->response->setContentType('application/xml');
+        
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+        
+        // Homepage
+        $xml .= '  <url>' . "\n";
+        $xml .= '    <loc>' . base_url() . '</loc>' . "\n";
+        $xml .= '    <lastmod>' . date('Y-m-d') . '</lastmod>' . "\n";
+        $xml .= '    <changefreq>daily</changefreq>' . "\n";
+        $xml .= '    <priority>1.0</priority>' . "\n";
+        $xml .= '  </url>' . "\n";
+        
+        // Static pages
+        $staticPages = ['about', 'privacy', 'terms', 'contact', 'ads'];
+        foreach ($staticPages as $page) {
+            $xml .= '  <url>' . "\n";
+            $xml .= '    <loc>' . base_url($page) . '</loc>' . "\n";
+            $xml .= '    <lastmod>' . date('Y-m-d') . '</lastmod>' . "\n";
+            $xml .= '    <changefreq>monthly</changefreq>' . "\n";
+            $xml .= '    <priority>0.5</priority>' . "\n";
+            $xml .= '  </url>' . "\n";
+        }
+        
+        // Category pages
+        foreach ($categories as $category) {
+            $xml .= '  <url>' . "\n";
+            $xml .= '    <loc>' . base_url('section/' . $category['slug']) . '</loc>' . "\n";
+            $xml .= '    <lastmod>' . date('Y-m-d') . '</lastmod>' . "\n";
+            $xml .= '    <changefreq>daily</changefreq>' . "\n";
+            $xml .= '    <priority>0.8</priority>' . "\n";
+            $xml .= '  </url>' . "\n";
+        }
+        
+        // News articles
+        foreach ($news as $article) {
+            $xml .= '  <url>' . "\n";
+            $xml .= '    <loc>' . base_url('news/' . $article['slug']) . '</loc>' . "\n";
+            $xml .= '    <lastmod>' . date('Y-m-d', strtotime($article['updated_at'] ?? $article['published_at'])) . '</lastmod>' . "\n";
+            $xml .= '    <changefreq>weekly</changefreq>' . "\n";
+            $xml .= '    <priority>0.7</priority>' . "\n";
+            $xml .= '  </url>' . "\n";
+        }
+        
+        $xml .= '</urlset>';
+        
+        return $this->response->setBody($xml);
+    }
+    
+    /**
+     * Track news view in the database
+     */
+    private function trackNewsView($newsId)
+    {
+        $db = \Config\Database::connect();
+        
+        // Get visitor's IP address
+        $ipAddress = $this->request->getIPAddress();
+        
+        // Insert view record
+        $db->table('news_views')->insert([
+            'news_id' => $newsId,
+            'viewed_at' => date('Y-m-d H:i:s'),
+            'viewer_ip' => $ipAddress
         ]);
     }
 } 

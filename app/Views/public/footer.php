@@ -1,14 +1,39 @@
 <footer class="footer mt-5">
     <div class="container text-center">
-        <?php if (isset($categories) && is_array($categories)): ?>
-            <div class="mb-2">
-                <?php foreach ($categories as $cat): ?>
-                    <a href="/section/<?= esc($cat['slug']) ?>" class="text-light me-3 text-decoration-none small">
-                        <?= esc($cat['name'], 'raw') ?>
-                    </a>
-                <?php endforeach; ?>
+        <!-- Social Media Section -->
+        <div class="mb-3">
+            <h6 class="text-dark mb-2">সামাজিক যোগাযোগে আমাদের খুঁজুন</h6>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="https://www.facebook.com/barindpost" class="text-dark footer-link" title="Facebook">
+                    <i class="fab fa-facebook fa-lg"></i>
+                </a>
+                <a href="#" class="text-dark footer-link" title="Twitter">
+                    <i class="fab fa-twitter fa-lg"></i>
+                </a>
+                <a href="#" class="text-dark footer-link" title="YouTube">
+                    <i class="fab fa-youtube fa-lg"></i>
+                </a>
+                <a href="#" class="text-dark footer-link" title="Instagram">
+                    <i class="fab fa-instagram fa-lg"></i>
+                </a>
             </div>
-        <?php endif; ?>
-        <div class="small">&copy; <?= date('Y') ?> বারিন্দ পোস্ট। সর্বস্বত্ব সংরক্ষিত।</div>
+        </div>
+        
+        <!-- Footer Line -->
+        <hr class="my-3" style="border-color: #dee2e6;">
+        
+        <!-- Footer Links -->
+        <div class="mb-2">
+            <a href="/barind-post" class="text-dark me-3 text-decoration-none small footer-link">বারিন্দ পোস্ট</a>
+            <span class="text-dark">|</span>
+            <a href="/privacy" class="text-dark me-3 text-decoration-none small footer-link">গোপনীয়তা নীতি</a>
+            <span class="text-dark">|</span>
+            <a href="/terms" class="text-dark me-3 text-decoration-none small footer-link">ব্যবহারের শর্তাবলী</a>
+            <span class="text-dark">|</span>
+            <a href="/contact" class="text-dark me-3 text-decoration-none small footer-link">যোগাযোগ</a>
+            <span class="text-dark">|</span>
+            <a href="/ads" class="text-dark me-3 text-decoration-none small footer-link">বিজ্ঞাপন</a>
+        </div>
+        <div class="small text-dark">&copy; <?= date('Y') ?> বারিন্দ পোস্ট। সর্বস্বত্ব সংরক্ষিত।</div>
     </div>
 </footer> 

@@ -1,5 +1,19 @@
 <?= $this->extend('admin/layout') ?>
 <?= $this->section('content') ?>
+
+<?php 
+$userRole = session('user_role');
+$isReporter = $userRole === 'reporter';
+?>
+
+<?php if ($isReporter): ?>
+    <div class="alert alert-info mb-4">
+        <i class="fas fa-info-circle"></i>
+        <strong>Reporter Dashboard:</strong> You can only view and manage your own news articles as drafts. 
+        Your articles will be reviewed by editors before publication.
+    </div>
+<?php endif; ?>
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>News Articles</h2>
     <a href="/admin/news/create" class="btn btn-primary">Create News</a>
@@ -29,7 +43,9 @@
                     <th>Category</th>
                     <th>Status</th>
                     <th>Featured</th>
-                    <th>Author</th>
+                    <?php if (!$isReporter): ?>
+                        <th>Author</th>
+                    <?php endif; ?>
                     <th>Published At</th>
                     <th>Actions</th>
                 </tr>
@@ -57,7 +73,9 @@
                                 <span class="text-muted">-</span>
                             <?php endif; ?>
                         </td>
-                        <td><?= esc($item['author_id']) ?></td>
+                        <?php if (!$isReporter): ?>
+                            <td><?= esc($userMap[$item['author_id']] ?? 'Unknown') ?></td>
+                        <?php endif; ?>
                         <td><?= esc($item['published_at']) ?></td>
                         <td>
                             <a href="/admin/news/edit/<?= esc($item['id']) ?>" class="btn btn-sm btn-warning">Edit</a>

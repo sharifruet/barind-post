@@ -33,7 +33,7 @@ $customStyles = '
             <div class="col-md-4">
                 <div class="card news-card h-100 border-0 shadow-sm">
                     <?php if (!empty($item['image_url'])): ?>
-                        <img src="<?= esc($item['image_url']) ?>" class="card-img-top news-img" alt="">
+                        <img src="<?= esc(get_image_url($item['image_url'])) ?>" class="card-img-top news-img" alt="<?= esc($item['image_alt_text'] ?? '') ?>">
                     <?php endif; ?>
                     <div class="card-body">
                         <h5 class="card-title">
