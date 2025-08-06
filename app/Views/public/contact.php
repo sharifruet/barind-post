@@ -19,7 +19,8 @@ $title = 'যোগাযোগ - বারিন্দ পোস্ট';
                             <div class="mb-3">
                                 <i class="fas fa-map-marker-alt text-danger me-2"></i>
                                 <strong>ঠিকানা:</strong><br>
-                                গোদাগাড়ী, রাজশাহী, বাংলাদেশ
+                                অস্থায়ী কার্যালয়<br>
+                                মহিশালবাড়ী, গোদাগাড়ী, রাজশাহী, বাংলাদেশ
                             </div>
                             <!--
                             <div class="mb-3">
@@ -31,7 +32,8 @@ $title = 'যোগাযোগ - বারিন্দ পোস্ট';
                             <div class="mb-3">
                                 <i class="fas fa-envelope text-danger me-2"></i>
                                 <strong>ইমেইল:</strong><br>
-                                info@barindpost.com
+                                অফিস: info@barindpost.com<br>
+                                বার্তা বিভাগ: news@barindpost.com
                             </div>
                             <!--
                             <div class="mb-3">
@@ -45,27 +47,27 @@ $title = 'যোগাযোগ - বারিন্দ পোস্ট';
                         <div class="col-md-6 mb-4">
                             <h3 class="h5 text-danger mb-3">সামাজিক যোগাযোগ</h3>
                             <div class="mb-2">
-                                <a href="#" class="text-decoration-none">
+                                <a href="https://facebook.com/barindpost" target="_blank" class="text-decoration-none">
                                     <i class="fab fa-facebook text-danger me-2"></i>
                                     Facebook
                                 </a>
                             </div>
                             <div class="mb-2">
-                                <a href="#" class="text-decoration-none">
-                                    <i class="fab fa-twitter text-danger me-2"></i>
-                                    Twitter
-                                </a>
-                            </div>
-                            <div class="mb-2">
-                                <a href="#" class="text-decoration-none">
-                                    <i class="fab fa-youtube text-danger me-2"></i>
-                                    YouTube
-                                </a>
-                            </div>
-                            <div class="mb-2">
-                                <a href="#" class="text-decoration-none">
+                                <a href="https://instagram.com/barindpost" target="_blank" class="text-decoration-none">
                                     <i class="fab fa-instagram text-danger me-2"></i>
                                     Instagram
+                                </a>
+                            </div>
+                            <div class="mb-2">
+                                <a href="https://x.com/BarindPost" target="_blank" class="text-decoration-none">
+                                    <i class="fa-brands fa-x-twitter text-danger me-2"></i>
+                                    X (Twitter)
+                                </a>
+                            </div>
+                            <div class="mb-2">
+                                <a href="https://barindpost.com" target="_blank" class="text-decoration-none">
+                                    <i class="fas fa-globe text-danger me-2"></i>
+                                    ওয়েবসাইট
                                 </a>
                             </div>
                         </div>

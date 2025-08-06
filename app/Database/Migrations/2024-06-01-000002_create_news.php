@@ -81,7 +81,7 @@ class Migration_create_news extends Migration
             'language' => [
                 'type' => 'VARCHAR',
                 'constraint' => '10',
-                'default' => 'en',
+                'default' => 'bn',
             ],
             'created_at' => [
                 'type' => 'DATETIME',

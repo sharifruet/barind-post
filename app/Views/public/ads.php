@@ -209,7 +209,7 @@ $title = 'বিজ্ঞাপন - বারিন্দ পোস্ট';
                                 <div class="card">
                                     <div class="card-body">
                                         <h6 class="text-danger">বিজ্ঞাপন বিভাগ</h6>
-                                        <p class="mb-1"><strong>ইমেইল:</strong> info@barindpost.com</p>
+                                        <p class="mb-1"><strong>ইমেইল:</strong> অফিস: info@barindpost.com<br>বার্তা বিভাগ: news@barindpost.com</p>
                                         <!--
                                         <p class="mb-1"><strong>ফোন:</strong> +880-XXX-XXXXXXX</p>
                                         -->

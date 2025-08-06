@@ -259,6 +259,11 @@ class Admin extends BaseAdminController
         $data['image_url'] = $this->request->getPost('image_url') ?: null;
         $data['image_caption'] = $this->request->getPost('image_caption') ?: null;
         $data['image_alt_text'] = $this->request->getPost('image_alt_text') ?: null;
+        
+        // Set default language to Bangla if not specified
+        if (empty($data['language'])) {
+            $data['language'] = 'bn';
+        }
         $newsId = $newsModel->insert($data, true);
         
         // Handle tags

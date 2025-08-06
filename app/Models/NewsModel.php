@@ -16,5 +16,12 @@ class NewsModel extends Model
     protected $createdField = 'created_at';
     protected $updatedField = 'updated_at';
 
+    // Set default values
+    protected $defaultValues = [
+        'language' => 'bn', // Bangla
+        'status' => 'draft',
+        'featured' => false
+    ];
+
     // Optionally, add methods for tags, category, author relationships
 } 

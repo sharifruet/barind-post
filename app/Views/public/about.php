@@ -221,8 +221,8 @@ $title = 'আমাদের সম্পর্কে - বারিন্দ �
                                 <div class="card">
                                     <div class="card-body">
                                         <h6 class="text-danger">অফিস</h6>
-                                        <p class="mb-1"><strong>ঠিকানা:</strong> গোদাগাড়ী, রাজশাহী, বাংলাদেশ</p>
-                                        <p class="mb-1"><strong>ইমেইল:</strong> info@barindpost.com</p>
+                                        <p class="mb-1"><strong>ঠিকানা:</strong> অস্থায়ী কার্যালয়<br>মহিশালবাড়ী, গোদাগাড়ী, রাজশাহী, বাংলাদেশ</p>
+                                        <p class="mb-1"><strong>ইমেইল:</strong> অফিস: info@barindpost.com<br>বার্তা বিভাগ: news@barindpost.com</p>
                                         <p class="mb-1"><strong>কর্মসময়:</strong> সকাল ৯টা - সন্ধ্যা ৬টা</p>
                                     </div>
                                 </div>
@@ -232,14 +232,14 @@ $title = 'আমাদের সম্পর্কে - বারিন্দ �
                                     <div class="card-body">
                                         <h6 class="text-danger">সামাজিক যোগাযোগ</h6>
                                         <div class="d-flex gap-2">
-                                            <a href="#" class="btn btn-outline-danger btn-sm">
+                                            <a href="https://facebook.com/barindpost" target="_blank" class="btn btn-outline-danger btn-sm">
                                                 <i class="fab fa-facebook"></i> Facebook
                                             </a>
-                                            <a href="#" class="btn btn-outline-info btn-sm">
-                                                <i class="fab fa-twitter"></i> Twitter
+                                            <a href="https://instagram.com/barindpost" target="_blank" class="btn btn-outline-danger btn-sm">
+                                                <i class="fab fa-instagram"></i> Instagram
                                             </a>
-                                            <a href="#" class="btn btn-outline-danger btn-sm">
-                                                <i class="fab fa-youtube"></i> YouTube
+                                            <a href="https://x.com/BarindPost" target="_blank" class="btn btn-outline-info btn-sm">
+                                                <i class="fa-brands fa-x-twitter"></i> X
                                             </a>
                                         </div>
                                     </div>

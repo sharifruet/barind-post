@@ -101,9 +101,9 @@ $title = 'ব্যবহারের শর্তাবলী - বারিন
                         <h2 class="h4 text-danger mb-3">১০. যোগাযোগ</h2>
                         <p>ব্যবহারের শর্তাবলী সম্পর্কে কোন প্রশ্ন থাকলে আমাদের সাথে যোগাযোগ করুন:</p>
                         <ul>
-                            <li><strong>ইমেইল:</strong> info@barindpost.com</li>
+                                                            <li><strong>ইমেইল:</strong> অফিস: info@barindpost.com<br>বার্তা বিভাগ: news@barindpost.com</li>
                            <!-- <li><strong>ফোন:</strong> +880-XXX-XXXXXXX</li> -->
-                            <li><strong>ঠিকানা:</strong> গোদাগাড়ী, রাজশাহী, বাংলাদেশ</li>
+                                                          <li><strong>ঠিকানা:</strong> অস্থায়ী কার্যালয়<br>মহিশালবাড়ী, গোদাগাড়ী, রাজশাহী, বাংলাদেশ</li>
                         </ul>
                     </div>
 

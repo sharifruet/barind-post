@@ -68,6 +68,38 @@ $customStyles = '
         .news-image-container figcaption {
             padding: 0;
         }
+        /* Tweet embed styles for public view */
+        .tweet-embed-container {
+            margin: 20px 0;
+            text-align: center;
+            max-width: 100%;
+            overflow: hidden;
+        }
+        .tweet-embed-placeholder {
+            display: inline-block;
+            max-width: 100%;
+            min-height: 200px;
+            background: #f8f9fa;
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+        }
+        .tweet-embed-placeholder:empty::before {
+            content: "Loading tweet...";
+            color: #657786;
+            font-style: italic;
+        }
+        /* Twitter widget responsive styles */
+        .twitter-tweet {
+            margin: 0 auto !important;
+            max-width: 100% !important;
+        }
+        /* Ensure tweets are responsive */
+        .twitter-tweet-rendered {
+            max-width: 100% !important;
+            width: auto !important;
+        }
 ';
 
 $customScripts = '

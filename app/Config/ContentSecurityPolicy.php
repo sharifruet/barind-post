@@ -54,7 +54,7 @@ class ContentSecurityPolicy extends BaseConfig
      *
      * @var list<string>|string
      */
-    public $scriptSrc = ['self', 'unsafe-inline', 'unsafe-eval', 'https://cdn.jsdelivr.net', 'https://code.jquery.com', 'https://cdn.ckeditor.com', 'https://cdnjs.cloudflare.com'];
+    public $scriptSrc = ['self', 'unsafe-inline', 'unsafe-eval', 'https://cdn.jsdelivr.net', 'https://code.jquery.com', 'https://cdn.ckeditor.com', 'https://cdnjs.cloudflare.com', 'https://platform.twitter.com'];
 
     /**
      * Lists allowed stylesheets' URLs.
@@ -124,7 +124,7 @@ class ContentSecurityPolicy extends BaseConfig
      *
      * @var list<string>|string|null
      */
-    public $frameSrc;
+    public $frameSrc = ['self', 'https://platform.twitter.com', 'https://twitter.com'];
 
     /**
      * Restricts the origins allowed to deliver video and audio.
