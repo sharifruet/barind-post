@@ -70,11 +70,23 @@ class PublicSite extends Controller
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
         $news = $newsModel->where('category_id', $category['id'])->where('status', 'published')->orderBy('published_at', 'DESC')->findAll(20);
-        return view('public/section', [
+        
+        // Set meta tags for the section
+        $data = [
             'category' => $category,
             'news' => $news,
-            'categories' => $categories
-        ]);
+            'categories' => $categories,
+            'title' => $category['name'] . ' - বারিন্দ পোস্ট',
+            'meta_description' => $category['name'] . ' বিভাগের সর্বশেষ সংবাদ। বারিন্দ পোস্টে প্রকাশিত ' . $category['name'] . ' সম্পর্কিত সব খবর জানুন।',
+            'meta_keywords' => 'বারিন্দ পোস্ট, ' . $category['name'] . ', রাজশাহী সংবাদ, বাংলাদেশ সংবাদ',
+            'og_title' => $category['name'] . ' - বারিন্দ পোস্ট',
+            'og_description' => $category['name'] . ' বিভাগের সর্বশেষ সংবাদ। বারিন্দ পোস্টে প্রকাশিত ' . $category['name'] . ' সম্পর্কিত সব খবর জানুন।',
+            'og_type' => 'website',
+            'twitter_title' => $category['name'] . ' - বারিন্দ পোস্ট',
+            'twitter_description' => $category['name'] . ' বিভাগের সর্বশেষ সংবাদ। বারিন্দ পোস্টে প্রকাশিত ' . $category['name'] . ' সম্পর্কিত সব খবর জানুন।'
+        ];
+        
+        return view('public/section', $data);
     }
 
     public function news($slug)
@@ -83,13 +95,10 @@ class PublicSite extends Controller
         $categoryModel = new CategoryModel();
         $categories = $categoryModel->findAll();
         
-        // Try multiple approaches to find the news
-        $news = null;
-        
-        // First try with the original slug (works for unique codes and Bengali slugs)
+        // Try to find the news article
         $news = $newsModel->where('slug', $slug)->where('status', 'published')->first();
         
-        // If not found, try with URL decoded slug (for Bengali slugs)
+        // If not found, try with URL decoded slug
         if (!$news) {
             $decodedSlug = urldecode($slug);
             $news = $newsModel->where('slug', $decodedSlug)->where('status', 'published')->first();
@@ -101,7 +110,7 @@ class PublicSite extends Controller
             $news = $newsModel->where('slug', $rawSlug)->where('status', 'published')->first();
         }
         
-        // If still not found, try to find by title (for Bengali slugs)
+        // If still not found, try to find by title
         if (!$news) {
             $news = $newsModel->where('title', $slug)->where('status', 'published')->first();
         }
@@ -119,7 +128,24 @@ class PublicSite extends Controller
         // Track the view
         $this->trackNewsView($news['id']);
         
-        return view('public/news', ['news' => $news, 'categories' => $categories]);
+        // Set meta tags for the news article
+        $data = [
+            'news' => $news,
+            'categories' => $categories,
+            'title' => $news['title'] . ' - বারিন্দ পোস্ট',
+            'meta_description' => !empty($news['lead_text']) ? $news['lead_text'] : $news['title'] . ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।',
+            'meta_keywords' => 'বারিন্দ পোস্ট, ' . $news['title'] . ', রাজশাহী সংবাদ, বাংলাদেশ সংবাদ',
+            'og_title' => $news['title'],
+            'og_description' => !empty($news['lead_text']) ? $news['lead_text'] : $news['title'] . ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।',
+            'og_type' => 'article',
+            'og_image' => !empty($news['image_url']) ? get_image_url($news['image_url']) : base_url('public/logo.png'),
+            'twitter_card' => 'summary_large_image',
+            'twitter_title' => $news['title'],
+            'twitter_description' => !empty($news['lead_text']) ? $news['lead_text'] : $news['title'] . ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।',
+            'twitter_image' => !empty($news['image_url']) ? get_image_url($news['image_url']) : base_url('public/logo.png')
+        ];
+        
+        return view('public/news', $data);
     }
 
     public function newsByTitle($title)

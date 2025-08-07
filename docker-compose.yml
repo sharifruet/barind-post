@@ -23,7 +23,7 @@ services:
       MYSQL_USER: barinduser
       MYSQL_PASSWORD: barindpass
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - db_data:/var/lib/mysql
       - ./dbscript.sql:/docker-entrypoint-initdb.d/dbscript.sql:ro

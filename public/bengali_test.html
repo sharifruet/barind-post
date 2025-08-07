@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bengali Text Test</title>
+    <style>
+        body {
+            font-family: 'Noto Sans Bengali', Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .bengali-text {
+            font-size: 24px;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+        }
+    </style>
+    <!-- Load Google Fonts for Bengali -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>Bengali Text Rendering Test</h1>
+        
+        <h2>HTML Text Rendering:</h2>
+        <div class="bengali-text">বারিন্দ পোস্ট</div>
+        <div class="bengali-text">গোদাগাড়ী, রাজশাহী</div>
+        <div class="bengali-text">বাংলা সংবাদ</div>
+        <div class="bengali-text">শীর্ষস্থানীয়</div>
+        <div class="bengali-text">অনলাইন পোর্টাল</div>
+        
+        <h2>Canvas Text Rendering:</h2>
+        <canvas id="testCanvas" width="400" height="200"></canvas>
+        
+        <button onclick="testCanvasRendering()">Test Canvas Rendering</button>
+    </div>
+
+    <script>
+        function testCanvasRendering() {
+            const canvas = document.getElementById('testCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Test texts
+            const texts = [
+                "বারিন্দ পোস্ট",
+                "গোদাগাড়ী, রাজশাহী",
+                "বাংলা সংবাদ",
+                "শীর্ষস্থানীয়"
+            ];
+            
+            ctx.font = '20px "Noto Sans Bengali", Arial, sans-serif';
+            ctx.fillStyle = 'black';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            texts.forEach((text, index) => {
+                const y = 30 + (index * 40);
+                ctx.fillText(text, canvas.width / 2, y);
+            });
+            
+            console.log('Canvas rendering completed');
+        }
+        
+        // Auto-test on load
+        window.onload = function() {
+            setTimeout(testCanvasRendering, 1000);
+        };
+    </script>
+</body>
+</html> 

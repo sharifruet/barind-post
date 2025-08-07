@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Bengali Overlay</title>
+    <style>
+        body {
+            font-family: 'Noto Sans Bengali', Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .controls {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .canvas-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            max-width: 100%;
+            height: auto;
+        }
+        .download-btn {
+            background: #28a745;
+        }
+        .download-btn:hover {
+            background: #1e7e34;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .image-preview {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .image-preview img {
+            max-width: 200px;
+            border: 1px solid #ddd;
+            margin: 10px;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>Simple Bengali Overlay Generator</h1>
+        
+        <div id="status" class="status info">Loading images...</div>
+        
+        <div class="image-preview">
+            <h3>Image Preview:</h3>
+            <img id="basePreview" src="Slide1.jpeg" alt="Base Image" style="display: none;">
+            <img id="overlayPreview" src="noname.png" alt="Overlay Image" style="display: none;">
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="bengaliText">Bengali Text:</label>
+                <input type="text" id="bengaliText" value="বারিন্দ পোস্ট" placeholder="Enter Bengali text here">
+            </div>
+            
+            <div class="control-group">
+                <label for="fontSize">Font Size:</label>
+                <input type="number" id="fontSize" value="24" min="12" max="72">
+            </div>
+            
+            <div class="control-group">
+                <label for="textColor">Text Color:</label>
+                <input type="color" id="textColor" value="#ffffff">
+            </div>
+            
+            <div class="control-group">
+                <label for="shadowColor">Shadow Color:</label>
+                <input type="color" id="shadowColor" value="#000000">
+            </div>
+            
+            <div class="control-group">
+                <label for="position">Position:</label>
+                <select id="position">
+                    <option value="bottom-left">Bottom Left</option>
+                    <option value="bottom-right">Bottom Right</option>
+                    <option value="top-left">Top Left</option>
+                    <option value="top-right">Top Right</option>
+                    <option value="center">Center</option>
+                </select>
+            </div>
+            
+            <button onclick="generateOverlay()" id="generateBtn">Generate Overlay</button>
+            <button class="download-btn" onclick="downloadImage()" id="downloadBtn" disabled>Download Image</button>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="overlayCanvas" width="720" height="405"></canvas>
+        </div>
+    </div>
+
+    <script>
+        let baseImage = null;
+        let overlayImage = null;
+        let canvas = null;
+        let ctx = null;
+
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        function showImagePreviews() {
+            document.getElementById('basePreview').style.display = 'inline-block';
+            document.getElementById('overlayPreview').style.display = 'inline-block';
+        }
+
+        // Load images when page loads
+        window.onload = function() {
+            canvas = document.getElementById('overlayCanvas');
+            ctx = canvas.getContext('2d');
+            
+            updateStatus('Loading images...', 'info');
+            
+            // Load base image
+            baseImage = new Image();
+            baseImage.crossOrigin = 'anonymous'; // Try to avoid CORS issues
+            baseImage.onload = function() {
+                console.log('Base image loaded successfully');
+                updateStatus('Base image loaded, loading overlay...', 'info');
+            };
+            baseImage.onerror = function() {
+                console.error('Failed to load base image');
+                updateStatus('Failed to load base image', 'error');
+            };
+            baseImage.src = 'Slide1.jpeg';
+            
+            // Load overlay image
+            overlayImage = new Image();
+            overlayImage.crossOrigin = 'anonymous'; // Try to avoid CORS issues
+            overlayImage.onload = function() {
+                console.log('Overlay image loaded successfully');
+                updateStatus('Images loaded successfully!', 'success');
+                showImagePreviews();
+                generateOverlay(); // Auto-generate
+            };
+            overlayImage.onerror = function() {
+                console.error('Failed to load overlay image');
+                updateStatus('Failed to load overlay image', 'error');
+            };
+            overlayImage.src = 'noname.png';
+        };
+
+        function drawBaseImage() {
+            try {
+                ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
+                console.log('Base image drawn successfully');
+            } catch (error) {
+                console.error('Error drawing base image:', error);
+                updateStatus('Error drawing base image', 'error');
+            }
+        }
+
+        function generateOverlay() {
+            if (!baseImage || !overlayImage) {
+                updateStatus('Images not loaded yet', 'error');
+                return;
+            }
+
+            updateStatus('Generating overlay...', 'info');
+            
+            try {
+                // Clear canvas and draw base image
+                drawBaseImage();
+                
+                // Get overlay position
+                const position = document.getElementById('position').value;
+                let overlayX = 0;
+                let overlayY = 0;
+                
+                const overlayWidth = overlayImage.width;
+                const overlayHeight = overlayImage.height;
+                
+                switch(position) {
+                    case 'bottom-left':
+                        overlayX = 0;
+                        overlayY = canvas.height - overlayHeight;
+                        break;
+                    case 'bottom-right':
+                        overlayX = canvas.width - overlayWidth;
+                        overlayY = canvas.height - overlayHeight;
+                        break;
+                    case 'top-left':
+                        overlayX = 0;
+                        overlayY = 0;
+                        break;
+                    case 'top-right':
+                        overlayX = canvas.width - overlayWidth;
+                        overlayY = 0;
+                        break;
+                    case 'center':
+                        overlayX = (canvas.width - overlayWidth) / 2;
+                        overlayY = (canvas.height - overlayHeight) / 2;
+                        break;
+                }
+                
+                // Draw overlay image
+                ctx.drawImage(overlayImage, overlayX, overlayY);
+                console.log('Overlay image drawn successfully');
+                
+                // Add Bengali text
+                addBengaliText(overlayX, overlayY, overlayWidth, overlayHeight);
+                
+                updateStatus('Overlay generated successfully!', 'success');
+                document.getElementById('downloadBtn').disabled = false;
+            } catch (error) {
+                console.error('Error generating overlay:', error);
+                updateStatus('Error generating overlay: ' + error.message, 'error');
+            }
+        }
+
+        function addBengaliText(overlayX, overlayY, overlayWidth, overlayHeight) {
+            const text = document.getElementById('bengaliText').value;
+            const fontSize = parseInt(document.getElementById('fontSize').value);
+            const textColor = document.getElementById('textColor').value;
+            const shadowColor = document.getElementById('shadowColor').value;
+            
+            // Set font for Bengali text
+            ctx.font = `${fontSize}px 'Noto Sans Bengali', Arial, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Calculate text position (center of overlay)
+            const textX = overlayX + overlayWidth / 2;
+            const textY = overlayY + overlayHeight / 2;
+            
+            // Add shadow
+            ctx.fillStyle = shadowColor;
+            ctx.fillText(text, textX + 2, textY + 2);
+            
+            // Add main text
+            ctx.fillStyle = textColor;
+            ctx.fillText(text, textX, textY);
+            
+            console.log('Bengali text added successfully');
+        }
+
+        function downloadImage() {
+            try {
+                const link = document.createElement('a');
+                link.download = 'bengali_overlay.png';
+                link.href = canvas.toDataURL();
+                link.click();
+                updateStatus('Image downloaded successfully!', 'success');
+            } catch (error) {
+                console.error('Error downloading image:', error);
+                updateStatus('Error downloading image: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html> 

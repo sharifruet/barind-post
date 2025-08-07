@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Image Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .image-test { margin: 20px 0; }
+        img { max-width: 300px; border: 1px solid #ccc; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Image Loading Debug</h1>
+    
+    <div class="image-test">
+        <h3>Slide1.jpeg</h3>
+        <img id="slide1" src="Slide1.jpeg" alt="Slide1" onload="imageLoaded('slide1')" onerror="imageError('slide1')">
+        <div id="slide1-status" class="status">Loading...</div>
+    </div>
+    
+    <div class="image-test">
+        <h3>noname.png</h3>
+        <img id="noname" src="noname.png" alt="noname" onload="imageLoaded('noname')" onerror="imageError('noname')">
+        <div id="noname-status" class="status">Loading...</div>
+    </div>
+    
+    <div class="image-test">
+        <h3>Canvas Test</h3>
+        <canvas id="testCanvas" width="300" height="200" style="border: 1px solid #ccc;"></canvas>
+        <button onclick="testCanvas()">Test Canvas Drawing</button>
+    </div>
+
+    <script>
+        function imageLoaded(imageId) {
+            document.getElementById(imageId + '-status').textContent = '✅ Loaded successfully';
+            document.getElementById(imageId + '-status').className = 'status success';
+        }
+        
+        function imageError(imageId) {
+            document.getElementById(imageId + '-status').textContent = '❌ Failed to load';
+            document.getElementById(imageId + '-status').className = 'status error';
+        }
+        
+        function testCanvas() {
+            const canvas = document.getElementById('testCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Draw a simple test
+            ctx.fillStyle = 'lightblue';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = 'black';
+            ctx.font = '20px Arial';
+            ctx.fillText('Canvas Test', 10, 30);
+            
+            console.log('Canvas test completed');
+        }
+    </script>
+</body>
+</html> 

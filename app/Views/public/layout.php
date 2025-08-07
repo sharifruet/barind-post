@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- SEO Meta Tags -->
-    <title><?= isset($title) ? esc($title) : 'বারিন্দ পোস্ট - রাজশাহীর শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল' ?></title>
-    <meta name="description" content="<?= isset($meta_description) ? esc($meta_description) : 'বারিন্দ পোস্ট রাজশাহী অঞ্চলের একটি শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল। সর্বশেষ সংবাদ, রাজনীতি, অর্থনীতি, খেলাধুলা, বিনোদন ও অন্যান্য গুরুত্বপূর্ণ খবর জানুন।' ?>">
+    <title><?= isset($title) ? esc($title) : 'বারিন্দ পোস্ট - গোদাগাড়ী, রাজশাহীর থেকে পরিচালিত শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল' ?></title>
+    <meta name="description" content="<?= isset($meta_description) ? esc($meta_description) : 'বারিন্দ পোস্ট গোদাগাড়ী, রাজশাহীর থেকে পরিচালিত একটি শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল। সর্বশেষ সংবাদ, রাজনীতি, অর্থনীতি, খেলাধুলা, বিনোদন ও অন্যান্য গুরুত্বপূর্ণ খবর জানুন।' ?>">
     <meta name="keywords" content="<?= isset($meta_keywords) ? esc($meta_keywords) : 'বারিন্দ পোস্ট, রাজশাহী সংবাদ, বাংলাদেশ সংবাদ, অনলাইন নিউজ, বাংলা সংবাদ' ?>">
     <meta name="author" content="বারিন্দ পোস্ট">
     <meta name="robots" content="index, follow">
@@ -20,8 +20,8 @@
     <link rel="canonical" href="<?= current_url() ?>">
     
     <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="<?= isset($og_title) ? esc($og_title) : (isset($title) ? esc($title) : 'বারিন্দ পোস্ট') ?>">
-    <meta property="og:description" content="<?= isset($og_description) ? esc($og_description) : (isset($meta_description) ? esc($meta_description) : 'বারিন্দ পোস্ট রাজশাহী অঞ্চলের একটি শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল।') ?>">
+    <meta property="og:title" content="<?= isset($og_title) ? esc($og_title) : (isset($title) ? esc($title) : 'বারিন্দ পোস্ট - গোদাগাড়ী, রাজশাহীর থেকে পরিচালিত শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল') ?>">
+    <meta property="og:description" content="<?= isset($og_description) ? esc($og_description) : (isset($meta_description) ? esc($meta_description) : 'বারিন্দ পোস্ট গোদাগাড়ী, রাজশাহীর থেকে পরিচালিত একটি শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল।') ?>">
     <meta property="og:type" content="<?= isset($og_type) ? esc($og_type) : 'website' ?>">
     <meta property="og:url" content="<?= current_url() ?>">
     <meta property="og:site_name" content="বারিন্দ পোস্ট">
@@ -34,8 +34,8 @@
     
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="<?= isset($twitter_card) ? esc($twitter_card) : 'summary_large_image' ?>">
-    <meta name="twitter:title" content="<?= isset($twitter_title) ? esc($twitter_title) : (isset($title) ? esc($title) : 'বারিন্দ পোস্ট') ?>">
-    <meta name="twitter:description" content="<?= isset($twitter_description) ? esc($twitter_description) : (isset($meta_description) ? esc($meta_description) : 'বারিন্দ পোস্ট রাজশাহী অঞ্চলের একটি শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল।') ?>">
+    <meta name="twitter:title" content="<?= isset($twitter_title) ? esc($twitter_title) : (isset($title) ? esc($title) : 'বারিন্দ পোস্ট - গোদাগাড়ী, রাজশাহীর থেকে পরিচালিত শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল') ?>">
+    <meta name="twitter:description" content="<?= isset($twitter_description) ? esc($twitter_description) : (isset($meta_description) ? esc($meta_description) : 'বারিন্দ পোস্ট গোদাগাড়ী, রাজশাহীর থেকে পরিচালিত একটি শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল।') ?>">
     <?php if (isset($og_image)): ?>
     <meta name="twitter:image" content="<?= esc($og_image) ?>">
     <?php endif; ?>

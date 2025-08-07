@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bengali Text Overlay Generator</title>
+    <style>
+        body {
+            font-family: 'Noto Sans Bengali', Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .controls {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .canvas-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            max-width: 100%;
+            height: auto;
+        }
+        .download-btn {
+            background: #28a745;
+        }
+        .download-btn:hover {
+            background: #1e7e34;
+        }
+    </style>
+    <!-- Load Google Fonts for Bengali -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>Bengali Text Overlay Generator</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="bengaliText">Bengali Text:</label>
+                <input type="text" id="bengaliText" value="বারিন্দ পোস্ট" placeholder="Enter Bengali text here">
+            </div>
+            
+            <div class="control-group">
+                <label for="fontSize">Font Size:</label>
+                <input type="number" id="fontSize" value="24" min="12" max="72">
+            </div>
+            
+            <div class="control-group">
+                <label for="textColor">Text Color:</label>
+                <input type="color" id="textColor" value="#ffffff">
+            </div>
+            
+            <div class="control-group">
+                <label for="shadowColor">Shadow Color:</label>
+                <input type="color" id="shadowColor" value="#000000">
+            </div>
+            
+            <div class="control-group">
+                <label for="position">Position:</label>
+                <select id="position">
+                    <option value="bottom-left">Bottom Left</option>
+                    <option value="bottom-right">Bottom Right</option>
+                    <option value="top-left">Top Left</option>
+                    <option value="top-right">Top Right</option>
+                    <option value="center">Center</option>
+                </select>
+            </div>
+            
+            <button onclick="generateOverlay()">Generate Overlay</button>
+            <button class="download-btn" onclick="downloadImage()">Download Image</button>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="overlayCanvas" width="720" height="405"></canvas>
+        </div>
+    </div>
+
+    <script>
+        let baseImage = null;
+        let overlayImage = null;
+        let canvas = null;
+        let ctx = null;
+
+        // Load images when page loads
+        window.onload = function() {
+            canvas = document.getElementById('overlayCanvas');
+            ctx = canvas.getContext('2d');
+            
+            // Load base image
+            baseImage = new Image();
+            baseImage.onload = function() {
+                drawBaseImage();
+            };
+            baseImage.src = 'public/Slide1.jpeg';
+            
+            // Load overlay image
+            overlayImage = new Image();
+            overlayImage.onload = function() {
+                // Overlay will be drawn when text is generated
+            };
+            overlayImage.src = 'public/noname.png';
+        };
+
+        function drawBaseImage() {
+            ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
+        }
+
+        function generateOverlay() {
+            // Clear canvas and draw base image
+            drawBaseImage();
+            
+            // Get overlay position
+            const position = document.getElementById('position').value;
+            let overlayX = 0;
+            let overlayY = 0;
+            
+            const overlayWidth = overlayImage.width;
+            const overlayHeight = overlayImage.height;
+            
+            switch(position) {
+                case 'bottom-left':
+                    overlayX = 0;
+                    overlayY = canvas.height - overlayHeight;
+                    break;
+                case 'bottom-right':
+                    overlayX = canvas.width - overlayWidth;
+                    overlayY = canvas.height - overlayHeight;
+                    break;
+                case 'top-left':
+                    overlayX = 0;
+                    overlayY = 0;
+                    break;
+                case 'top-right':
+                    overlayX = canvas.width - overlayWidth;
+                    overlayY = 0;
+                    break;
+                case 'center':
+                    overlayX = (canvas.width - overlayWidth) / 2;
+                    overlayY = (canvas.height - overlayHeight) / 2;
+                    break;
+            }
+            
+            // Draw overlay image
+            ctx.drawImage(overlayImage, overlayX, overlayY);
+            
+            // Add Bengali text
+            addBengaliText(overlayX, overlayY, overlayWidth, overlayHeight);
+        }
+
+        function addBengaliText(overlayX, overlayY, overlayWidth, overlayHeight) {
+            const text = document.getElementById('bengaliText').value;
+            const fontSize = parseInt(document.getElementById('fontSize').value);
+            const textColor = document.getElementById('textColor').value;
+            const shadowColor = document.getElementById('shadowColor').value;
+            
+            // Set font for Bengali text
+            ctx.font = `${fontSize}px 'Noto Sans Bengali', Arial, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Calculate text position (center of overlay)
+            const textX = overlayX + overlayWidth / 2;
+            const textY = overlayY + overlayHeight / 2;
+            
+            // Add shadow
+            ctx.fillStyle = shadowColor;
+            ctx.fillText(text, textX + 2, textY + 2);
+            
+            // Add main text
+            ctx.fillStyle = textColor;
+            ctx.fillText(text, textX, textY);
+        }
+
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = 'bengali_overlay.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        // Generate overlay when page loads
+        setTimeout(() => {
+            if (baseImage.complete && overlayImage.complete) {
+                generateOverlay();
+            }
+        }, 1000);
+    </script>
+</body>
+</html> 

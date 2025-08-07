@@ -1,5 +1,5 @@
 <?php
-$title = esc($category['name']) . ' - বারিন্দ পোস্ট';
+// Title is now set in the controller
 $customStyles = '
         .category-pill {
             margin-right: 0.5rem;

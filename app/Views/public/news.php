@@ -1,17 +1,5 @@
 <?php
-$title = $news['title'] . ' - বারিন্দ পোস্ট';
-$meta_description = !empty($news['lead_text']) ? $news['lead_text'] : $news['title'] . ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।';
-$meta_keywords = 'বারিন্দ পোস্ট, ' . $news['title'] . ', রাজশাহী সংবাদ, বাংলাদেশ সংবাদ';
-
-// Open Graph and Twitter Card data
-$og_title = $news['title'];
-$og_description = $meta_description;
-$og_type = 'article';
-$og_image = !empty($news['image_url']) ? get_image_url($news['image_url']) : base_url('public/logo.png');
-$twitter_card = 'summary_large_image';
-$twitter_title = $og_title;
-$twitter_description = $og_description;
-$twitter_image = $og_image;
+// Meta tags are now set in the controller
 
 // Structured data for news article
 $structured_data = [
