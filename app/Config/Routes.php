@@ -31,10 +31,8 @@ $routes->post('/admin/news/edit/(:num)', 'Admin::newsUpdate/$1');
 $routes->post('/admin/news/delete/(:num)', 'Admin::newsDelete/$1');
 $routes->post('/admin/news/toggle-featured/(:num)', 'Admin::toggleFeatured/$1');
 
-// Photo Card Generation Routes (Admin only)
+// Photo Card Generation Routes (Admin only) - Front-end JavaScript based
 $routes->get('/admin/photo-card-generator', 'Admin::photoCardGenerator');
-$routes->post('/admin/photo-card-generator/generate', 'Admin::generatePhotoCard');
-$routes->get('/admin/photo-card-test', 'Admin::photoCardTest');
 
 // Add route for listing news images
 $routes->get('/admin/news/images-list', 'Admin::newsImagesList');

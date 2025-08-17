@@ -12,6 +12,21 @@ $customStyles = '
 <?= $this->extend('public/layout') ?>
 
 <?= $this->section('content') ?>
+
+<?php
+// Function to limit text to first 15 words
+function limitTo15Words($text) {
+    if (empty($text)) return '';
+    
+    $words = preg_split('/\s+/', trim($text));
+    if (count($words) <= 15) {
+        return $text;
+    }
+    
+    $limitedWords = array_slice($words, 0, 15);
+    return implode(' ', $limitedWords) . '...';
+}
+?>
 <div class="container">
     <!-- Top Banner Ad -->
     <?php 
@@ -48,7 +63,7 @@ $customStyles = '
                                 <?= date('M d, Y', strtotime($item['published_at'])) ?>
                             </p>
                             <p class="card-text">
-                                <?= esc($item['lead_text']) ?>
+                                <?= esc(limitTo15Words($item['lead_text'])) ?>
                             </p>
                         </div>
                     </div>

@@ -110,7 +110,18 @@ $isReporter = $userRole === 'reporter';
             <label class="form-label">Subtitle</label>
             <input type="text" name="subtitle" class="form-control" value="<?= $isEdit ? esc($news['subtitle']) : '' ?>">
         </div>
-        <div class="col-md-12">
+        <div class="col-md-6">
+            <label class="form-label">Reporter</label>
+            <select name="reporter" class="form-select">
+                <option value="">Select Reporter</option>
+                <option value="নিজস্ব প্রতিবেদক" <?= $isEdit && $news['reporter'] == 'নিজস্ব প্রতিবেদক' ? 'selected' : '' ?>>নিজস্ব প্রতিবেদক</option>
+                <option value="আন্তর্জাতিক ডেস্ক" <?= $isEdit && $news['reporter'] == 'আন্তর্জাতিক ডেস্ক' ? 'selected' : '' ?>>আন্তর্জাতিক ডেস্ক</option>
+                <option value="নাটোর প্রতিনিধি" <?= $isEdit && $news['reporter'] == 'নাটোর প্রতিনিধি' ? 'selected' : '' ?>>নাটোর প্রতিনিধি</option>
+                <option value="রাজশাহী প্রতিনিধি" <?= $isEdit && $news['reporter'] == 'রাজশাহী প্রতিনিধি' ? 'selected' : '' ?>>রাজশাহী প্রতিনিধি</option>
+                <option value="গোদাগাড়ী প্রতিনিধি" <?= $isEdit && $news['reporter'] == 'গোদাগাড়ী প্রতিনিধি' ? 'selected' : '' ?>>গোদাগাড়ী প্রতিনিধি</option>
+            </select>
+        </div>
+        <div class="col-md-6">
             <label class="form-label">Lead Text</label>
             <textarea name="lead_text" class="form-control" rows="2"><?= $isEdit ? esc($news['lead_text']) : '' ?></textarea>
         </div>

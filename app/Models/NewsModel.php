@@ -9,7 +9,7 @@ class NewsModel extends Model
     protected $allowedFields = [
         'title', 'subtitle', 'lead_text', 'content', 'author_id', 'category_id', 'status',
         'featured', 'created_at', 'updated_at', 'published_at', 'image_url', 'image_caption', 
-        'image_alt_text', 'slug', 'source', 'dateline', 'word_count', 'language'
+        'image_alt_text', 'slug', 'source', 'dateline', 'word_count', 'language', 'reporter'
     ];
     protected $returnType = 'array';
     protected $useTimestamps = true;

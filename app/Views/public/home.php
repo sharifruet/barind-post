@@ -51,6 +51,19 @@ function getCategoryColor($categoryName, $categoryColors) {
     return $categoryColors[$categoryName] ?? $categoryColors['default'];
 }
 
+// Function to limit text to first 15 words
+function limitTo15Words($text) {
+    if (empty($text)) return '';
+    
+    $words = preg_split('/\s+/', trim($text));
+    if (count($words) <= 15) {
+        return $text;
+    }
+    
+    $limitedWords = array_slice($words, 0, 15);
+    return implode(' ', $limitedWords) . '...';
+}
+
 $customStyles = '
         .category-pill {
             margin-right: 0.5rem;
@@ -358,7 +371,7 @@ $customStyles = '
                         <h3 class="featured-hero-title">
                             <a href="/news/<?= esc($firstNews['slug']) ?>" class="text-decoration-none text-dark"><?= esc($firstNews['title'], 'raw') ?></a>
                         </h3>
-                        <div class="featured-hero-lead"><?= esc($firstNews['lead_text'], 'raw') ?></div>
+                        <div class="featured-hero-lead"><?= esc(limitTo15Words($firstNews['lead_text']), 'raw') ?></div>
                     </div>
                 </div>
             </div>
@@ -381,7 +394,7 @@ $customStyles = '
                                         <?= date('M d, Y', strtotime($news['published_at'])) ?>
                                     </p>
                                     <p class="card-text">
-                                        <?= esc($news['lead_text'], 'raw') ?>
+                                        <?= esc(limitTo15Words($news['lead_text']), 'raw') ?>
                                     </p>
                                 </div>
                             </div>
@@ -431,7 +444,7 @@ $customStyles = '
                                     <?= date('M d, Y', strtotime($news['published_at'])) ?>
                                 </p>
                                 <p class="card-text">
-                                    <?= esc($news['lead_text'], 'raw') ?>
+                                    <?= esc(limitTo15Words($news['lead_text']), 'raw') ?>
                                 </p>
                             </div>
                         </div>
@@ -498,7 +511,7 @@ $customStyles = '
                                             <?= date('M d, Y', strtotime($news['published_at'])) ?>
                                         </p>
                                         <p class="card-text small">
-                                            <?= esc(mb_substr($news['lead_text'], 0, 80) . '...', 'raw') ?>
+                                            <?= esc(limitTo15Words($news['lead_text']), 'raw') ?>
                                         </p>
                                     </div>
                                 </div>

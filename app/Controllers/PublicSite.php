@@ -128,10 +128,17 @@ class PublicSite extends Controller
         // Track the view
         $this->trackNewsView($news['id']);
         
+        // Get latest news for the read more section
+        $latestNews = $newsModel->where('status', 'published')
+                                ->where('id !=', $news['id'])
+                                ->orderBy('published_at', 'DESC')
+                                ->findAll(8);
+        
         // Set meta tags for the news article
         $data = [
             'news' => $news,
             'categories' => $categories,
+            'latestNews' => $latestNews,
             'title' => $news['title'] . ' - বারিন্দ পোস্ট',
             'meta_description' => !empty($news['lead_text']) ? $news['lead_text'] : $news['title'] . ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।',
             'meta_keywords' => 'বারিন্দ পোস্ট, ' . $news['title'] . ', রাজশাহী সংবাদ, বাংলাদেশ সংবাদ',
