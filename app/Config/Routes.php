@@ -62,6 +62,15 @@ $routes->post('/admin/categories/delete', 'Admin::deleteCategory');
 $routes->get('/admin/categories/edit/(:num)', 'Admin::editCategory/$1');
 $routes->post('/admin/categories/edit/(:num)', 'Admin::updateCategory/$1');
 
+// Reporter Roles Routes
+$routes->get('/admin/reporter-roles', 'Admin::reporterRoles');
+$routes->post('/admin/reporter-roles/add', 'Admin::addReporterRole');
+$routes->post('/admin/reporter-roles/delete', 'Admin::deleteReporterRole');
+$routes->get('/admin/reporter-roles/edit/(:num)', 'Admin::editReporterRole/$1');
+$routes->post('/admin/reporter-roles/edit/(:num)', 'Admin::updateReporterRole/$1');
+$routes->get('/admin/reporter-roles/assign/(:num)', 'Admin::assignReporterRoles/$1');
+$routes->post('/admin/reporter-roles/assign/(:num)', 'Admin::saveReporterRoleAssignment/$1');
+
 // Admin Contacts Routes
 $routes->get('/admin/contacts', 'Admin::contacts');
 $routes->get('/admin/contacts/list', 'Admin::getContacts');

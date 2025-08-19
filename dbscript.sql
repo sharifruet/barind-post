@@ -314,3 +314,56 @@ CREATE TABLE IF NOT EXISTS contacts (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Add reporterRole field to news table if not exists
+ALTER TABLE news ADD COLUMN IF NOT EXISTS reporterRole VARCHAR(100) NULL AFTER lead_text;
+
+-- Create reporter_roles table
+CREATE TABLE IF NOT EXISTS reporter_roles (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Insert default reporter roles
+INSERT INTO reporter_roles (name, description) VALUES
+('নিজস্ব প্রতিবেদক', 'Main staff reporter'),
+('আন্তর্জাতিক ডেস্ক', 'International desk reporter'),
+('নাটোর প্রতিনিধি', 'Natore correspondent'),
+('রাজশাহী প্রতিনিধি', 'Rajshahi correspondent'),
+('গোদাগাড়ী প্রতিনিধি', 'Godagari correspondent'),
+('চাঁপাইনবাবগঞ্জ প্রতিনিধি', 'Chapainawabganj correspondent'),
+('নওগাঁ প্রতিনিধি', 'Naogaon correspondent'),
+('জয়পুরহাট প্রতিনিধি', 'Joypurhat correspondent'),
+('সিরাজগঞ্জ প্রতিনিধি', 'Sirajganj correspondent'),
+('পাবনা প্রতিনিধি', 'Pabna correspondent'),
+('বগুড়া প্রতিনিধি', 'Bogura correspondent'),
+('গাইবান্ধা প্রতিনিধি', 'Gaibandha correspondent'),
+('রংপুর প্রতিনিধি', 'Rangpur correspondent'),
+('দিনাজপুর প্রতিনিধি', 'Dinajpur correspondent'),
+('ঠাকুরগাঁও প্রতিনিধি', 'Thakurgaon correspondent'),
+('পঞ্চগড় প্রতিনিধি', 'Panchagarh correspondent'),
+('নীলফামারী প্রতিনিধি', 'Nilphamari correspondent'),
+('লালমনিরহাট প্রতিনিধি', 'Lalmonirhat correspondent'),
+('কুড়িগ্রাম প্রতিনিধি', 'Kurigram correspondent');
+
+-- Create user_reporter_roles table for many-to-many relationship
+CREATE TABLE IF NOT EXISTS user_reporter_roles (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    reporter_role_id INT UNSIGNED NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (reporter_role_id) REFERENCES reporter_roles(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_user_role (user_id, reporter_role_id)
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Assign some default reporter roles to existing users
+INSERT INTO user_reporter_roles (user_id, reporter_role_id) VALUES
+(1, 1), -- Alice Reporter gets 'নিজস্ব প্রতিবেদক'
+(1, 2), -- Alice Reporter also gets 'আন্তর্জাতিক ডেস্ক'
+(2, 3), -- Bob Subeditor gets 'নাটোর প্রতিনিধি'
+(3, 4); -- Eve Editor gets 'রাজশাহী প্রতিনিধি'

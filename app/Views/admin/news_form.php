@@ -111,15 +111,26 @@ $isReporter = $userRole === 'reporter';
             <input type="text" name="subtitle" class="form-control" value="<?= $isEdit ? esc($news['subtitle']) : '' ?>">
         </div>
         <div class="col-md-6">
-            <label class="form-label">Reporter</label>
-            <select name="reporter" class="form-select">
-                <option value="">Select Reporter</option>
-                <option value="নিজস্ব প্রতিবেদক" <?= $isEdit && $news['reporter'] == 'নিজস্ব প্রতিবেদক' ? 'selected' : '' ?>>নিজস্ব প্রতিবেদক</option>
-                <option value="আন্তর্জাতিক ডেস্ক" <?= $isEdit && $news['reporter'] == 'আন্তর্জাতিক ডেস্ক' ? 'selected' : '' ?>>আন্তর্জাতিক ডেস্ক</option>
-                <option value="নাটোর প্রতিনিধি" <?= $isEdit && $news['reporter'] == 'নাটোর প্রতিনিধি' ? 'selected' : '' ?>>নাটোর প্রতিনিধি</option>
-                <option value="রাজশাহী প্রতিনিধি" <?= $isEdit && $news['reporter'] == 'রাজশাহী প্রতিনিধি' ? 'selected' : '' ?>>রাজশাহী প্রতিনিধি</option>
-                <option value="গোদাগাড়ী প্রতিনিধি" <?= $isEdit && $news['reporter'] == 'গোদাগাড়ী প্রতিনিধি' ? 'selected' : '' ?>>গোদাগাড়ী প্রতিনিধি</option>
+            <label class="form-label">Reporter Role</label>
+            <select name="reporterRole" class="form-select">
+                <option value="">Select Reporter Role</option>
+                <?php 
+                // Get user's assigned reporter roles
+                $reporterRoleModel = new \App\Models\ReporterRoleModel();
+                $userReporterRoles = $reporterRoleModel->getUserRoles(session('user_id'));
+                
+                // If user is admin/editor, show all active roles
+                if (in_array(session('user_role'), ['admin', 'editor'])) {
+                    $userReporterRoles = $reporterRoleModel->getActiveRoles();
+                }
+                
+                foreach ($userReporterRoles as $role): ?>
+                    <option value="<?= esc($role['name']) ?>" <?= $isEdit && $news['reporterRole'] == $role['name'] ? 'selected' : '' ?>><?= esc($role['name']) ?></option>
+                <?php endforeach; ?>
             </select>
+            <?php if (empty($userReporterRoles)): ?>
+                <small class="form-text text-warning">No reporter roles assigned. Contact admin to assign roles.</small>
+            <?php endif; ?>
         </div>
         <div class="col-md-6">
             <label class="form-label">Lead Text</label>

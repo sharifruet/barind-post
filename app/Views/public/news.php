@@ -68,23 +68,24 @@ $customStyles = '
         }
         .social-media-buttons {
             background: #f8f9fa;
-            padding: 2rem;
+            padding: 2.5rem 1.5rem;
             border-radius: 1rem;
             margin-bottom: 2rem;
         }
         .social-btn {
             display: block;
             width: 100%;
-            padding: 1.5rem;
-            margin: 1rem 0;
-            border-radius: 0.75rem;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            border-radius: 1rem;
             text-decoration: none;
             color: white;
             font-weight: 500;
             transition: all 0.3s ease;
             text-align: center;
-            font-size: 2.5rem;
+            font-size: 3.5rem;
             line-height: 1;
+            min-height: 80px;
         }
         .social-btn:hover {
             transform: translateY(-2px);
@@ -209,15 +210,15 @@ $customScripts = '
             </div>
             
             <!-- Reporter Badge -->
-            <?php if (!empty($news['reporter'])): ?>
+            <?php if (!empty($news['reporterRole'])): ?>
                 <div class="reporter-badge mb-3">
-                    <?= esc($news['reporter']) ?>
+                    <?= esc($news['reporterRole']) ?>
                 </div>
             <?php endif; ?>
             
             <!-- Social Media Buttons -->
             <div class="social-media-buttons">
-                <h6 class="mb-3 text-center">শেয়ার করুন</h6>
+                <h5 class="mb-4 text-center fw-bold">শেয়ার করুন</h5>
                 <div>
                     <a href="https://www.facebook.com/sharer/sharer.php?u=<?= urlencode(current_url()) ?>" 
                        target="_blank" class="social-btn facebook" title="ফেসবুকে শেয়ার করুন">

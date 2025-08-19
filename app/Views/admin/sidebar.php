@@ -33,6 +33,9 @@ $isReporter = $userRole === 'reporter';
                 <li class="nav-item mb-2">
                     <a class="nav-link<?= (url_is('admin/roles*')) ? ' active' : '' ?>" href="/admin/roles"><i class="fas fa-shield-alt me-2"></i>Manage Roles</a>
                 </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link<?= (url_is('admin/reporter-roles*')) ? ' active' : '' ?>" href="/admin/reporter-roles"><i class="fas fa-user-tie me-2"></i>Reporter Roles</a>
+                </li>
             <?php endif; ?>
             <li class="nav-item mt-4">
                 <a class="nav-link text-danger" href="/logout"><i class="fas fa-sign-out-alt me-2"></i>Logout</a>

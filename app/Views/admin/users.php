@@ -56,6 +56,9 @@
                                 <td><?= esc($user['role']) ?></td>
                                 <td><?= esc($user['created_at']) ?></td>
                                 <td>
+                                    <a href="/admin/reporter-roles/assign/<?= $user['id'] ?>" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-user-tie"></i> Assign Roles
+                                    </a>
                                     <form method="post" action="/admin/users/delete" style="display:inline;">
                                         <input type="hidden" name="id" value="<?= esc($user['id']) ?>">
                                         <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this user?')">Delete</button>
