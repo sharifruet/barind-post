@@ -134,11 +134,200 @@ class PublicSite extends Controller
                                 ->orderBy('published_at', 'DESC')
                                 ->findAll(8);
         
+        // Custom styles for news page
+        $customStyles = '
+        .news-img {
+            border-radius: 1rem;
+            object-fit: cover;
+            width: 100%;
+            height: auto;
+            max-height: none;
+        }
+        .back-btn {
+            border-radius: 2rem;
+            padding: 0.5rem 1.5rem;
+            font-weight: 500;
+        }
+        .news-container {
+            max-width: 100%;
+        }
+        .news-image-container {
+            margin: 0 0 1.5rem 0;
+        }
+        .news-image-container img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+            border-radius: 0;
+        }
+        .news-image-container figcaption {
+            padding: 0;
+        }
+        .reporter-badge {
+            background: #dc3545;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .social-media-buttons {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .social-btn {
+            display: inline-block;
+            width: auto;
+            max-width: 100%;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 1rem;
+            line-height: 1;
+            min-height: 35px;
+            box-sizing: border-box;
+            overflow: hidden;
+            word-wrap: break-word;
+        }
+        .social-btn:hover {
+            transform: translateY(-2px);
+            color: white;
+            text-decoration: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .social-btn-container{
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            flex-wrap: wrap;
+        }
+        .social-btn.facebook { background: #1877f2; }
+        .social-btn.twitter { background: #1da1f2; }
+        .social-btn.whatsapp { background: #25d366; }
+        .social-btn.telegram { background: #0088cc; }
+        .social-btn.copy { background: #6c757d; }
+        .social-btn.print { background: #28a745; }
+        .read-more-section {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 1rem;
+            margin: 0.5rem 0;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .latest-news-title {
+            font-size: 0.8rem;
+            margin-bottom: 0.2rem;
+            padding: 0.2rem 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .latest-news-title:last-child {
+            border-bottom: none;
+        }
+        .latest-news-title a {
+            color: #495057;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        .latest-news-title a:hover {
+            color: #dc3545;
+            text-decoration: underline;
+        }
+        /* Tweet embed styles for public view */
+        .tweet-embed-container {
+            margin: 20px 0;
+            text-align: center;
+            max-width: 100%;
+            overflow: hidden;
+        }
+        .tweet-embed-placeholder {
+            display: inline-block;
+            max-width: 100%;
+            min-height: 200px;
+            background: #f8f9fa;
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+        }
+        .tweet-embed-placeholder:empty::before {
+            content: \"Loading tweet...\";
+            color: #657786;
+            font-style: italic;
+        }
+        /* Twitter widget responsive styles */
+        .twitter-tweet {
+            margin: 0 auto !important;
+            max-width: 100% !important;
+        }
+        /* Ensure tweets are responsive */
+        .twitter-tweet-rendered {
+            max-width: 100% !important;
+            width: auto !important;
+        }
+        
+        /* Print styles */
+        @media print {
+            .social-media-buttons,
+            .read-more-section,
+            .navbar,
+            .footer,
+            .sidebar {
+                display: none !important;
+            }
+            .container {
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            body {
+                font-size: 12pt !important;
+                line-height: 1.4 !important;
+                color: #000 !important;
+                background: #fff !important;
+            }
+            h1, h2, h3, h4, h5, h6 {
+                color: #000 !important;
+                page-break-after: avoid;
+            }
+            img {
+                max-width: 100% !important;
+                height: auto !important;
+            }
+            a {
+                color: #000 !important;
+                text-decoration: none !important;
+            }
+            .news-image-container {
+                text-align: center;
+                margin: 20px 0;
+            }
+        }
+        ';
+
         // Set meta tags for the news article
         $data = [
             'news' => $news,
             'categories' => $categories,
             'latestNews' => $latestNews,
+            'customStyles' => $customStyles,
             'title' => $news['title'] . ' - বারিন্দ পোস্ট',
             'meta_description' => !empty($news['lead_text']) ? $news['lead_text'] : $news['title'] . ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।',
             'meta_keywords' => 'বারিন্দ পোস্ট, ' . $news['title'] . ', রাজশাহী সংবাদ, বাংলাদেশ সংবাদ',
@@ -174,7 +363,178 @@ class PublicSite extends Controller
         // Track the view
         $this->trackNewsView($news['id']);
         
-        return view('public/news', ['news' => $news, 'categories' => $categories]);
+        // Custom styles for news page (same as main news method)
+        $customStyles = '
+        .news-img {
+            border-radius: 1rem;
+            object-fit: cover;
+            width: 100%;
+            height: auto;
+            max-height: none;
+        }
+        .back-btn {
+            border-radius: 2rem;
+            padding: 0.5rem 1.5rem;
+            font-weight: 500;
+        }
+        .news-container {
+            max-width: 100%;
+        }
+        .news-image-container {
+            margin: 0 0 1.5rem 0;
+        }
+        .news-image-container img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+            border-radius: 0;
+        }
+        .news-image-container figcaption {
+            padding: 0;
+        }
+        .reporter-badge {
+            background: #dc3545;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .social-media-buttons {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .social-btn {
+            display: inline-block;
+            width: auto;
+            max-width: 100%;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 1rem;
+            line-height: 1;
+            min-height: 35px;
+            box-sizing: border-box;
+            overflow: hidden;
+            word-wrap: break-word;
+        }
+        .social-btn:hover {
+            transform: translateY(-2px);
+            color: white;
+            text-decoration: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .social-btn-container{
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            flex-wrap: wrap;
+        }
+        .social-btn.facebook { background: #1877f2; }
+        .social-btn.twitter { background: #1da1f2; }
+        .social-btn.whatsapp { background: #25d366; }
+        .social-btn.telegram { background: #0088cc; }
+        .social-btn.copy { background: #6c757d; }
+        .read-more-section {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 1rem;
+            margin: 2rem 0;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .read-more-section h4 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+        .latest-news-title {
+            font-size: 0.6rem;
+            margin-bottom: 0.2rem;
+            padding: 0.2rem 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .latest-news-title:last-child {
+            border-bottom: none;
+        }
+        .latest-news-title a {
+            color: #495057;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        .latest-news-title a:hover {
+            color: #dc3545;
+            text-decoration: underline;
+        }
+        /* Tweet embed styles for public view */
+        .tweet-embed-container {
+            margin: 20px 0;
+            text-align: center;
+            max-width: 100%;
+            overflow: hidden;
+        }
+        .tweet-embed-placeholder {
+            display: inline-block;
+            max-width: 100%;
+            min-height: 200px;
+            background: #f8f9fa;
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+        }
+        .tweet-embed-placeholder:empty::before {
+            content: \"Loading tweet...\";
+            color: #657786;
+            font-style: italic;
+        }
+        /* Twitter widget responsive styles */
+        .twitter-tweet {
+            margin: 0 auto !important;
+            max-width: 100% !important;
+        }
+        /* Ensure tweets are responsive */
+        .twitter-tweet-rendered {
+            max-width: 100% !important;
+            width: auto !important;
+        }
+        ';
+        
+        // Set meta tags for the news article
+        $data = [
+            'news' => $news, 
+            'categories' => $categories,
+            'customStyles' => $customStyles,
+            'title' => $news['title'] . ' - বারিন্দ পোস্ট',
+            'meta_description' => !empty($news['lead_text']) ? $news['lead_text'] : $news['title'] . ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।',
+            'meta_keywords' => 'বারিন্দ পোস্ট, ' . $news['title'] . ', রাজশাহী সংবাদ, বাংলাদেশ সংবাদ',
+            'og_title' => $news['title'],
+            'og_description' => !empty($news['lead_text']) ? $news['lead_text'] : $news['title'] . ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।',
+            'og_type' => 'article',
+            'og_image' => !empty($news['image_url']) ? get_image_url($news['image_url']) : base_url('public/logo.png'),
+            'twitter_card' => 'summary_large_image',
+            'twitter_title' => $news['title'],
+            'twitter_description' => !empty($news['lead_text']) ? $news['lead_text'] : $news['title'] . ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।',
+            'twitter_image' => !empty($news['image_url']) ? get_image_url($news['image_url']) : base_url('public/logo.png')
+        ];
+        
+        return view('public/news', $data);
     }
 
     public function tag($slug)

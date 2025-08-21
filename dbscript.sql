@@ -328,7 +328,7 @@ CREATE TABLE IF NOT EXISTS reporter_roles (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Insert default reporter roles
+-- Insert default reporter roles (with proper UTF-8 encoding)
 INSERT INTO reporter_roles (name, description) VALUES
 ('নিজস্ব প্রতিবেদক', 'Main staff reporter'),
 ('আন্তর্জাতিক ডেস্ক', 'International desk reporter'),

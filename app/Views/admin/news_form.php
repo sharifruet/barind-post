@@ -110,6 +110,10 @@ $isReporter = $userRole === 'reporter';
             <label class="form-label">Subtitle</label>
             <input type="text" name="subtitle" class="form-control" value="<?= $isEdit ? esc($news['subtitle']) : '' ?>">
         </div>
+        <div class="col-md-12">
+            <label class="form-label">Lead Text</label>
+            <textarea name="lead_text" class="form-control" rows="2"><?= $isEdit ? esc($news['lead_text']) : '' ?></textarea>
+        </div>
         <div class="col-md-6">
             <label class="form-label">Reporter Role</label>
             <select name="reporterRole" class="form-select">
@@ -124,6 +128,14 @@ $isReporter = $userRole === 'reporter';
                     $userReporterRoles = $reporterRoleModel->getActiveRoles();
                 }
                 
+                // Get logged-in user's name
+                $userModel = new \App\Models\UserModel();
+                $currentUser = $userModel->find(session('user_id'));
+                $userName = $currentUser ? $currentUser['name'] : 'Unknown User';
+                
+                // Add user's name as an option
+                echo '<option value="' . esc($userName) . '"' . ($isEdit && $news['reporterRole'] == $userName ? ' selected' : '') . '>' . esc($userName) . '</option>';
+                
                 foreach ($userReporterRoles as $role): ?>
                     <option value="<?= esc($role['name']) ?>" <?= $isEdit && $news['reporterRole'] == $role['name'] ? 'selected' : '' ?>><?= esc($role['name']) ?></option>
                 <?php endforeach; ?>
@@ -131,10 +143,6 @@ $isReporter = $userRole === 'reporter';
             <?php if (empty($userReporterRoles)): ?>
                 <small class="form-text text-warning">No reporter roles assigned. Contact admin to assign roles.</small>
             <?php endif; ?>
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Lead Text</label>
-            <textarea name="lead_text" class="form-control" rows="2"><?= $isEdit ? esc($news['lead_text']) : '' ?></textarea>
         </div>
         <div class="col-md-12">
             <div class="alert alert-info small mb-2">
