@@ -11,10 +11,9 @@ The Photo Card Generation feature allows admin users to create social media-read
 
 ### Functionality
 1. **News Selection**: Choose from published news articles
-2. **Template Selection**: Multiple design templates available:
+2. **Template Selection**: Two design templates available:
    - Default (White Background)
-   - Red Background
-   - Gradient Background
+   - Header & Footer Layout
 3. **Preview**: Real-time preview of selected news article
 4. **Generation**: AJAX-based photo card generation
 5. **Download**: Direct download of generated photo cards
@@ -61,9 +60,8 @@ public/uploads/photo_cards/ - Generated image storage
 6. Download or copy the URL of the generated image
 
 ### Templates
-- **Default**: Clean white background with black text
-- **Red**: Red background with white text
-- **Gradient**: Gradient background with white text
+- **Default**: Clean white background with black text, image overlay with title at bottom
+- **Header & Footer Layout**: Structured layout with image (full height) → title section (minimum 200px) → footer (minimum 80px), image uses natural dimensions, logo positioned in title section, red title background with white text, and black footer with "বরিন্দ পোস্ট | [Category]" and date
 
 ## Security Features
 - Role-based access control (admin only)

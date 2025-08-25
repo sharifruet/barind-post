@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CKEditor Image Upload Test</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans Bengali', Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .ck-editor__editable {
+            min-height: 300px;
+        }
+        .debug-info {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>CKEditor Image Upload Test</h1>
+        <p>This test verifies that CKEditor image upload is working correctly.</p>
+        
+        <div id="status" class="status info">
+            🚀 CKEditor Image Upload Test Ready. Click buttons to test different functions.
+        </div>
+        
+        <button onclick="testEndpoint()">Test Upload Endpoint</button>
+        <button onclick="testCKEditor()">Test CKEditor</button>
+        <button onclick="testImageUpload()">Test Image Upload</button>
+        
+        <div class="debug-info">
+            <strong>Debug Information:</strong><br>
+            <div id="debugContent"></div>
+        </div>
+        
+        <div id="ckeditor-container">
+            <textarea id="content" name="content"></textarea>
+        </div>
+    </div>
+
+    <!-- CKEditor Script -->
+    <script src="https://cdn.ckeditor.com/ckeditor5/40.2.0/classic/ckeditor.js"></script>
+    
+    <script>
+        let editor = null;
+        
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.innerHTML = message;
+        }
+        
+        function updateDebug(message) {
+            const debugDiv = document.getElementById('debugContent');
+            const timestamp = new Date().toLocaleTimeString();
+            debugDiv.innerHTML += `[${timestamp}] ${message}<br>`;
+            debugDiv.scrollTop = debugDiv.scrollHeight;
+        }
+        
+        function testEndpoint() {
+            updateDebug('Testing upload endpoint...');
+            
+            fetch('/image-upload/upload', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new FormData()
+            })
+            .then(response => {
+                updateDebug(`Endpoint response status: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                updateDebug(`Endpoint response: ${JSON.stringify(data)}`);
+                if (data.error) {
+                    updateStatus('❌ Upload endpoint error: ' + data.error.message, 'error');
+                } else {
+                    updateStatus('✅ Upload endpoint is accessible', 'success');
+                }
+            })
+            .catch(error => {
+                updateDebug(`Endpoint error: ${error.message}`);
+                updateStatus('❌ Upload endpoint failed: ' + error.message, 'error');
+            });
+        }
+        
+        function testCKEditor() {
+            updateDebug('Initializing CKEditor...');
+            
+            if (editor) {
+                editor.destroy();
+            }
+            
+            ClassicEditor.create(document.querySelector('#content'), {
+                toolbar: [
+                    'heading', '|',
+                    'bold', 'italic', 'underline', '|',
+                    'link', '|',
+                    'bulletedList', 'numberedList', '|',
+                    'imageUpload', '|',
+                    'undo', 'redo'
+                ],
+                simpleUpload: {
+                    uploadUrl: '/image-upload/upload',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }
+            })
+            .then(newEditor => {
+                editor = newEditor;
+                updateDebug('CKEditor initialized successfully');
+                updateStatus('✅ CKEditor loaded with image upload capability', 'success');
+                
+                // Listen for upload events
+                editor.plugins.get('FileRepository').createUploadAdapter = function(loader) {
+                    updateDebug('Upload adapter created');
+                    return {
+                        upload: function() {
+                            updateDebug('Upload started');
+                            return loader.file.then(file => {
+                                const formData = new FormData();
+                                formData.append('upload', file);
+                                
+                                return fetch('/image-upload/upload', {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-Requested-With': 'XMLHttpRequest'
+                                    },
+                                    body: formData
+                                });
+                            }).then(response => {
+                                updateDebug(`Upload response status: ${response.status}`);
+                                return response.json();
+                            }).then(data => {
+                                updateDebug(`Upload response: ${JSON.stringify(data)}`);
+                                if (data.error) {
+                                    throw new Error(data.error.message);
+                                }
+                                return {
+                                    default: data.url
+                                };
+                            });
+                        }
+                    };
+                };
+            })
+            .catch(error => {
+                updateDebug(`CKEditor error: ${error.message}`);
+                updateStatus('❌ CKEditor initialization failed: ' + error.message, 'error');
+            });
+        }
+        
+        function testImageUpload() {
+            if (!editor) {
+                updateStatus('❌ CKEditor not initialized. Please test CKEditor first.', 'error');
+                return;
+            }
+            
+            updateDebug('Testing image upload through CKEditor...');
+            updateStatus('📤 Please use the image upload button in the CKEditor toolbar to test upload', 'info');
+        }
+        
+        // Test endpoint on page load
+        window.addEventListener('load', function() {
+            updateDebug('Page loaded, testing endpoint...');
+            testEndpoint();
+        });
+    </script>
+</body>
+</html>

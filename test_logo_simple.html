@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logo Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+        canvas { border: 1px solid #000; margin: 10px; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Logo Loading Test</h1>
+    
+    <div class="test-section">
+        <h3>Test 1: Basic Logo Loading</h3>
+        <canvas id="testCanvas1" width="400" height="300"></canvas>
+        <br>
+        <button onclick="testLogoLoading()">Test Logo Loading</button>
+        <div id="log1"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test 2: Logo with Background</h3>
+        <canvas id="testCanvas2" width="400" height="300"></canvas>
+        <br>
+        <button onclick="testLogoWithBackground()">Test Logo with Background</button>
+        <div id="log2"></div>
+    </div>
+
+    <script>
+        function log(message, elementId) {
+            const element = document.getElementById(elementId);
+            element.innerHTML += '<p>' + message + '</p>';
+            console.log(message);
+        }
+
+        function testLogoLoading() {
+            const canvas = document.getElementById('testCanvas1');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Set white background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const logo = new Image();
+            logo.crossOrigin = 'anonymous';
+            
+            logo.onload = function() {
+                log('Logo loaded successfully! Width: ' + logo.width + ', Height: ' + logo.height, 'log1');
+                
+                // Draw logo in center
+                const logoWidth = 100;
+                const logoHeight = (logo.height / logo.width) * logoWidth;
+                const logoX = (canvas.width - logoWidth) / 2;
+                const logoY = (canvas.height - logoHeight) / 2;
+                
+                log('Drawing logo at: ' + logoX + ', ' + logoY + ' with size: ' + logoWidth + 'x' + logoHeight, 'log1');
+                ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
+                log('Logo drawn successfully!', 'log1');
+            };
+            
+            logo.onerror = function() {
+                log('Logo failed to load!', 'log1');
+            };
+            
+            log('Setting logo source to: /logo.png', 'log1');
+            logo.src = '/logo.png';
+        }
+        
+        function testLogoWithBackground() {
+            const canvas = document.getElementById('testCanvas2');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Set white background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const logo = new Image();
+            logo.crossOrigin = 'anonymous';
+            
+            logo.onload = function() {
+                log('Logo loaded successfully! Width: ' + logo.width + ', Height: ' + logo.height, 'log2');
+                
+                // Draw logo in center with background
+                const logoWidth = 100;
+                const logoHeight = (logo.height / logo.width) * logoWidth;
+                const logoX = (canvas.width - logoWidth) / 2;
+                const logoY = (canvas.height - logoHeight) / 2;
+                
+                // Draw silver background
+                const backgroundPadding = 10;
+                const backgroundWidth = logoWidth + (backgroundPadding * 2);
+                const backgroundHeight = logoHeight + (backgroundPadding * 2);
+                const backgroundX = logoX - backgroundPadding;
+                const backgroundY = logoY - backgroundPadding;
+                
+                log('Drawing silver background at: ' + backgroundX + ', ' + backgroundY + ' with size: ' + backgroundWidth + 'x' + backgroundHeight, 'log2');
+                ctx.fillStyle = 'rgba(192, 192, 192, 0.9)';
+                ctx.fillRect(backgroundX, backgroundY, backgroundWidth, backgroundHeight);
+                
+                // Draw red border for debugging
+                ctx.strokeStyle = '#ff0000';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(backgroundX, backgroundY, backgroundWidth, backgroundHeight);
+                
+                log('Drawing logo at: ' + logoX + ', ' + logoY + ' with size: ' + logoWidth + 'x' + logoHeight, 'log2');
+                ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
+                log('Logo with background drawn successfully!', 'log2');
+            };
+            
+            logo.onerror = function() {
+                log('Logo failed to load!', 'log2');
+            };
+            
+            log('Setting logo source to: /logo.png', 'log2');
+            logo.src = '/logo.png';
+        }
+        
+        // Run basic test on page load
+        window.onload = function() {
+            log('Page loaded, ready to test logo loading', 'log1');
+        };
+    </script>
+</body>
+</html>

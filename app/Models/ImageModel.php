@@ -29,8 +29,8 @@ class ImageModel extends Model
     public function getAllImagesWithUsage()
     {
         $builder = $this->db->table('images i');
-        $builder->select('i.*, COUNT(ni.id) as usage_count');
-        $builder->join('news_images ni', 'ni.image_id = i.id', 'left');
+        $builder->select('i.*, COUNT(n.id) as usage_count');
+        $builder->join('news n', 'n.image_url = i.image_path', 'left');
         $builder->groupBy('i.id');
         $builder->orderBy('i.created_at', 'DESC');
         
@@ -44,8 +44,8 @@ class ImageModel extends Model
     {
         $builder = $this->db->table('images i');
         $builder->select('i.*');
-        $builder->join('news_images ni', 'ni.image_id = i.id', 'left');
-        $builder->where('ni.id IS NULL');
+        $builder->join('news n', 'n.image_url = i.image_path', 'left');
+        $builder->where('n.id IS NULL');
         $builder->orderBy('i.created_at', 'DESC');
         
         return $builder->get()->getResultArray();
@@ -56,8 +56,14 @@ class ImageModel extends Model
      */
     public function isImageUsed($imageId)
     {
-        $builder = $this->db->table('news_images');
-        $builder->where('image_id', $imageId);
+        // First get the image path
+        $image = $this->find($imageId);
+        if (!$image) {
+            return false;
+        }
+        
+        $builder = $this->db->table('news');
+        $builder->where('image_url', $image['image_path']);
         
         return $builder->countAllResults() > 0;
     }

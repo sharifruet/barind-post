@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2-Line Text Test</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans Bengali', Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        canvas {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+        }
+        .controls {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .control-group {
+            margin: 10px 0;
+        }
+        label {
+            display: inline-block;
+            width: 120px;
+            font-weight: bold;
+        }
+        input, select {
+            padding: 5px;
+            margin: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>2-Line Text Positioning Test</h1>
+        <p>This test verifies that 2-line text is properly positioned and visible on the canvas.</p>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>Test Text:</label>
+                <select id="testText">
+                    <option value="This is a short title">Short Title</option>
+                    <option value="This is a longer title that should wrap to two lines">Long Title</option>
+                    <option value="রাজশাহীতে নতুন প্রযুক্তি চালু হয়েছে যা জনগণের জন্য খুবই গুরুত্বপূর্ণ">Bengali Long Title</option>
+                    <option value="This is an extremely long title that should definitely wrap to two lines and show ellipsis if needed">Very Long Title</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Font Size:</label>
+                <input type="range" id="fontSize" min="20" max="60" value="40">
+                <span id="fontSizeValue">40px</span>
+            </div>
+            <div class="control-group">
+                <label>Canvas Width:</label>
+                <input type="range" id="canvasWidth" min="400" max="800" value="600">
+                <span id="canvasWidthValue">600px</span>
+            </div>
+            <div class="control-group">
+                <label>Canvas Height:</label>
+                <input type="range" id="canvasHeight" min="300" max="600" value="400">
+                <span id="canvasHeightValue">400px</span>
+            </div>
+            <button onclick="generateTest()">Generate Test</button>
+        </div>
+        
+        <canvas id="testCanvas" width="600" height="400"></canvas>
+        
+        <div id="debugInfo" style="margin-top: 20px; padding: 10px; background: #e9ecef; border-radius: 5px; font-family: monospace; font-size: 12px;">
+            <strong>Debug Info:</strong><br>
+            <div id="debugContent"></div>
+        </div>
+    </div>
+
+    <script>
+        function generateTest() {
+            const canvas = document.getElementById('testCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Get values from controls
+            const testText = document.getElementById('testText').value;
+            const fontSize = parseInt(document.getElementById('fontSize').value);
+            const width = parseInt(document.getElementById('canvasWidth').value);
+            const height = parseInt(document.getElementById('canvasHeight').value);
+            
+            // Update canvas size
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw background
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Set font
+            ctx.font = `bold ${fontSize}px "Noto Sans Bengali", Arial, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#96031a';
+            
+            // Calculate line height and padding
+            const lineHeight = fontSize + 10;
+            const titlePadding = 15;
+            const maxTitleWidth = width - 100;
+            
+            // Wrap text to maximum 2 lines
+            const words = testText.split(' ');
+            const lines = [];
+            let currentLine = words[0];
+            
+            for (let i = 1; i < words.length; i++) {
+                const word = words[i];
+                const testLine = currentLine + ' ' + word;
+                const testWidth = ctx.measureText(testLine).width;
+                
+                if (testWidth < maxTitleWidth) {
+                    currentLine = testLine;
+                } else {
+                    if (lines.length === 0) {
+                        lines.push(currentLine);
+                        currentLine = word;
+                    } else {
+                        const remainingWords = words.slice(i);
+                        const secondLine = remainingWords.join(' ');
+                        const secondLineWidth = ctx.measureText(secondLine).width;
+                        
+                        if (secondLineWidth <= maxTitleWidth) {
+                            lines.push(currentLine);
+                            lines.push(secondLine);
+                            break;
+                        } else {
+                            let truncatedLine = '';
+                            for (let j = 0; j < remainingWords.length; j++) {
+                                const testTruncated = truncatedLine + (j > 0 ? ' ' : '') + remainingWords[j] + '...';
+                                if (ctx.measureText(testTruncated).width <= maxTitleWidth) {
+                                    truncatedLine = testTruncated;
+                                } else {
+                                    break;
+                                }
+                            }
+                            lines.push(currentLine);
+                            lines.push(truncatedLine || '...');
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if (lines.length === 0) {
+                lines.push(currentLine);
+            } else if (lines.length === 1 && currentLine !== lines[0]) {
+                lines.push(currentLine);
+            }
+            
+            if (lines.length > 2) {
+                lines.splice(2);
+            }
+            
+            // Calculate text position
+            const totalTextHeight = (lines.length * lineHeight) + (titlePadding * 2);
+            const titleX = width / 2;
+            
+            // Position text at the bottom of the image, accounting for multiple lines
+            let titleY;
+            if (lines.length === 1) {
+                titleY = height - 15; // Single line at bottom
+            } else {
+                // For 2 lines, adjust position to ensure both lines fit
+                titleY = height - 15 - ((lines.length - 1) * lineHeight);
+            }
+            
+            // Draw background
+            const backgroundWidth = width;
+            const backgroundHeight = (lines.length * lineHeight) + (titlePadding * 2);
+            const backgroundX = 0;
+            const backgroundY = titleY - (lines.length * lineHeight) - titlePadding;
+            
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.fillRect(backgroundX, backgroundY, backgroundWidth, backgroundHeight);
+            
+            // Draw text
+            ctx.fillStyle = '#96031a';
+            lines.forEach((line, index) => {
+                const y = titleY - ((lines.length - 1 - index) * lineHeight);
+                if (y >= 0 && y < height) {
+                    ctx.fillText(line, titleX, y);
+                }
+            });
+            
+            // Draw canvas border for reference
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(0, 0, width, height);
+            
+            // Update debug info
+            const debugContent = document.getElementById('debugContent');
+            debugContent.innerHTML = `
+                Lines: ${lines.length}<br>
+                Line 1: "${lines[0] || 'N/A'}"<br>
+                Line 2: "${lines[1] || 'N/A'}"<br>
+                Canvas: ${width} x ${height}<br>
+                Title Y: ${titleY.toFixed(1)}<br>
+                Line Height: ${lineHeight}<br>
+                Background Y: ${backgroundY.toFixed(1)}<br>
+                Background Height: ${backgroundHeight}<br>
+                Text positions: ${lines.map((line, index) => {
+                    const y = titleY - ((lines.length - 1 - index) * lineHeight);
+                    return `Line ${index + 1}: ${y.toFixed(1)}`;
+                }).join(', ')}
+            `;
+        }
+        
+        // Update display values
+        document.getElementById('fontSize').addEventListener('input', function() {
+            document.getElementById('fontSizeValue').textContent = this.value + 'px';
+        });
+        
+        document.getElementById('canvasWidth').addEventListener('input', function() {
+            document.getElementById('canvasWidthValue').textContent = this.value + 'px';
+        });
+        
+        document.getElementById('canvasHeight').addEventListener('input', function() {
+            document.getElementById('canvasHeightValue').textContent = this.value + 'px';
+        });
+        
+        // Generate initial test
+        generateTest();
+    </script>
+</body>
+</html>

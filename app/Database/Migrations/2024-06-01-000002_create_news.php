@@ -58,6 +58,15 @@ class Migration_create_news extends Migration
                 'constraint' => '500',
                 'null' => true,
             ],
+            'image_caption' => [
+                'type' => 'TEXT',
+                'null' => true,
+            ],
+            'image_alt_text' => [
+                'type' => 'VARCHAR',
+                'constraint' => '255',
+                'null' => true,
+            ],
             'slug' => [
                 'type' => 'VARCHAR',
                 'constraint' => '255',

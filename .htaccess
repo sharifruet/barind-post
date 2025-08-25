@@ -3,7 +3,7 @@ RewriteEngine On
 # Serve static files from public directory
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(logo\.png|favicon\.ico|robots\.txt)$ public/$1 [L]
+RewriteRule ^(logo\.png|favicon\.ico|robots\.txt|test_image_preview\.html|test_modal_closing\.html|test_bootstrap_modal\.html|test_2line_text\.html|test_photo_card_js\.html|test_ckeditor_upload\.html)$ public/$1 [L]
 
 # Allow access to uploaded files
 RewriteCond %{REQUEST_FILENAME} !-f

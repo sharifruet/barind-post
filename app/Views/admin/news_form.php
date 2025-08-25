@@ -513,6 +513,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function showImagePreview(imageData) {
+        console.log('showImagePreview called with:', imageData);
+        
         let previewSection = document.getElementById('imagePreview');
         if (!previewSection) {
             previewSection = document.createElement('div');
@@ -523,6 +525,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Add base URL if the image URL is relative
         const fullImageUrl = imageData.preview_url.startsWith('http') ? imageData.preview_url : window.location.origin + '/' + imageData.preview_url;
+        console.log('showImagePreview - fullImageUrl:', fullImageUrl);
         
         previewSection.innerHTML = `
             <div class="alert alert-success">
@@ -541,6 +544,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
         `;
+        
+        console.log('Preview section updated');
     }
     
     function showExistingImage() {
@@ -612,30 +617,44 @@ document.addEventListener('DOMContentLoaded', function() {
         empty.style.display = 'none';
         grid.innerHTML = '';
         
+        console.log('Loading existing images...');
+        
         fetch('/image-upload/existing-images', {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error('HTTP error! status: ' + response.status);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('Response data:', data);
             loading.style.display = 'none';
             
-            if (data.success && data.images.length > 0) {
+            if (data.success && data.images && data.images.length > 0) {
+                console.log('Found', data.images.length, 'images');
                 data.images.forEach(image => {
                     const imageCard = createImageCard(image);
                     grid.appendChild(imageCard);
                 });
             } else {
+                console.log('No images found or error in response');
                 empty.style.display = 'block';
+                if (data.message) {
+                    empty.innerHTML = '<p class="text-warning">' + data.message + '</p>';
+                }
             }
         })
         .catch(error => {
             console.error('Error loading images:', error);
             loading.style.display = 'none';
             empty.style.display = 'block';
-            empty.innerHTML = '<p class="text-danger">Error loading images. Please try again.</p>';
+            empty.innerHTML = '<p class="text-danger">Error loading images: ' + error.message + '</p>';
         });
     }
     
@@ -656,35 +675,62 @@ document.addEventListener('DOMContentLoaded', function() {
                         <strong>Usage:</strong> ${image.usage_count} times<br>
                         <strong>Uploaded:</strong> ${new Date(image.uploaded_at).toLocaleDateString()}
                     </p>
-                    <button type="button" class="btn btn-primary btn-sm w-100" onclick="selectExistingImage(${image.id}, '${image.image_path}', '${image.caption || ''}', '${image.alt_text || ''}')">
-                        <i class="fas fa-check"></i> Select
-                    </button>
+                                            <button type="button" class="btn btn-primary btn-sm w-100 select-image-btn" 
+                                data-image-id="${image.id}" 
+                                data-image-path="${image.image_path}" 
+                                data-caption="${image.caption || ''}" 
+                                data-alt-text="${image.alt_text || ''}">
+                            <i class="fas fa-check"></i> Select
+                        </button>
                 </div>
             </div>
         `;
+        
+                    // Add event listener to the button
+            const button = col.querySelector('.select-image-btn');
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const imageId = this.getAttribute('data-image-id');
+                const imagePath = this.getAttribute('data-image-path');
+                const caption = this.getAttribute('data-caption');
+                const altText = this.getAttribute('data-alt-text');
+                selectExistingImage(imageId, imagePath, caption, altText);
+            });
         
         return col;
     }
 });
 
 function selectExistingImage(imageId, imagePath, caption, altText) {
+    console.log('selectExistingImage called with:', { imageId, imagePath, caption, altText });
+    
     // Update form fields
     document.querySelector('input[name="image_url"]').value = imagePath;
     document.querySelector('input[name="image_caption"]').value = caption;
     document.querySelector('input[name="image_alt_text"]').value = altText;
     
     // Show preview with proper base URL handling
+    const fullImageUrl = imagePath.startsWith('http') ? imagePath : window.location.origin + '/' + imagePath;
+    console.log('Full image URL:', fullImageUrl);
+    
     showImagePreview({
         image_path: imagePath,
         caption: caption,
         alt_text: altText,
-        preview_url: imagePath
+        preview_url: fullImageUrl
     });
     
-    // Close modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById('existingImagesModal'));
-    if (modal) {
-        modal.hide();
+    // Close modal immediately
+    const modalElement = document.getElementById('existingImagesModal');
+    if (modalElement) {
+        // Try to get existing instance first
+        let bsModal = bootstrap.Modal.getInstance(modalElement);
+        if (!bsModal) {
+            // Create new instance if none exists
+            bsModal = new bootstrap.Modal(modalElement);
+        }
+        bsModal.hide();
+        console.log('Modal closed using Bootstrap Modal');
     }
     
     // Show success message
@@ -1088,6 +1134,44 @@ function loadCKEditor() {
                     
                     // Store editor instance globally for sync functionality
                     window.ckEditorInstance = editor;
+                    
+                    // Add custom upload adapter for better debugging
+                    editor.plugins.get('FileRepository').createUploadAdapter = function(loader) {
+                        console.log('Creating upload adapter for CKEditor');
+                        return {
+                            upload: function() {
+                                console.log('Upload started in CKEditor');
+                                return loader.file.then(file => {
+                                    console.log('File to upload:', file.name, file.size);
+                                    const formData = new FormData();
+                                    formData.append('upload', file);
+                                    
+                                    return fetch('/image-upload/upload', {
+                                        method: 'POST',
+                                        headers: {
+                                            'X-Requested-With': 'XMLHttpRequest'
+                                        },
+                                        body: formData
+                                    });
+                                }).then(response => {
+                                    console.log('Upload response status:', response.status);
+                                    return response.json();
+                                }).then(data => {
+                                    console.log('Upload response data:', data);
+                                    if (data.error) {
+                                        console.error('Upload error:', data.error.message);
+                                        throw new Error(data.error.message);
+                                    }
+                                    return {
+                                        default: data.url
+                                    };
+                                }).catch(error => {
+                                    console.error('Upload failed:', error);
+                                    throw error;
+                                });
+                            }
+                        };
+                    };
                     
                     // Ensure the editor content is properly synced with the textarea for form submission
                     editor.model.document.on('change:data', () => {

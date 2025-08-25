@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Card JS Test</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans Bengali', Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        canvas {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Photo Card JavaScript Test</h1>
+        <p>This test verifies that the photo card generation JavaScript is working correctly.</p>
+        
+        <div id="status" class="status"></div>
+        
+        <button onclick="testBasicCanvas()">Test Basic Canvas</button>
+        <button onclick="testTextWrapping()">Test Text Wrapping</button>
+        <button onclick="testPhotoCardGeneration()">Test Photo Card Generation</button>
+        
+        <canvas id="testCanvas" width="600" height="400"></canvas>
+    </div>
+
+    <script>
+        function updateStatus(message, isError = false) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = isError ? 'status error' : 'status success';
+            statusDiv.innerHTML = message;
+        }
+
+        function testBasicCanvas() {
+            try {
+                const canvas = document.getElementById('testCanvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw a simple rectangle
+                ctx.fillStyle = '#f0f0f0';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw some text
+                ctx.font = 'bold 24px "Noto Sans Bengali", Arial, sans-serif';
+                ctx.fillStyle = '#96031a';
+                ctx.textAlign = 'center';
+                ctx.fillText('Basic Canvas Test - Working!', canvas.width / 2, canvas.height / 2);
+                
+                updateStatus('✅ Basic canvas functionality is working correctly.');
+            } catch (error) {
+                updateStatus('❌ Basic canvas test failed: ' + error.message, true);
+            }
+        }
+
+        function testTextWrapping() {
+            try {
+                const canvas = document.getElementById('testCanvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Set font
+                ctx.font = 'bold 32px "Noto Sans Bengali", Arial, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#96031a';
+                
+                // Test text wrapping logic (simplified version from photo card generator)
+                const testText = "This is a longer title that should wrap to two lines for testing purposes";
+                const fontSize = 32;
+                const lineHeight = fontSize + 10;
+                const titlePadding = 15;
+                const maxTitleWidth = canvas.width - 100;
+                
+                // Wrap text to maximum 2 lines
+                const words = testText.split(' ');
+                const lines = [];
+                let currentLine = words[0];
+                
+                for (let i = 1; i < words.length; i++) {
+                    const word = words[i];
+                    const testLine = currentLine + ' ' + word;
+                    const testWidth = ctx.measureText(testLine).width;
+                    
+                    if (testWidth < maxTitleWidth) {
+                        currentLine = testLine;
+                    } else {
+                        if (lines.length === 0) {
+                            lines.push(currentLine);
+                            currentLine = word;
+                        } else {
+                            const remainingWords = words.slice(i);
+                            const secondLine = remainingWords.join(' ');
+                            const secondLineWidth = ctx.measureText(secondLine).width;
+                            
+                            if (secondLineWidth <= maxTitleWidth) {
+                                lines.push(currentLine);
+                                lines.push(secondLine);
+                                break;
+                            } else {
+                                let truncatedLine = '';
+                                for (let j = 0; j < remainingWords.length; j++) {
+                                    const testTruncated = truncatedLine + (j > 0 ? ' ' : '') + remainingWords[j] + '...';
+                                    if (ctx.measureText(testTruncated).width <= maxTitleWidth) {
+                                        truncatedLine = testTruncated;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                lines.push(currentLine);
+                                lines.push(truncatedLine || '...');
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                if (lines.length === 0) {
+                    lines.push(currentLine);
+                } else if (lines.length === 1 && currentLine !== lines[0]) {
+                    lines.push(currentLine);
+                }
+                
+                if (lines.length > 2) {
+                    lines.splice(2);
+                }
+                
+                // Calculate positioning
+                const totalTextHeight = (lines.length * lineHeight) + (titlePadding * 2);
+                const titleX = canvas.width / 2;
+                const titleY = canvas.height - (totalTextHeight / 2) - 20;
+                
+                // Draw background
+                const backgroundWidth = canvas.width;
+                const backgroundHeight = (lines.length * lineHeight) + (titlePadding * 2);
+                const backgroundX = 0;
+                const backgroundY = titleY - (lines.length * lineHeight) - titlePadding;
+                
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.fillRect(backgroundX, backgroundY, backgroundWidth, backgroundHeight);
+                
+                // Draw text
+                ctx.fillStyle = '#96031a';
+                lines.forEach((line, index) => {
+                    const y = titleY - ((lines.length - 1 - index) * lineHeight);
+                    if (y >= 0 && y < canvas.height) {
+                        ctx.fillText(line, titleX, y);
+                    }
+                });
+                
+                updateStatus(`✅ Text wrapping test successful! Generated ${lines.length} lines: "${lines.join('" and "')}"`);
+            } catch (error) {
+                updateStatus('❌ Text wrapping test failed: ' + error.message, true);
+            }
+        }
+
+        function testPhotoCardGeneration() {
+            try {
+                // Simulate the photo card generation process
+                const canvas = document.getElementById('testCanvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Simulate loading an image (create a gradient background)
+                const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                gradient.addColorStop(0, '#4a90e2');
+                gradient.addColorStop(1, '#357abd');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Test the complete photo card generation logic
+                const title = "রাজশাহীতে নতুন প্রযুক্তি চালু হয়েছে যা জনগণের জন্য খুবই গুরুত্বপূর্ণ";
+                const fontSize = 40;
+                const color = '#96031a';
+                const width = canvas.width;
+                const height = canvas.height;
+                
+                // Set font
+                ctx.font = `bold ${fontSize}px "Noto Sans Bengali", Arial, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.globalAlpha = 1.0;
+                ctx.fillStyle = color;
+                
+                // Text wrapping logic
+                const lineHeight = fontSize + 10;
+                const titlePadding = 15;
+                const maxTitleWidth = width - 100;
+                
+                const words = title.split(' ');
+                const lines = [];
+                let currentLine = words[0];
+                
+                for (let i = 1; i < words.length; i++) {
+                    const word = words[i];
+                    const testLine = currentLine + ' ' + word;
+                    const testWidth = ctx.measureText(testLine).width;
+                    
+                    if (testWidth < maxTitleWidth) {
+                        currentLine = testLine;
+                    } else {
+                        if (lines.length === 0) {
+                            lines.push(currentLine);
+                            currentLine = word;
+                        } else {
+                            const remainingWords = words.slice(i);
+                            const secondLine = remainingWords.join(' ');
+                            const secondLineWidth = ctx.measureText(secondLine).width;
+                            
+                            if (secondLineWidth <= maxTitleWidth) {
+                                lines.push(currentLine);
+                                lines.push(secondLine);
+                                break;
+                            } else {
+                                let truncatedLine = '';
+                                for (let j = 0; j < remainingWords.length; j++) {
+                                    const testTruncated = truncatedLine + (j > 0 ? ' ' : '') + remainingWords[j] + '...';
+                                    if (ctx.measureText(testTruncated).width <= maxTitleWidth) {
+                                        truncatedLine = testTruncated;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                lines.push(currentLine);
+                                lines.push(truncatedLine || '...');
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                if (lines.length === 0) {
+                    lines.push(currentLine);
+                } else if (lines.length === 1 && currentLine !== lines[0]) {
+                    lines.push(currentLine);
+                }
+                
+                if (lines.length > 2) {
+                    lines.splice(2);
+                }
+                
+                // Calculate positioning
+                const totalTextHeight = (lines.length * lineHeight) + (titlePadding * 2);
+                const titleX = width / 2;
+                
+                // Position text at the bottom of the image, accounting for multiple lines
+                let titleY;
+                if (lines.length === 1) {
+                    titleY = height - 15; // Single line at bottom
+                } else {
+                    // For 2 lines, adjust position to ensure both lines fit
+                    titleY = height - 15 - ((lines.length - 1) * lineHeight);
+                }
+                
+                // Draw background
+                const backgroundWidth = width;
+                const backgroundHeight = (lines.length * lineHeight) + (titlePadding * 2);
+                const backgroundX = 0;
+                const backgroundY = titleY - (lines.length * lineHeight) - titlePadding;
+                
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.fillRect(backgroundX, backgroundY, backgroundWidth, backgroundHeight);
+                
+                // Draw text
+                ctx.fillStyle = color;
+                lines.forEach((line, index) => {
+                    const y = titleY - ((lines.length - 1 - index) * lineHeight);
+                    if (y >= 0 && y < height) {
+                        ctx.fillText(line, titleX, y);
+                    }
+                });
+                
+                updateStatus(`✅ Photo card generation test successful! Generated ${lines.length} lines with Bengali text.`);
+            } catch (error) {
+                updateStatus('❌ Photo card generation test failed: ' + error.message, true);
+            }
+        }
+
+        // Run basic test on load
+        window.addEventListener('load', function() {
+            updateStatus('🚀 Photo Card JavaScript Test Ready. Click buttons to test different functions.');
+        });
+    </script>
+</body>
+</html>

@@ -265,12 +265,9 @@ class ImageUpload extends BaseController
                 throw new \Exception('Failed to save image to database');
             }
 
-            // Return CKEditor format response
+            // Return CKEditor format response - simpleUpload expects just the URL
             return $this->response->setJSON([
-                'url' => base_url($relativePath),
-                'uploaded' => 1,
-                'fileName' => $filename,
-                'error' => null
+                'url' => base_url($relativePath)
             ]);
 
         } catch (\Exception $e) {
@@ -280,7 +277,6 @@ class ImageUpload extends BaseController
             }
             
             return $this->response->setJSON([
-                'uploaded' => 0,
                 'error' => [
                     'message' => 'Upload failed: ' . $e->getMessage()
                 ]
@@ -323,6 +319,242 @@ class ImageUpload extends BaseController
             return $this->response->setJSON([
                 'success' => false,
                 'message' => 'Failed to fetch images: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get all images (alias for getExistingImages)
+     */
+    public function getAllImages()
+    {
+        return $this->getExistingImages();
+    }
+
+    /**
+     * Update image caption
+     */
+    public function updateCaption()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Invalid request']);
+        }
+
+        $imageId = $this->request->getPost('image_id');
+        $caption = $this->request->getPost('caption');
+        $altText = $this->request->getPost('alt_text');
+
+        if (!$imageId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Image ID is required']);
+        }
+
+        try {
+            $imageModel = new ImageModel();
+            $imageModel->update($imageId, [
+                'caption' => $caption,
+                'alt_text' => $altText
+            ]);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Image updated successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to update image: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Delete image
+     */
+    public function delete()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Invalid request']);
+        }
+
+        $imageId = $this->request->getPost('image_id');
+
+        if (!$imageId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Image ID is required']);
+        }
+
+        try {
+            $imageModel = new ImageModel();
+            $deleted = $imageModel->deleteImageIfUnused($imageId);
+
+            if ($deleted) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Image deleted successfully'
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Image cannot be deleted as it is being used'
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to delete image: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Set image as featured
+     */
+    public function setFeatured()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Invalid request']);
+        }
+
+        $imageId = $this->request->getPost('image_id');
+        $featured = $this->request->getPost('featured');
+
+        if (!$imageId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Image ID is required']);
+        }
+
+        try {
+            $imageModel = new ImageModel();
+            $imageModel->update($imageId, ['featured' => $featured]);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Image featured status updated'
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to update featured status: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get images for a specific news article
+     */
+    public function getImages($newsId)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Invalid request']);
+        }
+
+        try {
+            $db = \Config\Database::connect();
+            $builder = $db->table('news');
+            $news = $builder->where('id', $newsId)->get()->getRowArray();
+
+            if (!$news) {
+                return $this->response->setJSON(['success' => false, 'message' => 'News article not found']);
+            }
+
+            $images = [];
+            if ($news['image_url']) {
+                $images[] = [
+                    'id' => 0, // No specific ID for news images
+                    'image_path' => $news['image_url'],
+                    'caption' => $news['image_caption'],
+                    'alt_text' => $news['image_alt_text'],
+                    'preview_url' => base_url($news['image_url'])
+                ];
+            }
+
+            return $this->response->setJSON([
+                'success' => true,
+                'images' => $images
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to fetch images: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Link image to news article
+     */
+    public function linkImage()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Invalid request']);
+        }
+
+        $newsId = $this->request->getPost('news_id');
+        $imagePath = $this->request->getPost('image_path');
+        $caption = $this->request->getPost('caption');
+        $altText = $this->request->getPost('alt_text');
+
+        if (!$newsId || !$imagePath) {
+            return $this->response->setJSON(['success' => false, 'message' => 'News ID and image path are required']);
+        }
+
+        try {
+            $db = \Config\Database::connect();
+            $builder = $db->table('news');
+            $builder->where('id', $newsId)->update([
+                'image_url' => $imagePath,
+                'image_caption' => $caption,
+                'image_alt_text' => $altText
+            ]);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Image linked successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to link image: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Remove image from news article
+     */
+    public function removeFromNews()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Invalid request']);
+        }
+
+        $newsId = $this->request->getPost('news_id');
+
+        if (!$newsId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'News ID is required']);
+        }
+
+        try {
+            $db = \Config\Database::connect();
+            $builder = $db->table('news');
+            $builder->where('id', $newsId)->update([
+                'image_url' => null,
+                'image_caption' => null,
+                'image_alt_text' => null
+            ]);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Image removed successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to remove image: ' . $e->getMessage()
             ]);
         }
     }

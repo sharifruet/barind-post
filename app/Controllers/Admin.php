@@ -752,13 +752,63 @@ class Admin extends BaseAdminController
         }
         
         $newsModel = new NewsModel();
-        $news = $newsModel->where('status', 'published')
-                          ->orderBy('published_at', 'DESC')
-                          ->findAll(50); // Get last 50 published news
+        $categoryModel = new CategoryModel();
+        
+        // Get news with category information
+        $db = \Config\Database::connect();
+        $news = $db->table('news')
+                   ->select('news.*, categories.name as category_name')
+                   ->join('categories', 'categories.id = news.category_id', 'left')
+                   ->where('news.status', 'published')
+                   ->orderBy('news.published_at', 'DESC')
+                   ->limit(50)
+                   ->get()
+                   ->getResultArray();
         
         return view('admin/photo_card_generator', [
             'news' => $news
         ]);
+    }
+
+    public function generatePhotoCard()
+    {
+        // Check if user is logged in and has admin role
+        if (!session('user_id') || session('user_role') !== 'admin') {
+            return $this->response->setJSON(['error' => 'Access denied. Admin role required.']);
+        }
+        
+        $newsId = $this->request->getPost('news_id');
+        $template = $this->request->getPost('template') ?? 'default';
+        
+        if (!$newsId) {
+            return $this->response->setJSON(['error' => 'News ID is required.']);
+        }
+        
+        // Get news with category information
+        $db = \Config\Database::connect();
+        $news = $db->table('news')
+                   ->select('news.*, categories.name as category_name')
+                   ->join('categories', 'categories.id = news.category_id', 'left')
+                   ->where('news.id', $newsId)
+                   ->get()
+                   ->getRowArray();
+        
+        if (!$news) {
+            return $this->response->setJSON(['error' => 'News article not found.']);
+        }
+        
+        try {
+            // Generate the photo card
+            $imageData = $this->createPhotoCard($news, $template);
+            
+            // Return the image data as base64
+            return $this->response->setJSON([
+                'success' => true,
+                'image' => base64_encode($imageData)
+            ]);
+        } catch (Exception $e) {
+            return $this->response->setJSON(['error' => 'Failed to generate photo card: ' . $e->getMessage()]);
+        }
     }
 
     private function createPhotoCard($news, $template = 'default')
@@ -772,8 +822,19 @@ class Admin extends BaseAdminController
         $width = 1200;
         $height = 630;
         
-        // Create image
-        $image = imagecreatetruecolor($width, $height);
+        // Calculate height for header_footer template
+        if ($template === 'header_footer') {
+            $imageHeight = $height; // Image takes full height
+            $titleHeight = max(200, $height * 0.2); // Minimum 200px or 20% of height
+            $footerHeight = max(80, $height * 0.1); // Minimum 80px or 10% of height
+            
+            // Adjust canvas height to accommodate full image + title + footer
+            $totalHeight = $imageHeight + $titleHeight + $footerHeight;
+            $image = imagecreatetruecolor($width, $totalHeight);
+        } else {
+            $image = imagecreatetruecolor($width, $height);
+        }
+        
         if ($image === false) {
             throw new Exception('Failed to create image resource');
         }
@@ -785,26 +846,8 @@ class Admin extends BaseAdminController
         $darkGray = imagecolorallocate($image, 52, 58, 64);
         $lightGray = imagecolorallocate($image, 108, 117, 125);
         
-        // Fill background based on template
-        switch ($template) {
-            case 'red':
-                imagefill($image, 0, 0, $red);
-                break;
-            case 'gradient':
-                // Create gradient background
-                for ($i = 0; $i < $height; $i++) {
-                    $color = imagecolorallocate($image, 
-                        220 - ($i / $height) * 50, 
-                        53 - ($i / $height) * 20, 
-                        69 - ($i / $height) * 20
-                    );
-                    imageline($image, 0, $i, $width, $i, $color);
-                }
-                break;
-            default:
-                imagefill($image, 0, 0, $white);
-                break;
-        }
+        // Fill background
+        imagefill($image, 0, 0, $white);
         
         // Load and add logo
         $logoPath = FCPATH . 'public/logo.png';
@@ -817,17 +860,38 @@ class Admin extends BaseAdminController
                 $logoWidth = imagesx($logo);
                 $logoHeight = imagesy($logo);
                 
-                // Scale logo to fit (smaller size)
-                $logoNewWidth = 100;
-                $logoNewHeight = ($logoHeight / $logoWidth) * $logoNewWidth;
-                
-                $scaledLogo = imagecreatetruecolor($logoNewWidth, $logoNewHeight);
-                imagealphablending($scaledLogo, false);
-                imagesavealpha($scaledLogo, true);
-                imagecopyresampled($scaledLogo, $logo, 0, 0, 0, 0, $logoNewWidth, $logoNewHeight, $logoWidth, $logoHeight);
-                
-                // Position logo at top-right corner
-                imagecopy($image, $scaledLogo, $width - $logoNewWidth - 50, 30, 0, 0, $logoNewWidth, $logoNewHeight);
+                // Scale logo based on template
+                if ($template === 'header_footer') {
+                    // For header_footer template, logo goes in title section
+                    $imageHeight = $height * 0.6; // 60% of height for image
+                    $titleHeight = $height * 0.3; // 30% for title (3x footer height)
+                    $footerHeight = $height * 0.1; // 10% for footer
+                    
+                    $logoNewWidth = 80; // Fixed logo size
+                    $logoNewHeight = ($logoHeight / $logoWidth) * $logoNewWidth;
+                    
+                    $scaledLogo = imagecreatetruecolor($logoNewWidth, $logoNewHeight);
+                    imagealphablending($scaledLogo, false);
+                    imagesavealpha($scaledLogo, true);
+                    imagecopyresampled($scaledLogo, $logo, 0, 0, 0, 0, $logoNewWidth, $logoNewHeight, $logoWidth, $logoHeight);
+                    
+                    // Position logo in title section, at the top
+                    $logoX = ($width - $logoNewWidth) / 2; // Center horizontally
+                    $logoY = $imageHeight + 20; // Just after image, at top of title section
+                    imagecopy($image, $scaledLogo, $logoX, $logoY, 0, 0, $logoNewWidth, $logoNewHeight);
+                } else {
+                    // For other templates, use original positioning
+                    $logoNewWidth = 100;
+                    $logoNewHeight = ($logoHeight / $logoWidth) * $logoNewWidth;
+                    
+                    $scaledLogo = imagecreatetruecolor($logoNewWidth, $logoNewHeight);
+                    imagealphablending($scaledLogo, false);
+                    imagesavealpha($scaledLogo, true);
+                    imagecopyresampled($scaledLogo, $logo, 0, 0, 0, 0, $logoNewWidth, $logoNewHeight, $logoWidth, $logoHeight);
+                    
+                    // Position logo at top-right corner
+                    imagecopy($image, $scaledLogo, $width - $logoNewWidth - 50, 30, 0, 0, $logoNewWidth, $logoNewHeight);
+                }
                 
                 imagedestroy($logo);
                 imagedestroy($scaledLogo);
@@ -838,50 +902,89 @@ class Admin extends BaseAdminController
         if (!empty($news['image_url'])) {
             $imageUrl = $news['image_url'];
             
+            // Debug: Log the image URL
+            error_log("Photo Card Debug: Image URL = " . $imageUrl);
+            
             // Handle both local files and external URLs
             if (strpos($imageUrl, 'http') === 0) {
                 // External URL - try to download
                 $imageData = @file_get_contents($imageUrl);
                 if ($imageData === false) {
                     // Skip if external image can't be loaded
+                    error_log("Photo Card Debug: Failed to load external image: " . $imageUrl);
                     $imageData = null;
+                } else {
+                    error_log("Photo Card Debug: External image loaded successfully");
                 }
             } else {
-                // Local file
-                $newsImagePath = FCPATH . 'public/uploads/news/' . basename($imageUrl);
-                if (file_exists($newsImagePath)) {
-                    $imageData = file_get_contents($newsImagePath);
-                } else {
-                    $imageData = null;
+                // Local file - try multiple possible paths
+                $possiblePaths = [
+                    FCPATH . 'public/uploads/news/' . basename($imageUrl),
+                    FCPATH . 'public/writable/uploads/news/' . basename($imageUrl),
+                    FCPATH . 'writable/uploads/news/' . basename($imageUrl)
+                ];
+                
+                $imageData = null;
+                foreach ($possiblePaths as $newsImagePath) {
+                    error_log("Photo Card Debug: Trying path = " . $newsImagePath);
+                    if (file_exists($newsImagePath)) {
+                        $imageData = file_get_contents($newsImagePath);
+                        error_log("Photo Card Debug: Local image loaded successfully from: " . $newsImagePath);
+                        break;
+                    }
+                }
+                
+                if ($imageData === null) {
+                    error_log("Photo Card Debug: Local image file not found in any path");
                 }
             }
             
             if ($imageData !== null && $imageData !== false) {
+                error_log("Photo Card Debug: Image data loaded, attempting to create image resource");
                 $newsImage = imagecreatefromstring($imageData);
                 if ($newsImage === false) {
                     // Skip if image can't be created
+                    error_log("Photo Card Debug: Failed to create image resource from string");
                 } else {
                     $newsImageWidth = imagesx($newsImage);
                     $newsImageHeight = imagesy($newsImage);
+                    error_log("Photo Card Debug: Image created successfully - Width: $newsImageWidth, Height: $newsImageHeight");
                     
-                    // Scale news image to fit top portion with larger size
-                    $newsImageNewWidth = $width - 100; // Full width minus margins
-                    $newsImageNewHeight = ($newsImageHeight / $newsImageWidth) * $newsImageNewWidth;
-                    
-                    // Limit height to 60% of total height to leave space for text
-                    $maxImageHeight = $height * 0.6;
-                    if ($newsImageNewHeight > $maxImageHeight) {
-                        $newsImageNewHeight = $maxImageHeight;
-                        $newsImageNewWidth = ($newsImageWidth / $newsImageHeight) * $newsImageNewHeight;
+                    // Scale news image based on template
+                    if ($template === 'header_footer') {
+                        // For header_footer template, use exact image dimensions
+                        // Use the exact image dimensions - full height
+                        $newsImageNewWidth = $newsImageWidth;
+                        $newsImageNewHeight = $newsImageHeight;
+                        $newsImageX = ($width - $newsImageNewWidth) / 2; // Center horizontally
+                        $newsImageY = 0; // Start from top
+                        
+                        $scaledNewsImage = imagecreatetruecolor($newsImageNewWidth, $newsImageNewHeight);
+                        imagecopyresampled($scaledNewsImage, $newsImage, 0, 0, 0, 0, $newsImageNewWidth, $newsImageNewHeight, $newsImageWidth, $newsImageHeight);
+                        
+                        // Position news image
+                        error_log("Photo Card Debug: Drawing image at X: $newsImageX, Y: $newsImageY, Width: $newsImageNewWidth, Height: $newsImageNewHeight");
+                        imagecopy($image, $scaledNewsImage, $newsImageX, $newsImageY, 0, 0, $newsImageNewWidth, $newsImageNewHeight);
+                    } else {
+                        // For other templates, use original logic
+                        $newsImageNewWidth = $width - 100; // Full width minus margins
+                        $newsImageNewHeight = ($newsImageHeight / $newsImageWidth) * $newsImageNewWidth;
+                        
+                        // Limit height to 60% of total height to leave space for text
+                        $maxImageHeight = $height * 0.6;
+                        if ($newsImageNewHeight > $maxImageHeight) {
+                            $newsImageNewHeight = $maxImageHeight;
+                            $newsImageNewWidth = ($newsImageWidth / $newsImageHeight) * $newsImageNewHeight;
+                        }
+                        
+                        $scaledNewsImage = imagecreatetruecolor($newsImageNewWidth, $newsImageNewHeight);
+                        imagecopyresampled($scaledNewsImage, $newsImage, 0, 0, 0, 0, $newsImageNewWidth, $newsImageNewHeight, $newsImageWidth, $newsImageHeight);
+                        
+                        // Position news image at top center
+                        $newsImageX = ($width - $newsImageNewWidth) / 2;
+                        $newsImageY = 50; // Top margin
+                        imagecopy($image, $scaledNewsImage, $newsImageX, $newsImageY, 0, 0, $newsImageNewWidth, $newsImageNewHeight);
                     }
-                    
-                    $scaledNewsImage = imagecreatetruecolor($newsImageNewWidth, $newsImageNewHeight);
-                    imagecopyresampled($scaledNewsImage, $newsImage, 0, 0, 0, 0, $newsImageNewWidth, $newsImageNewHeight, $newsImageWidth, $newsImageHeight);
-                    
-                    // Position news image at top center
-                    $newsImageX = ($width - $newsImageNewWidth) / 2;
-                    $newsImageY = 50; // Top margin
-                    imagecopy($image, $scaledNewsImage, $newsImageX, $newsImageY, 0, 0, $newsImageNewWidth, $newsImageNewHeight);
                     
                     imagedestroy($newsImage);
                     imagedestroy($scaledNewsImage);
@@ -922,7 +1025,7 @@ class Admin extends BaseAdminController
             }
         }
         
-        // Add title text (positioned at bottom)
+        // Add title text based on template
         $title = $news['title'];
         
         // Debug: Log the title being processed
@@ -933,73 +1036,123 @@ class Admin extends BaseAdminController
         // Ensure proper UTF-8 encoding for Bengali text
         $title = mb_convert_encoding($title, 'UTF-8', 'UTF-8');
         
-        $titleFontSize = 36;
-        $titleColor = $template === 'default' ? $black : $white;
-        
-        // Calculate text position at bottom
-        $titleX = 50;
-        $titleY = $height - 200; // Position at bottom
-        $maxTitleWidth = $width - 100; // Full width minus margins
-        
-        // For Bengali text, use simpler approach without complex wrapping
-        $lines = [$title]; // Just use the title as one line for now
-        $lineHeight = 45;
-        
-        // Simple direct rendering approach (like the working example)
-        foreach ($lines as $index => $line) {
-            $y = $titleY + ($index * $lineHeight);
-            if ($y < $height - 100) { // Don't go below bottom
-                // Ensure proper UTF-8 encoding
-                $line = mb_convert_encoding($line, 'UTF-8', 'UTF-8');
-                
-                // Try with a test title first to see if the issue is with the data
-                $testTitle = 'আমরা বিশ্বাস করি';
-                imagettftext($image, $titleFontSize, 0, $titleX, $y, $titleColor, $fontPath, $testTitle);
-                
-                // Then try with the actual title
-                imagettftext($image, $titleFontSize, 0, $titleX, $y + 50, $titleColor, $fontPath, $line);
+        if ($template === 'header_footer') {
+            // For header_footer template, position title in title section
+            $imageHeight = $height; // Image takes full height
+            $titleHeight = max(200, $height * 0.2); // Minimum 200px or 20% of height
+            $footerHeight = max(80, $height * 0.1); // Minimum 80px or 10% of height
+            
+            // Adjust canvas height to accommodate full image + title + footer
+            $totalHeight = $imageHeight + $titleHeight + $footerHeight;
+            $image = imagecreatetruecolor($width, $totalHeight);
+            
+            $titleFontSize = 36;
+            $titleColor = $black;
+            $titleX = $width / 2; // Center horizontally
+            $titleY = $imageHeight + 120; // Position after logo in title section
+            $maxTitleWidth = $width - 100;
+            
+            // For Bengali text, use simpler approach without complex wrapping
+            $lines = [$title]; // Just use the title as one line for now
+            $lineHeight = 45;
+            
+            // Draw red background for entire title section
+            $titleBackgroundY = $imageHeight; // Start from end of image
+            $titleBgColor = imagecolorallocate($image, 150, 3, 26); // #96031a red
+            imagefill($image, 0, $titleBackgroundY, $titleBgColor);
+            
+            // Simple direct rendering approach with white text
+            $titleColor = $white; // White text on red background
+            foreach ($lines as $index => $line) {
+                $y = $titleY + ($index * $lineHeight);
+                if ($y >= $imageHeight && $y < $totalHeight - $footerHeight) {
+                    // Ensure proper UTF-8 encoding
+                    $line = mb_convert_encoding($line, 'UTF-8', 'UTF-8');
+                    imagettftext($image, $titleFontSize, 0, $titleX, $y, $titleColor, $fontPath, $line);
+                }
             }
+            
+            // Add footer
+            $footerY = $totalHeight - $footerHeight;
+            
+            // Draw footer background
+            $footerBgColor = imagecolorallocate($image, 0, 0, 0); // Black background
+            imagefill($image, 0, $footerY, $footerBgColor);
+            
+            // Add footer text
+            $footerFontSize = 16;
+            $footerColor = $white;
+            
+            // Left side: "Barind Post | Category"
+            $categoryName = $news['category_name'] ?? 'সংবাদ';
+            $leftText = 'বরিন্দ পোস্ট | ' . $categoryName;
+            imagettftext($image, $footerFontSize, 0, 20, $footerY + ($footerHeight / 2) + 5, $footerColor, $fontPath, $leftText);
+            
+            // Right side: Date
+            $dateText = date('d M, Y', strtotime($news['published_at']));
+            $dateWidth = imagettfbbox($footerFontSize, 0, $fontPath, $dateText);
+            $dateX = $width - 20 - ($dateWidth[2] - $dateWidth[0]);
+            imagettftext($image, $footerFontSize, 0, $dateX, $footerY + ($footerHeight / 2) + 5, $footerColor, $fontPath, $dateText);
+            
+        } else {
+            // For other templates, use original logic
+            $titleFontSize = 36;
+            $titleColor = $template === 'default' ? $black : $white;
+            
+            // Calculate text position at bottom
+            $titleX = 50;
+            $titleY = $height - 200; // Position at bottom
+            $maxTitleWidth = $width - 100; // Full width minus margins
+            
+            // For Bengali text, use simpler approach without complex wrapping
+            $lines = [$title]; // Just use the title as one line for now
+            $lineHeight = 45;
+            
+            // Simple direct rendering approach (like the working example)
+            foreach ($lines as $index => $line) {
+                $y = $titleY + ($index * $lineHeight);
+                if ($y < $height - 100) { // Don't go below bottom
+                    // Ensure proper UTF-8 encoding
+                    $line = mb_convert_encoding($line, 'UTF-8', 'UTF-8');
+                    
+                    // Try with a test title first to see if the issue is with the data
+                    $testTitle = 'আমরা বিশ্বাস করি';
+                    imagettftext($image, $titleFontSize, 0, $titleX, $y, $titleColor, $fontPath, $testTitle);
+                    
+                    // Then try with the actual title
+                    imagettftext($image, $titleFontSize, 0, $titleX, $y + 50, $titleColor, $fontPath, $line);
+                }
+            }
+            
+            // Add subtitle/date (positioned at bottom)
+            $dateText = date('d M, Y', strtotime($news['published_at']));
+            $dateFontSize = 18;
+            $dateColor = $template === 'default' ? $lightGray : $white;
+            $dateY = $titleY + (count($lines) * $lineHeight) + 20;
+            
+            // Simple direct rendering for date (like the working example)
+            imagettftext($image, $dateFontSize, 0, $titleX, $dateY, $dateColor, $fontPath, $dateText);
+            
+            // Add website URL
+            $urlText = 'barindpost.com';
+            $urlFontSize = 16;
+            $urlColor = $template === 'default' ? $red : $white;
+            $urlY = $height - 50;
+            
+            // Simple direct rendering for URL (like the working example)
+            imagettftext($image, $urlFontSize, 0, $titleX, $urlY, $urlColor, $fontPath, $urlText);
         }
-        
-        // Additional fallback rendering if needed
-        // (Removed complex fallback system to simplify and avoid issues)
-        
-        // Add subtitle/date (positioned at bottom)
-        $dateText = date('d M, Y', strtotime($news['published_at']));
-        $dateFontSize = 18;
-        $dateColor = $template === 'default' ? $lightGray : $white;
-        $dateY = $titleY + (count($lines) * $lineHeight) + 20;
-        
-        // Simple direct rendering for date (like the working example)
-        imagettftext($image, $dateFontSize, 0, $titleX, $dateY, $dateColor, $fontPath, $dateText);
-        
-        // Add website URL
-        $urlText = 'barindpost.com';
-        $urlFontSize = 16;
-        $urlColor = $template === 'default' ? $red : $white;
-        $urlY = $height - 50;
-        
-        // Simple direct rendering for URL (like the working example)
-        imagettftext($image, $urlFontSize, 0, $titleX, $urlY, $urlColor, $fontPath, $urlText);
         
         // Save the image
-        $outputDir = FCPATH . 'public/uploads/photo_cards/';
-        if (!is_dir($outputDir)) {
-            if (!mkdir($outputDir, 0755, true)) {
-                throw new Exception('Failed to create output directory');
-            }
-        }
-        
-        $filename = 'photo_card_' . $news['id'] . '_' . time() . '.png';
-        $outputPath = $outputDir . $filename;
-        
-        if (!imagepng($image, $outputPath)) {
-            throw new Exception('Failed to save image to ' . $outputPath);
-        }
+        // Capture image data to string
+        ob_start();
+        imagepng($image);
+        $imageData = ob_get_contents();
+        ob_end_clean();
         
         imagedestroy($image);
         
-        return 'public/uploads/photo_cards/' . $filename;
+        return $imageData;
     }
 
     private function wrapText($text, $fontPath, $fontSize, $maxWidth)
@@ -1010,7 +1163,7 @@ class Admin extends BaseAdminController
         $lines = [];
         $currentLine = '';
         
-        foreach ($words as $word) {
+        foreach ($words as $index => $word) {
             $testLine = $currentLine . ' ' . $word;
             
             // Ensure proper UTF-8 encoding
@@ -1025,15 +1178,66 @@ class Admin extends BaseAdminController
             }
             
             if ($lineWidth > $maxWidth && $currentLine !== '') {
-                $lines[] = trim($currentLine);
-                $currentLine = $word;
+                // If we already have 1 line, try to fit remaining words on second line
+                if (count($lines) === 0) {
+                    $lines[] = trim($currentLine);
+                    $currentLine = $word;
+                } else {
+                    // We already have 1 line, try to fit remaining words on second line
+                    $remainingWords = array_slice($words, $index);
+                    $secondLine = implode(' ', $remainingWords);
+                    
+                    // Check if second line fits
+                    $bbox2 = imagettfbbox($fontSize, 0, $fontPath, $secondLine);
+                    if ($bbox2 === false) {
+                        $secondLineWidth = strlen($secondLine) * ($fontSize * 0.6);
+                    } else {
+                        $secondLineWidth = $bbox2[2] - $bbox2[0];
+                    }
+                    
+                    if ($secondLineWidth <= $maxWidth) {
+                        // All remaining words fit on second line
+                        $lines[] = trim($currentLine);
+                        $lines[] = $secondLine;
+                        break;
+                    } else {
+                        // Second line is too long, truncate with ellipsis
+                        $truncatedLine = '';
+                        foreach ($remainingWords as $remainingWord) {
+                            $testTruncated = $truncatedLine . ($truncatedLine ? ' ' : '') . $remainingWord . '...';
+                            $bbox3 = imagettfbbox($fontSize, 0, $fontPath, $testTruncated);
+                            if ($bbox3 === false) {
+                                $truncatedWidth = strlen($testTruncated) * ($fontSize * 0.6);
+                            } else {
+                                $truncatedWidth = $bbox3[2] - $bbox3[0];
+                            }
+                            
+                            if ($truncatedWidth <= $maxWidth) {
+                                $truncatedLine = $testTruncated;
+                            } else {
+                                break;
+                            }
+                        }
+                        $lines[] = trim($currentLine);
+                        $lines[] = $truncatedLine ?: '...';
+                        break;
+                    }
+                }
             } else {
                 $currentLine = $testLine;
             }
         }
         
-        if (!empty($currentLine)) {
+        // Add the last line if we haven't reached 2 lines yet
+        if (empty($lines)) {
             $lines[] = trim($currentLine);
+        } elseif (count($lines) === 1 && trim($currentLine) !== $lines[0]) {
+            $lines[] = trim($currentLine);
+        }
+        
+        // Ensure we don't exceed 2 lines
+        if (count($lines) > 2) {
+            $lines = array_slice($lines, 0, 2);
         }
         
         return implode("\n", $lines);

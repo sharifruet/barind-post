@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modal Closing Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .image-select-card {
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .image-select-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Modal Closing Test</h1>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Test Modal Closing</h5>
+                    </div>
+                    <div class="card-body">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#existingImagesModal">
+                            Open Image Selection Modal
+                        </button>
+                        
+                        <div id="imagePreview" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Existing Images Modal -->
+    <div class="modal fade" id="existingImagesModal" tabindex="-1" aria-labelledby="existingImagesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="existingImagesModalLabel">Select Existing Image</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row" id="existingImagesGrid">
+                        <!-- Test images will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Test data
+        const testImages = [
+            {
+                id: "9",
+                image_path: "public/uploads/news/1755746923_2f457012d92dc27f.png",
+                caption: "Test Image 1",
+                alt_text: "Test Alt Text 1",
+                preview_url: "http://localhost/public/uploads/news/1755746923_2f457012d92dc27f.png",
+                usage_count: "1",
+                uploaded_at: "2025-08-21 09:28:43"
+            },
+            {
+                id: "8",
+                image_path: "public/uploads/news/1755577461_b97b9286a51a18aa.png",
+                caption: "Test Image 2",
+                alt_text: "Test Alt Text 2",
+                preview_url: "http://localhost/public/uploads/news/1755577461_b97b9286a51a18aa.png",
+                usage_count: "0",
+                uploaded_at: "2025-08-19 10:24:21"
+            }
+        ];
+
+        function createImageCard(image) {
+            const col = document.createElement('div');
+            col.className = 'col-md-4 col-lg-3 mb-3';
+            
+            const fullImageUrl = image.preview_url.startsWith('http') ? image.preview_url : window.location.origin + '/' + image.preview_url;
+            
+            col.innerHTML = `
+                <div class="card h-100 image-select-card" data-image-id="${image.id}">
+                    <img src="${fullImageUrl}" class="card-img-top" alt="${image.alt_text || ''}" style="height: 150px; object-fit: cover;">
+                    <div class="card-body">
+                        <h6 class="card-title">${image.caption || 'No caption'}</h6>
+                        <p class="card-text small text-muted">
+                            <strong>Usage:</strong> ${image.usage_count} times<br>
+                            <strong>Uploaded:</strong> ${new Date(image.uploaded_at).toLocaleDateString()}
+                        </p>
+                        <button type="button" class="btn btn-primary btn-sm w-100 select-image-btn" 
+                                data-image-id="${image.id}" 
+                                data-image-path="${image.image_path}" 
+                                data-caption="${image.caption || ''}" 
+                                data-alt-text="${image.alt_text || ''}">
+                            <i class="fas fa-check"></i> Select
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Add event listener to the button
+            const button = col.querySelector('.select-image-btn');
+            button.addEventListener('click', function() {
+                const imageId = this.getAttribute('data-image-id');
+                const imagePath = this.getAttribute('data-image-path');
+                const caption = this.getAttribute('data-caption');
+                const altText = this.getAttribute('data-alt-text');
+                selectExistingImage(imageId, imagePath, caption, altText);
+            });
+            
+            return col;
+        }
+
+        function selectExistingImage(imageId, imagePath, caption, altText) {
+            console.log('selectExistingImage called with:', { imageId, imagePath, caption, altText });
+            
+            // Show preview
+            const fullImageUrl = imagePath.startsWith('http') ? imagePath : window.location.origin + '/' + imagePath;
+            showImagePreview({
+                image_path: imagePath,
+                caption: caption,
+                alt_text: altText,
+                preview_url: fullImageUrl
+            });
+            
+            // Close modal immediately
+            const modalElement = document.getElementById('existingImagesModal');
+            if (modalElement) {
+                // Try to get existing instance first
+                let bsModal = bootstrap.Modal.getInstance(modalElement);
+                if (!bsModal) {
+                    // Create new instance if none exists
+                    bsModal = new bootstrap.Modal(modalElement);
+                }
+                bsModal.hide();
+                console.log('Modal closed using Bootstrap Modal');
+            }
+            
+            // Show success message
+            showAlert('Image selected successfully! Modal should close automatically.', 'success');
+        }
+
+        function showImagePreview(imageData) {
+            console.log('showImagePreview called with:', imageData);
+            
+            let previewSection = document.getElementById('imagePreview');
+            if (!previewSection) {
+                previewSection = document.createElement('div');
+                previewSection.id = 'imagePreview';
+                previewSection.className = 'col-md-12 mt-3';
+                document.querySelector('.card-body').appendChild(previewSection);
+            }
+            
+            const fullImageUrl = imageData.preview_url.startsWith('http') ? imageData.preview_url : window.location.origin + '/' + imageData.preview_url;
+            console.log('showImagePreview - fullImageUrl:', fullImageUrl);
+            
+            previewSection.innerHTML = `
+                <div class="alert alert-success">
+                    <h6>Selected Image:</h6>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <img src="${fullImageUrl}" class="img-fluid rounded" alt="${imageData.alt_text || ''}" style="max-height: 150px; object-fit: cover;">
+                        </div>
+                        <div class="col-md-9">
+                            <p><strong>Caption:</strong> ${imageData.caption || 'No caption'}</p>
+                            <p><strong>Alt Text:</strong> ${imageData.alt_text || 'No alt text'}</p>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeImagePreview()">
+                                <i class="fas fa-times"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            console.log('Preview section updated');
+        }
+
+        function removeImagePreview() {
+            const previewSection = document.getElementById('imagePreview');
+            if (previewSection) {
+                previewSection.remove();
+            }
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const container = document.querySelector('.container');
+            if (container) {
+                container.insertBefore(alertDiv, container.firstChild);
+            }
+            
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // Load test images when modal opens
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('existingImagesModal');
+            modal.addEventListener('show.bs.modal', function() {
+                const grid = document.getElementById('existingImagesGrid');
+                grid.innerHTML = ''; // Clear existing content
+                
+                testImages.forEach(image => {
+                    const imageCard = createImageCard(image);
+                    grid.appendChild(imageCard);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
