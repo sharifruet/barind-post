@@ -331,21 +331,6 @@ function generatePhotoCardContent(title, lead, content, imageUrl, date, category
 
         // Set background based on template
         switch (template) {
-            case 'red':
-                ctx.fillStyle = '#dc3545';
-                ctx.fillRect(0, 0, width, height);
-                break;
-            case 'gradient':
-                const gradient = ctx.createLinearGradient(0, 0, 0, height);
-                gradient.addColorStop(0, '#dc3545');
-                gradient.addColorStop(1, '#c82333');
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, width, height);
-                break;
-            case 'dark':
-                ctx.fillStyle = '#343a40';
-                ctx.fillRect(0, 0, width, height);
-                break;
             case 'header_footer':
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, width, height);
@@ -372,18 +357,6 @@ function generatePhotoCardContent(title, lead, content, imageUrl, date, category
         logo.src = '/logo.png';
         console.log('Logo source set to:', logo.src);
 
-        loadNewsImage(imageUrl, category, template, width, height, originalImageHeight, fontSize, color, title, isPreview, date);
-
-        drawLogo(template, width, height, originalImageHeight);
-
-        addTextOverlay(category, template, fontSize, color, title, width, height, originalImageHeight, isPreview);
-
-        addHeaderFooterTextOverlay(category, template, fontSize, color, title, width, height, originalImageHeight, isPreview, date);
-
-        addDefaultTextOverlay(template, fontSize, color, title, width, height, isPreview);
-
-        drawFooter(category, originalImageHeight, date);
-        drawLogo(template, width, height, originalImageHeight);
         displayResult(isPreview, width, height);
     }
 
