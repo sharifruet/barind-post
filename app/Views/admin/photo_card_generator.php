@@ -356,8 +356,6 @@ function generatePhotoCardContent(title, lead, content, imageUrl, date, category
         };
         logo.src = '/logo.png';
         console.log('Logo source set to:', logo.src);
-
-        displayResult(isPreview, width, height);
     }
 
     // Load news image function
@@ -402,99 +400,38 @@ function generatePhotoCardContent(title, lead, content, imageUrl, date, category
                         console.log('Logo not ready, trying to reload...');
                         logo.onload = function() {
                             drawLogoOnTop(template, width, height, originalImageHeight);
+                            displayResult(isPreview, width, height);
                         };
                         logo.src = logo.src; // Reload
                     } else {
                         drawLogoOnTop(template, width, height, originalImageHeight);
+                        displayResult(isPreview, width, height);
                     }
                 }, 200); // Increased delay to ensure everything else is drawn first
-                
-                drawLogoOnTop(template, width, height, originalImageHeight);
             };
             newsImage.onerror = function() {
                 // Continue without news image
-                drawLogo(template, width, height, originalImageHeight);
                 addTextOverlay(category, template, fontSize, color, title, width, height, originalImageHeight, isPreview, date);
+                
+                // Draw logo and display result
+                setTimeout(() => {
+                    drawLogoOnTop(template, width, height, originalImageHeight);
+                    displayResult(isPreview, width, height);
+                }, 100);
             };
             newsImage.src = imageUrl;
         } else {
-            drawLogo(template, width, height, originalImageHeight);
             addTextOverlay(category, template, fontSize, color, title, width, height, originalImageHeight, isPreview, date);
+            
+            // Draw logo and display result
+            setTimeout(() => {
+                drawLogoOnTop(template, width, height, originalImageHeight);
+                displayResult(isPreview, width, height);
+            }, 100);
         }
     }
 
-    // Draw logo function
-    function drawLogo(template, width, height, originalImageHeight) {
-        console.log('drawLogo called, logo complete:', logo.complete, 'naturalWidth:', logo.naturalWidth);
-        if (logo.complete && logo.naturalWidth !== 0) {
-            if (template === 'header_footer') {
-                // For header_footer template, logo goes in title section
-                // Use the original image height for layout calculations
-                const imageHeight = originalImageHeight || height; // Use original image height if available
-                const titleHeight = Math.max(200, imageHeight * 0.2); // Minimum 200px or 20% of image height
-                const footerHeight = Math.max(60, imageHeight * 0.08); // Minimum 60px or 8% of image height
-                
-                // Position logo 50% on image and 50% on title background
-                const logoWidth = 80; // Fixed logo size
-                const logoHeight = (logo.height / logo.width) * logoWidth;
-                const logoX = (width - logoWidth) / 2; // Center horizontally
-                const logoY = imageHeight - (logoHeight / 2); // 50% on image, 50% on title background
-                
-                // Draw silver semi-transparent background behind logo
-                const backgroundPadding = 10; // Padding around logo
-                const backgroundWidth = logoWidth + (backgroundPadding * 2);
-                const backgroundHeight = logoHeight + (backgroundPadding * 2);
-                const backgroundX = logoX - backgroundPadding;
-                const backgroundY = logoY - backgroundPadding;
-                
-                // Draw semi-transparent silver background
-                ctx.fillStyle = 'rgba(192, 192, 192, 0.8)'; // Silver with 80% opacity
-                ctx.fillRect(backgroundX, backgroundY, backgroundWidth, backgroundHeight);
-                
-                // Draw the logo on top
-                console.log('Drawing logo at:', logoX, logoY, 'size:', logoWidth, 'x', logoHeight);
-                ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
-            } else {
-                // For other templates, use original positioning
-                const logoWidth = width * 0.05; // 5% of image width
-                const logoHeight = (logo.height / logo.width) * logoWidth;
-                const backgroundPadding = Math.max(5, logoWidth * 0.1); // Proportional padding
-                const logoX = backgroundPadding; // Position logo with padding from left edge
-                const logoY = backgroundPadding; // Position logo with padding from top edge
-                
-                // Calculate font size based on image resolution
-                let siteNameFontSize = Math.max(12, logoWidth * 0.2);
-                if (width < 800) { // Low resolution images
-                    siteNameFontSize = Math.max(8, logoWidth * 0.15); // Smaller font for low res
-                }
-                
-                // Ensure text fits within background
-                const textHeight = siteNameFontSize * 1.2;
-                const totalHeight = logoHeight + textHeight + (backgroundPadding * 2);
-                const maxTextHeight = totalHeight - logoHeight - (backgroundPadding * 2);
-                
-                if (textHeight > maxTextHeight) {
-                    siteNameFontSize = Math.max(6, maxTextHeight / 1.2); // Adjust font size to fit
-                }
-                
-                // Draw semi-transparent white background behind logo and site name
-                const backgroundHeight = totalHeight;
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-                ctx.fillRect(2, 2, logoWidth + (backgroundPadding * 2), backgroundHeight);
-                
-                // Draw the logo
-                ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
-                
-                // Draw site name below logo in Bengali
-                ctx.font = `${siteNameFontSize}px "Noto Sans Bengali", Arial, sans-serif`;
-                ctx.fillStyle = '#000000';
-                ctx.textAlign = 'center';
-                const siteNameX = logoX + (logoWidth / 2);
-                const siteNameY = logoY + logoHeight + (siteNameFontSize * 1.2);
-                ctx.fillText('বরিন্দ পোস্ট', siteNameX, siteNameY);
-            }
-        }
-    }
+
 
     // Add text overlay function
     function addTextOverlay(category, template, fontSize, color, title, width, height, originalImageHeight, isPreview, date) {
@@ -652,9 +589,6 @@ function generatePhotoCardContent(title, lead, content, imageUrl, date, category
             day: 'numeric'
         });
         ctx.fillText(dateText, width - 20, footerY + (footerHeight / 2) + 5);
-        
-        // Display result
-        displayResult(isPreview, width, height);
     }
 
     // Add default text overlay function
@@ -775,9 +709,6 @@ function generatePhotoCardContent(title, lead, content, imageUrl, date, category
                 ctx.fillText(line, titleX, y);
             }
         });
-        
-        // Display result
-        displayResult(isPreview, width, height);
     }
 
     // Draw footer function
@@ -867,83 +798,58 @@ function generatePhotoCardContent(title, lead, content, imageUrl, date, category
     function drawLogoOnTop(template, width, height, originalImageHeight) {
         console.log('drawLogoOnTop called - logo ready:', logo.complete, 'naturalWidth:', logo.naturalWidth);
         
-        // Draw a black rectangle of 100x100 in the center
-        const rectSize = 100;
-        const rectX = (width - rectSize) / 2; // Center horizontally
-        const rectY = (height - rectSize) / 2; // Center vertically
-        
-        console.log('Drawing black rectangle in center:', {
-            rectSize: rectSize,
-            rectX: rectX,
-            rectY: rectY,
-            width: width,
-            height: height
-        });
-        
-        // Draw black rectangle in center
-        ctx.fillStyle = '#000000'; // Black color
-        ctx.fillRect(rectX, rectY, rectSize, rectSize);
-        
-        // Draw a black square with size 12% of image width for header_footer template
-        if (template === 'header_footer') {
-            const squareSize = width * 0.12; // 12% of image width
-            const squareX = 20; // 20px from left edge
-            const squareY = 20; // 20px from top edge
-            
-            console.log('Drawing black square for header_footer template:', {
-                squareSize: squareSize,
-                squareX: squareX,
-                squareY: squareY,
-                width: width
-            });
-            
-            // Draw black square
-            ctx.fillStyle = '#000000'; // Black color
-            ctx.fillRect(squareX, squareY, squareSize, squareSize);
-            
-            // Draw red border around square for debugging
-            ctx.strokeStyle = '#ff0000';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(squareX, squareY, squareSize, squareSize);
-        }
-        
         if (logo.complete && logo.naturalWidth !== 0) {
             console.log('Drawing logo on top of everything');
             
-            // Draw a simple logo in top-right corner for all templates
-            const logoWidth = 80; // Made slightly larger
-            const logoHeight = (logo.height / logo.width) * logoWidth;
-            const logoX = width - logoWidth - 20;
-            const logoY = 20;
-            
-            // Draw silver background
-            const backgroundPadding = 10;
-            const backgroundWidth = logoWidth + (backgroundPadding * 2);
-            const backgroundHeight = logoHeight + (backgroundPadding * 2);
-            const backgroundX = logoX - backgroundPadding;
-            const backgroundY = logoY - backgroundPadding;
-            
-            // Draw background
-            ctx.fillStyle = 'rgba(192, 192, 192, 0.9)';
-            ctx.fillRect(backgroundX, backgroundY, backgroundWidth, backgroundHeight);
-            
-            // Draw red border for debugging
-            ctx.strokeStyle = '#ff0000';
-            ctx.lineWidth = 3; // Made border thicker
-            ctx.strokeRect(backgroundX, backgroundY, backgroundWidth, backgroundHeight);
-            
-            // Draw logo
-            console.log('Drawing logo at:', logoX, logoY, 'size:', logoWidth, 'x', logoHeight);
-            ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
-            
-            // Also draw a test rectangle to verify drawing is working
-            ctx.fillStyle = '#00ff00'; // Green
-            ctx.fillRect(10, 10, 50, 50); // Small green square in top-left
+            if (template === 'header_footer') {
+                // For header_footer template, logo goes in title section
+                const imageHeight = originalImageHeight || height;
+                const titleHeight = Math.max(200, imageHeight * 0.2);
+                
+                // Position logo 50% on image and 50% on title background
+                const logoWidth = 80;
+                const logoHeight = (logo.height / logo.width) * logoWidth;
+                const logoX = (width - logoWidth) / 2; // Center horizontally
+                const logoY = imageHeight - (logoHeight / 2); // 50% on image, 50% on title background
+                
+                // Draw silver semi-transparent background behind logo
+                const backgroundPadding = 10;
+                const backgroundWidth = logoWidth + (backgroundPadding * 2);
+                const backgroundHeight = logoHeight + (backgroundPadding * 2);
+                const backgroundX = logoX - backgroundPadding;
+                const backgroundY = logoY - backgroundPadding;
+                
+                // Draw semi-transparent silver background
+                ctx.fillStyle = 'rgba(192, 192, 192, 0.8)';
+                ctx.fillRect(backgroundX, backgroundY, backgroundWidth, backgroundHeight);
+                
+                // Draw the logo on top
+                console.log('Drawing logo at:', logoX, logoY, 'size:', logoWidth, 'x', logoHeight);
+                ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
+            } else {
+                // For other templates, logo in top-right corner
+                const logoWidth = 80;
+                const logoHeight = (logo.height / logo.width) * logoWidth;
+                const logoX = width - logoWidth - 20;
+                const logoY = 20;
+                
+                // Draw silver background
+                const backgroundPadding = 10;
+                const backgroundWidth = logoWidth + (backgroundPadding * 2);
+                const backgroundHeight = logoHeight + (backgroundPadding * 2);
+                const backgroundX = logoX - backgroundPadding;
+                const backgroundY = logoY - backgroundPadding;
+                
+                // Draw background
+                ctx.fillStyle = 'rgba(192, 192, 192, 0.9)';
+                ctx.fillRect(backgroundX, backgroundY, backgroundWidth, backgroundHeight);
+                
+                // Draw logo
+                console.log('Drawing logo at:', logoX, logoY, 'size:', logoWidth, 'x', logoHeight);
+                ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
+            }
         } else {
             console.log('Logo still not ready after reload');
-            // Draw a test rectangle anyway to verify drawing works
-            ctx.fillStyle = '#00ff00'; // Green
-            ctx.fillRect(10, 10, 50, 50); // Small green square in top-left
         }
     }
 </script>
