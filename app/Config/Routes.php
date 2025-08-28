@@ -92,3 +92,8 @@ $routes->get('/contact', 'PublicSite::contact');
 $routes->post('/contact', 'PublicSite::submitContact');
 $routes->get('/ads', 'PublicSite::ads');
 $routes->get('/barind-post', 'PublicSite::about');
+
+// RSS Feed Routes
+$routes->get('/rss', 'PublicSite::rss');
+$routes->get('/rss/category/(:segment)', 'PublicSite::rssCategory/$1');
+$routes->get('/rss-info', 'PublicSite::rssInfo');

@@ -719,7 +719,7 @@ class PublicSite extends Controller
         $xml .= '  </url>' . "\n";
         
         // Static pages
-        $staticPages = ['about', 'privacy', 'terms', 'contact', 'ads'];
+        $staticPages = ['about', 'privacy', 'terms', 'contact', 'ads', 'rss-info'];
         foreach ($staticPages as $page) {
             $xml .= '  <url>' . "\n";
             $xml .= '    <loc>' . base_url($page) . '</loc>' . "\n";
@@ -729,6 +729,14 @@ class PublicSite extends Controller
             $xml .= '  </url>' . "\n";
         }
         
+        // RSS feeds
+        $xml .= '  <url>' . "\n";
+        $xml .= '    <loc>' . base_url('rss') . '</loc>' . "\n";
+        $xml .= '    <lastmod>' . date('Y-m-d') . '</lastmod>' . "\n";
+        $xml .= '    <changefreq>hourly</changefreq>' . "\n";
+        $xml .= '    <priority>0.8</priority>' . "\n";
+        $xml .= '  </url>' . "\n";
+        
         // Category pages
         foreach ($categories as $category) {
             $xml .= '  <url>' . "\n";
@@ -736,6 +744,14 @@ class PublicSite extends Controller
             $xml .= '    <lastmod>' . date('Y-m-d') . '</lastmod>' . "\n";
             $xml .= '    <changefreq>daily</changefreq>' . "\n";
             $xml .= '    <priority>0.8</priority>' . "\n";
+            $xml .= '  </url>' . "\n";
+            
+            // Category RSS feeds
+            $xml .= '  <url>' . "\n";
+            $xml .= '    <loc>' . base_url('rss/category/' . $category['slug']) . '</loc>' . "\n";
+            $xml .= '    <lastmod>' . date('Y-m-d') . '</lastmod>' . "\n";
+            $xml .= '    <changefreq>hourly</changefreq>' . "\n";
+            $xml .= '    <priority>0.7</priority>' . "\n";
             $xml .= '  </url>' . "\n";
         }
         
@@ -770,5 +786,138 @@ class PublicSite extends Controller
             'viewed_at' => date('Y-m-d H:i:s'),
             'viewer_ip' => $ipAddress
         ]);
+    }
+
+    /**
+     * Generate RSS feed for all news
+     */
+    public function rss()
+    {
+        $newsModel = new NewsModel();
+        $categoryModel = new CategoryModel();
+        
+        // Get latest published news (last 50 articles)
+        $news = $newsModel->where('status', 'published')
+                         ->orderBy('published_at', 'DESC')
+                         ->findAll(50);
+        
+        // Set proper headers for RSS
+        $this->response->setContentType('application/rss+xml; charset=UTF-8');
+        
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+        $xml .= '<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom">' . "\n";
+        $xml .= '  <channel>' . "\n";
+        $xml .= '    <title>বারিন্দ পোস্ট - সর্বশেষ সংবাদ</title>' . "\n";
+        $xml .= '    <link>' . base_url() . '</link>' . "\n";
+        $xml .= '    <description>রাজশাহী ও বাংলাদেশের সর্বশেষ সংবাদ। বারিন্দ পোস্টে প্রকাশিত সব খবর জানুন।</description>' . "\n";
+        $xml .= '    <language>bn</language>' . "\n";
+        $xml .= '    <lastBuildDate>' . date('r') . '</lastBuildDate>' . "\n";
+        $xml .= '    <atom:link href="' . base_url('rss') . '" rel="self" type="application/rss+xml" />' . "\n";
+        
+        foreach ($news as $article) {
+            // Get category name
+            $category = $categoryModel->find($article['category_id']);
+            $categoryName = $category ? $category['name'] : '';
+            
+            // Clean content for RSS (remove HTML tags, limit length)
+            $content = strip_tags($article['content']);
+            $content = mb_substr($content, 0, 500) . (mb_strlen($content) > 500 ? '...' : '');
+            
+            // Format date
+            $pubDate = date('r', strtotime($article['published_at']));
+            
+            $xml .= '    <item>' . "\n";
+            $xml .= '      <title>' . htmlspecialchars($article['title'], ENT_XML1, 'UTF-8') . '</title>' . "\n";
+            $xml .= '      <link>' . base_url('news/' . $article['slug']) . '</link>' . "\n";
+            $xml .= '      <guid>' . base_url('news/' . $article['slug']) . '</guid>' . "\n";
+            $xml .= '      <pubDate>' . $pubDate . '</pubDate>' . "\n";
+            $xml .= '      <category>' . htmlspecialchars($categoryName, ENT_XML1, 'UTF-8') . '</category>' . "\n";
+            $xml .= '      <description>' . htmlspecialchars($content, ENT_XML1, 'UTF-8') . '</description>' . "\n";
+            
+            // Add image if available
+            if (!empty($article['image_url'])) {
+                $xml .= '      <enclosure url="' . base_url($article['image_url']) . '" type="image/jpeg" />' . "\n";
+            }
+            
+            $xml .= '    </item>' . "\n";
+        }
+        
+        $xml .= '  </channel>' . "\n";
+        $xml .= '</rss>';
+        
+        return $this->response->setBody($xml);
+    }
+
+    /**
+     * Show RSS feed information page
+     */
+    public function rssInfo()
+    {
+        $categoryModel = new CategoryModel();
+        $categories = $categoryModel->findAll();
+        return view('public/rss_info', ['categories' => $categories]);
+    }
+
+    /**
+     * Generate RSS feed for specific category
+     */
+    public function rssCategory($slug)
+    {
+        $newsModel = new NewsModel();
+        $categoryModel = new CategoryModel();
+        
+        // Get category
+        $category = $categoryModel->where('slug', $slug)->first();
+        if (!$category) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+        
+        // Get latest published news from this category (last 30 articles)
+        $news = $newsModel->where('category_id', $category['id'])
+                         ->where('status', 'published')
+                         ->orderBy('published_at', 'DESC')
+                         ->findAll(30);
+        
+        // Set proper headers for RSS
+        $this->response->setContentType('application/rss+xml; charset=UTF-8');
+        
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+        $xml .= '<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom">' . "\n";
+        $xml .= '  <channel>' . "\n";
+        $xml .= '    <title>' . htmlspecialchars($category['name'], ENT_XML1, 'UTF-8') . ' - বারিন্দ পোস্ট</title>' . "\n";
+        $xml .= '    <link>' . base_url('section/' . $category['slug']) . '</link>' . "\n";
+        $xml .= '    <description>' . htmlspecialchars($category['name'], ENT_XML1, 'UTF-8') . ' বিভাগের সর্বশেষ সংবাদ। বারিন্দ পোস্টে প্রকাশিত ' . htmlspecialchars($category['name'], ENT_XML1, 'UTF-8') . ' সম্পর্কিত সব খবর জানুন।</description>' . "\n";
+        $xml .= '    <language>bn</language>' . "\n";
+        $xml .= '    <lastBuildDate>' . date('r') . '</lastBuildDate>' . "\n";
+        $xml .= '    <atom:link href="' . base_url('rss/category/' . $category['slug']) . '" rel="self" type="application/rss+xml" />' . "\n";
+        
+        foreach ($news as $article) {
+            // Clean content for RSS (remove HTML tags, limit length)
+            $content = strip_tags($article['content']);
+            $content = mb_substr($content, 0, 500) . (mb_strlen($content) > 500 ? '...' : '');
+            
+            // Format date
+            $pubDate = date('r', strtotime($article['published_at']));
+            
+            $xml .= '    <item>' . "\n";
+            $xml .= '      <title>' . htmlspecialchars($article['title'], ENT_XML1, 'UTF-8') . '</title>' . "\n";
+            $xml .= '      <link>' . base_url('news/' . $article['slug']) . '</link>' . "\n";
+            $xml .= '      <guid>' . base_url('news/' . $article['slug']) . '</guid>' . "\n";
+            $xml .= '      <pubDate>' . $pubDate . '</pubDate>' . "\n";
+            $xml .= '      <category>' . htmlspecialchars($category['name'], ENT_XML1, 'UTF-8') . '</category>' . "\n";
+            $xml .= '      <description>' . htmlspecialchars($content, ENT_XML1, 'UTF-8') . '</description>' . "\n";
+            
+            // Add image if available
+            if (!empty($article['image_url'])) {
+                $xml .= '      <enclosure url="' . base_url($article['image_url']) . '" type="image/jpeg" />' . "\n";
+            }
+            
+            $xml .= '    </item>' . "\n";
+        }
+        
+        $xml .= '  </channel>' . "\n";
+        $xml .= '</rss>';
+        
+        return $this->response->setBody($xml);
     }
 } 

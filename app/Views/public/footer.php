@@ -33,6 +33,10 @@
             <a href="/contact" class="text-dark me-3 text-decoration-none small footer-link">যোগাযোগ</a>
             <span class="text-dark">|</span>
             <a href="/ads" class="text-dark me-3 text-decoration-none small footer-link">বিজ্ঞাপন</a>
+            <span class="text-dark">|</span>
+            <a href="/rss-info" class="text-dark me-3 text-decoration-none small footer-link" title="RSS Feed">
+                <i class="fas fa-rss"></i> RSS
+            </a>
         </div>
         <div class="small text-dark">&copy; <?= date('Y') ?> বারিন্দ পোস্ট। সর্বস্বত্ব সংরক্ষিত।</div>
     </div>

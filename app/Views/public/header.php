@@ -55,10 +55,22 @@
                     </li>
                 <?php endif; ?>
             </ul>
-            <form class="d-flex" method="get" action="/search">
+            <form class="d-flex me-3" method="get" action="/search">
                 <input class="form-control me-2" type="search" name="q" placeholder="সংবাদ খুঁজুন..." aria-label="Search" value="<?= esc($query ?? '', 'raw') ?>">
                 <button class="btn btn-outline-danger" type="submit">খুঁজুন</button>
             </form>
+            
+            <!-- RSS Feed Links -->
+            <div class="d-flex align-items-center">
+                <a href="/rss" class="btn btn-sm btn-outline-secondary me-2" title="RSS Feed" target="_blank">
+                    <i class="fas fa-rss"></i> RSS
+                </a>
+                <?php if (isset($category) && $category): ?>
+                    <a href="/rss/category/<?= esc($category['slug']) ?>" class="btn btn-sm btn-outline-secondary" title="Category RSS Feed" target="_blank">
+                        <i class="fas fa-rss"></i> <?= esc($category['name'], 'raw') ?>
+                    </a>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 </nav> 
