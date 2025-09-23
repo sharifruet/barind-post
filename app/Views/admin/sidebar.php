@@ -3,7 +3,7 @@ $userRole = session('user_role');
 $isReporter = $userRole === 'reporter';
 ?>
 
-<nav class="col-md-2 d-none d-md-block sidebar py-4">
+<nav class="col-md-2 sidebar py-4" id="sidebar">
     <div class="position-sticky">
         <ul class="nav flex-column">
             <li class="nav-item mb-2">
@@ -20,6 +20,12 @@ $isReporter = $userRole === 'reporter';
             </li>
             <li class="nav-item mb-2">
                 <a class="nav-link<?= (url_is('admin/contacts*')) ? ' active' : '' ?>" href="/admin/contacts"><i class="fas fa-envelope me-2"></i>Contact Messages</a>
+            </li>
+            <li class="nav-item mb-2">
+                <a class="nav-link<?= (url_is('admin/prayer-times*')) ? ' active' : '' ?>" href="/admin/prayer-times"><i class="fas fa-mosque me-2"></i>Prayer Times</a>
+            </li>
+            <li class="nav-item mb-2">
+                <a class="nav-link<?= (url_is('admin/logs*')) ? ' active' : '' ?>" href="/admin/logs"><i class="fas fa-file-alt me-2"></i>View Logs</a>
             </li>
             <?php if ($userRole === 'admin'): ?>
                 <li class="nav-item mb-2">

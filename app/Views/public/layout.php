@@ -7,7 +7,7 @@
     
     <!-- SEO Meta Tags -->
     <title><?= isset($title) ? esc($title) : 'বারিন্দ পোস্ট - গোদাগাড়ী, রাজশাহীর থেকে পরিচালিত শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল' ?></title>
-    <meta name="description" content="<?= isset($meta_description) ? esc($meta_description) : 'বারিন্দ পোস্ট গোদাগাড়ী, রাজশাহীর থেকে পরিচালিত একটি শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল। সর্বশেষ সংবাদ, রাজনীতি, অর্থনীতি, খেলাধুলা, বিনোদন ও অন্যান্য গুরুত্বপূর্ণ খবর জানুন।' ?>">
+    <meta name="description" content="<?= isset($meta_description) ? esc($meta_description) : 'বারিন্দ পোস্ট গোদাগাড়ী, রাজশাহীর থেকে পরিচালিত একটি শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল। সর্বশেষ সংবাদ, রাজনীতি, আন্তর্জাতিক, খেলাধুলা, শিক্ষা, স্বাস্থ্য ও বিজ্ঞান-প্রযুক্তি সংবাদ জানুন।' ?>">
     <meta name="keywords" content="<?= isset($meta_keywords) ? esc($meta_keywords) : 'বারিন্দ পোস্ট, রাজশাহী সংবাদ, বাংলাদেশ সংবাদ, অনলাইন নিউজ, বাংলা সংবাদ' ?>">
     <meta name="author" content="বারিন্দ পোস্ট">
     <meta name="robots" content="index, follow">
@@ -53,6 +53,30 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     
+    <!-- Google Analytics 4 -->
+    <?php if (isset($_ENV['GA4_MEASUREMENT_ID']) && !empty($_ENV['GA4_MEASUREMENT_ID'])): ?>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=<?= $_ENV['GA4_MEASUREMENT_ID'] ?>"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '<?= $_ENV['GA4_MEASUREMENT_ID'] ?>', {
+            'custom_map': {'custom_parameter_1': 'language'},
+            'language': 'bn'
+        });
+    </script>
+    <?php endif; ?>
+    
+    <!-- Google Search Console Verification -->
+    <?php if (isset($_ENV['GOOGLE_SITE_VERIFICATION']) && !empty($_ENV['GOOGLE_SITE_VERIFICATION'])): ?>
+    <meta name="google-site-verification" content="<?= $_ENV['GOOGLE_SITE_VERIFICATION'] ?>">
+    <?php endif; ?>
+    
+    <!-- Google AdSense -->
+    <?php if (isset($_ENV['GOOGLE_ADSENSE_ID']) && !empty($_ENV['GOOGLE_ADSENSE_ID'])): ?>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=<?= $_ENV['GOOGLE_ADSENSE_ID'] ?>" crossorigin="anonymous"></script>
+    <?php endif; ?>
+    
     <!-- Preconnect to external domains -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -67,6 +91,17 @@
     
     <!-- Bengali Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Lazy Loading CSS -->
+    <style>
+        img[loading="lazy"] {
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        img[loading="lazy"].loaded {
+            opacity: 1;
+        }
+    </style>
     
     <!-- Structured Data -->
     <script type="application/ld+json">
@@ -230,6 +265,33 @@
     
     <!-- Twitter Widget Script -->
     <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+    
+    <!-- Lazy Loading JavaScript -->
+    <script>
+        // Enhanced lazy loading for images
+        document.addEventListener('DOMContentLoaded', function() {
+            const images = document.querySelectorAll('img[loading="lazy"]');
+            
+            if ('IntersectionObserver' in window) {
+                const imageObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            img.classList.add('loaded');
+                            observer.unobserve(img);
+                        }
+                    });
+                });
+                
+                images.forEach(img => imageObserver.observe(img));
+            } else {
+                // Fallback for older browsers
+                images.forEach(img => {
+                    img.classList.add('loaded');
+                });
+            }
+        });
+    </script>
     
     <?= isset($customScripts) ? $customScripts : '' ?>
 </body>

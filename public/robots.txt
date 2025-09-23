@@ -1,2 +1,26 @@
 User-agent: *
-Disallow: 
+Allow: /
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /writable/
+Disallow: /app/
+Disallow: /system/
+Disallow: /tests/
+Disallow: /vendor/
+Disallow: /*.env
+Disallow: /*.log
+Disallow: /composer.json
+Disallow: /composer.lock
+
+# Allow important files
+Allow: /public/uploads/
+Allow: /public/logo.png
+Allow: /favicon.ico
+Allow: /robots.txt
+
+# Sitemap location
+Sitemap: https://barindpost.com/sitemap.xml
+
+# Crawl delay (optional - be respectful)
+Crawl-delay: 1

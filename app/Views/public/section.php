@@ -79,17 +79,18 @@ function limitTo15Words($text) {
 <div class="container">
     <!-- Top Banner Ad -->
     <?php 
+    /*
     $adType = 'banner';
     $adSize = 'small';
     $adText = 'বিজ্ঞাপন দিন';
     include __DIR__.'/ad_placeholder.php'; 
+    */
     ?>
     <div class="mb-4">
         <a href="/section/<?= esc($category['slug']) ?>" class="btn btn-primary category-pill rounded-pill px-3 py-1 active">
             <?= esc($category['name']) ?>
         </a>
     </div>
-    <h2 class="mb-4">Section: <?= esc($category['name']) ?></h2>
     <div class="row">
         <!-- Left Column - 8 columns for news with photos -->
         <div class="col-md-8">
@@ -126,25 +127,21 @@ function limitTo15Words($text) {
                 <h4 class="mb-3 text-primary">আরও <?= esc($category['name']) ?> সংবাদ</h4>
                 <div class="list-group list-group-flush">
                     <?php 
-                    // Get remaining news items for right sidebar
-                    $rightColumnNews = array_slice($news, 6, 15);
-                    if (!empty($rightColumnNews)): ?>
-                        <?php foreach ($rightColumnNews as $index => $item): ?>
-                            <a href="/news/<?= esc($item['slug']) ?>" class="list-group-item list-group-item-action border-0 px-0 py-2">
-                                <div class="d-flex align-items-start">
-                                    <span class="badge bg-secondary me-2 mt-1"><?= $index + 1 ?></span>
-                                    <div class="flex-grow-1">
-                                        <h6 class="mb-1 fw-semibold text-dark"><?= esc($item['title']) ?></h6>
-                                    </div>
-                                </div>
-                            </a>
-                        <?php endforeach; ?>
-                    <?php else: ?>
+                    // Get additional news for right sidebar (skip the ones used in left column)
+                    $rightColumnNews = array_slice($news, 6, 12);
+
+                    if (!empty($rightColumnNews)): 
+                        foreach ($rightColumnNews as $news): 
+                            // Use the single news widget for each news item
+                            echo view('public/widgets/single_news_widget', ['news' => $news]);
+                        endforeach;
+                    else: ?>
                         <div class="text-center text-muted py-3">
                             <i class="fas fa-newspaper"></i>
                             <p class="mb-0">আরও সংবাদ নেই</p>
                         </div>
                     <?php endif; ?>
+
                 </div>
             </div>
         </div>
@@ -152,10 +149,12 @@ function limitTo15Words($text) {
     
     <!-- Bottom Banner Ad -->
     <?php 
+    /*
     $adType = 'banner';
     $adSize = 'small';
     $adText = 'বিজ্ঞাপন দিন';
     include __DIR__.'/ad_placeholder.php'; 
+    */
     ?>
 </div>
 <?= $this->endSection() ?> 

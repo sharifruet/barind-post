@@ -42,7 +42,7 @@ $positionClasses = [
 
 $positionClass = $positionClasses[$adPosition] ?? 'mx-auto';
 ?>
-
+<!--
 <div class="ad-placeholder <?= $adClass ?> <?= $positionClass ?>" style="<?= $adSize === 'custom' ? 'height: 100px;' : '' ?>">
     <div>
         <i class="fas fa-bullhorn me-2"></i>
@@ -51,3 +51,4 @@ $positionClass = $positionClasses[$adPosition] ?? 'mx-auto';
         <small class="text-muted"><?= strtoupper($adType) ?> - <?= strtoupper($adSize) ?></small>
     </div>
 </div> 
+-->

@@ -1,6 +1,6 @@
 <?php
 $title = 'বারিন্দ পোস্ট - গোদাগাড়ী, রাজশাহীর থেকে পরিচালিত শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল';
-$meta_description = 'বারিন্দ পোস্ট গোদাগাড়ী, রাজশাহীর থেকে পরিচালিত একটি শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল। সর্বশেষ সংবাদ, রাজনীতি, অর্থনীতি, খেলাধুলা, বিনোদন ও অন্যান্য গুরুত্বপূর্ণ খবর জানুন।';
+$meta_description = 'বারিন্দ পোস্ট গোদাগাড়ী, রাজশাহীর থেকে পরিচালিত একটি শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল। সর্বশেষ সংবাদ, রাজনীতি, আন্তর্জাতিক, খেলাধুলা, শিক্ষা, স্বাস্থ্য ও বিজ্ঞান-প্রযুক্তি সংবাদ জানুন।';
 $meta_keywords = 'বারিন্দ পোস্ট, রাজশাহী সংবাদ, বাংলাদেশ সংবাদ, অনলাইন নিউজ, বাংলা সংবাদ, সর্বশেষ খবর';
 
 // Open Graph and Twitter Card data
@@ -37,13 +37,28 @@ $customScripts = '
 
 // Define default colors for categories
 $categoryColors = [
-    'জাতীয়' => '#dc3545',      // Red
-    'রাজনীতি' => '#fd7e14',    // Orange
-    'অর্থনীতি' => '#ffc107',   // Yellow
-    'আন্তর্জাতিক' => '#20c997', // Teal
-    'খেলাধুলা' => '#28a745',   // Green
-    'বিনোদন' => '#6f42c1',     // Purple
-    'default' => '#007bff'      // Blue
+    'সারাদেশ' => '#dc3545',           // Red
+    'রাজনীতি' => '#fd7e14',          // Orange
+    'অর্থনীতি' => '#ffc107',         // Yellow
+    'খেলাধুলা' => '#28a745',         // Green
+    'বিনোদন' => '#6f42c1',           // Purple
+    'শিক্ষা' => '#17a2b8',           // Info
+    'স্বাস্থ্য' => '#e83e8c',         // Pink
+    'বিজ্ঞান ও প্রযুক্তি' => '#20c997', // Teal
+    'আন্তর্জাতিক' => '#6c757d',       // Secondary
+    'সম্পাদকীয়' => '#343a40',        // Dark
+    'লেটার টু এডিটর' => '#495057',    // Gray
+    'বিশেষ প্রতিবেদন' => '#dc3545',   // Red
+    'কৃষি' => '#28a745',             // Green
+    'পরিবেশ' => '#20c997',           // Teal
+    'নারী' => '#e83e8c',             // Pink
+    'ইসলাম' => '#6f42c1',            // Purple
+    'সংস্কৃতি' => '#fd7e14',          // Orange
+    'ভ্রমণ' => '#17a2b8',            // Info
+    'লাইফস্টাইল' => '#ffc107',        // Warning
+    'ক্যাম্পাস' => '#28a745',         // Green
+    'প্রবাস' => '#6c757d',            // Secondary
+    'default' => '#007bff'            // Blue
 ];
 
 // Function to get category color
@@ -349,13 +364,14 @@ $customStyles = '
 <div class="container">
     <!-- Top Banner Ad -->
     <?php 
+    /*
     $adType = 'banner';
     $adSize = 'small';
     $adText = 'বিজ্ঞাপন দিন';
     include __DIR__.'/ad_placeholder.php'; 
+    */
     ?>
     <?php if (!empty($featuredNews)): ?>
-        <h2 class="mb-4">বিশেষ সংবাদ</h2>
         <div class="row g-4 mb-5">
             <?php 
             $firstNews = array_shift($featuredNews); // Get first news for hero section
@@ -382,7 +398,6 @@ $customStyles = '
                     <?php foreach ($featuredNews as $news): ?>
                         <div class="col-6 col-md-6">
                             <div class="card news-card h-100 border-0 shadow-sm position-relative">
-                                <div class="featured-badge">বিশেষ</div>
                                 <?php if (!empty($news['image_url'])): ?>
                                     <img src="<?= esc(get_image_url($news['image_url'])) ?>" class="card-img-top featured-img" alt="<?= esc($news['image_alt_text'] ?? '') ?>">
                                 <?php endif; ?>
@@ -408,17 +423,12 @@ $customStyles = '
 
     <div class="mb-4">
         <?php 
-        // Define important categories to show on homepage
-        $importantCategories = ['জাতীয়', 'রাজনীতি', 'অর্থনীতি', 'আন্তর্জাতিক', 'খেলাধুলা', 'বিনোদন', 'শিক্ষা', 'স্বাস্থ্য', 'প্রযুক্তি', 'পরিবেশ', 'কৃষি', 'সংস্কৃতি', 'ধর্ম'];
-        
         foreach ($categories as $cat): 
-            if (in_array($cat['name'], $importantCategories)):
         ?>
             <a href="/section/<?= esc($cat['slug']) ?>" class="btn btn-outline-danger category-pill px-3 py-1 mt-1">
                 <?= esc($cat['name'], 'raw') ?>
             </a>
         <?php 
-            endif;
         endforeach; 
         ?>
     </div>
@@ -453,31 +463,26 @@ $customStyles = '
             </div>
         </div>
         
-        <!-- Right Column - 4 columns for news titles only -->
+        <!-- Right Column - 4 columns for news with photos -->
         <div class="col-md-4">
             <div class="latest-news-sidebar">
                 <h4 class="mb-3 text-primary">আরও সর্বশেষ সংবাদ</h4>
                 <div class="list-group list-group-flush">
-                                                    <?php 
-                // Get additional news for right sidebar (skip the ones used in left column)
-                $rightColumnNews = array_slice($latestNews, 6, 15); // Get 15 news starting from index 6
-                if (!empty($rightColumnNews)): ?>
-                    <?php foreach ($rightColumnNews as $index => $news): ?>
-                        <a href="/news/<?= esc($news['slug']) ?>" class="list-group-item list-group-item-action border-0 px-0 py-2">
-                            <div class="d-flex align-items-start">
-                                <span class="badge bg-secondary me-2 mt-1"><?= $index + 1 ?></span>
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-1 fw-semibold text-dark"><?= esc($news['title'], 'raw') ?></h6>
-                                </div>
-                            </div>
-                        </a>
-                    <?php endforeach; ?>
-                                    <?php else: ?>
+                    <?php 
+                    // Get additional news for right sidebar (skip the ones used in left column)
+                    $rightColumnNews = array_slice($latestNews, 6, 10); // Get 15 news starting from index 6
+                    
+                    if (!empty($rightColumnNews)): 
+                        foreach ($rightColumnNews as $news): 
+                            // Use the single news widget for each news item
+                            echo view('public/widgets/single_news_widget', ['news' => $news]);
+                        endforeach;
+                    else: ?>
                         <div class="text-center text-muted py-3">
                             <i class="fas fa-newspaper"></i>
                             <p class="mb-0">আরও সংবাদ নেই</p>
                         </div>
-                <?php endif; ?>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -525,10 +530,12 @@ $customStyles = '
     
     <!-- Bottom Banner Ad -->
     <?php 
+    /*
     $adType = 'banner';
     $adSize = 'small';
     $adText = 'বিজ্ঞাপন দিন';
     include __DIR__.'/ad_placeholder.php'; 
+    */
     ?>
 </div>
 <?= $this->endSection() ?> 

@@ -43,10 +43,12 @@ $customScripts = '
 <div class="container">
     <!-- Top Banner Ad -->
     <?php 
+    /*
     $adType = 'banner';
     $adSize = 'small';
     $adText = 'বিজ্ঞাপন দিন';
     include __DIR__.'/ad_placeholder.php'; 
+    */
     ?>
     
     <div class="row">
@@ -192,10 +194,12 @@ $customScripts = '
     
     <!-- Bottom Banner Ad -->
     <?php 
+    /*
     $adType = 'banner';
     $adSize = 'small';
     $adText = 'বিজ্ঞাপন দিন';
     include __DIR__.'/ad_placeholder.php'; 
+    */
     ?>
 </div>
 
