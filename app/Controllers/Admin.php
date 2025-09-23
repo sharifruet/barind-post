@@ -6,6 +6,8 @@ use App\Models\UserModel;
 use App\Models\NewsModel;
 use App\Models\CategoryModel;
 use App\Models\TagModel;
+use App\Models\PrayerTimesModel;
+use App\Models\CityModel;
 use Exception;
 
 class Admin extends BaseAdminController
@@ -1395,5 +1397,175 @@ class Admin extends BaseAdminController
         session()->setFlashdata('success', 'Reporter roles assigned successfully.');
         
         return redirect()->to('/admin/users');
+    }
+
+    /**
+     * Prayer Times Management
+     */
+    public function prayerTimes($year = null)
+    {
+        if (!$year) {
+            $year = date('Y');
+        }
+
+        // Validate year
+        if (!is_numeric($year) || $year < 2020 || $year > 2030) {
+            session()->setFlashdata('error', 'Invalid year. Please provide a year between 2020 and 2030.');
+            return redirect()->to('/admin/prayer-times');
+        }
+
+        $prayerTimesModel = new PrayerTimesModel();
+        $cityModel = new CityModel();
+
+        // Get all cities
+        $cities = $cityModel->findAll();
+        
+        // Check which cities have prayer times data for the year
+        $citiesWithData = [];
+        $citiesWithoutData = [];
+
+        foreach ($cities as $city) {
+            $hasData = $prayerTimesModel->hasDataForYear($city['id'], $year);
+            
+            if ($hasData) {
+                $citiesWithData[] = $city;
+            } else {
+                $citiesWithoutData[] = $city;
+            }
+        }
+
+        // Get statistics
+        $stats = $prayerTimesModel->getDataStatistics($year);
+
+        $data = [
+            'year' => $year,
+            'cities_with_data' => $citiesWithData,
+            'cities_without_data' => $citiesWithoutData,
+            'stats' => $stats,
+            'title' => "Prayer Times Management - {$year}"
+        ];
+
+        return view('admin/prayer_times_year', $data);
+    }
+
+    public function fetchPrayerTimes($year, $cityId)
+    {
+        if (!$year || !$cityId) {
+            session()->setFlashdata('error', 'Year and city ID are required.');
+            return redirect()->to('/admin/prayer-times');
+        }
+
+        // Validate year
+        if (!is_numeric($year) || $year < 2020 || $year > 2030) {
+            session()->setFlashdata('error', 'Invalid year. Please provide a year between 2020 and 2030.');
+            return redirect()->to('/admin/prayer-times');
+        }
+
+        $prayerTimesModel = new PrayerTimesModel();
+        $cityModel = new CityModel();
+
+        // Get city information
+        $city = $cityModel->find($cityId);
+        if (!$city) {
+            session()->setFlashdata('error', 'City not found.');
+            return redirect()->to('/admin/prayer-times');
+        }
+
+        // Check if data already exists for this city and year
+        if ($prayerTimesModel->hasDataForYear($cityId, $year)) {
+            session()->setFlashdata('info', "Prayer times for {$city['name']} in {$year} already exist in database.");
+            return redirect()->to("/admin/prayer-times/{$year}");
+        }
+
+        try {
+            // Use the PrayerTimes controller method
+            $prayerTimesController = new \App\Controllers\PrayerTimes();
+            $prayerTimes = $prayerTimesController->fetchPrayerTimesFromAPI($city['latitude'], $city['longitude'], $year);
+            
+            if (empty($prayerTimes)) {
+                session()->setFlashdata('error', 'Failed to fetch prayer times from API.');
+                return redirect()->to("/admin/prayer-times/{$year}");
+            }
+
+            // Store prayer times in database
+            $storedCount = $prayerTimesController->storePrayerTimes($cityId, $year, $prayerTimes);
+
+            session()->setFlashdata('success', "Successfully fetched and stored {$storedCount} prayer times for {$city['name']} in {$year}.");
+            return redirect()->to("/admin/prayer-times/{$year}");
+
+        } catch (\Exception $e) {
+            log_message('error', 'Prayer times fetch error: ' . $e->getMessage());
+            session()->setFlashdata('error', 'An error occurred while fetching prayer times: ' . $e->getMessage());
+            return redirect()->to("/admin/prayer-times/{$year}");
+        }
+    }
+
+    public function deletePrayerTimes($year, $cityId)
+    {
+        $prayerTimesModel = new PrayerTimesModel();
+        $cityModel = new CityModel();
+
+        $city = $cityModel->find($cityId);
+        if (!$city) {
+            session()->setFlashdata('error', 'City not found.');
+            return redirect()->to('/admin/prayer-times');
+        }
+
+        $deletedCount = $prayerTimesModel->deleteByCityAndYear($cityId, $year);
+        
+        if ($deletedCount > 0) {
+            session()->setFlashdata('success', "Deleted {$deletedCount} prayer time records for {$city['name']} in {$year}.");
+        } else {
+            session()->setFlashdata('info', "No prayer time records found for {$city['name']} in {$year}.");
+        }
+
+        return redirect()->to("/admin/prayer-times/{$year}");
+    }
+
+    /**
+     * View application logs
+     */
+    public function viewLogs()
+    {
+        $todayLogFile = WRITEPATH . 'logs/log-' . date('Y-m-d') . '.log';
+        $logs = [];
+        $availableLogFiles = [];
+        
+        // Get all available log files
+        $logDir = WRITEPATH . 'logs/';
+        if (is_dir($logDir)) {
+            $files = scandir($logDir);
+            foreach ($files as $file) {
+                if (strpos($file, 'log-') === 0 && strpos($file, '.log') !== false) {
+                    $availableLogFiles[] = $file;
+                }
+            }
+            rsort($availableLogFiles); // Sort by date, newest first
+        }
+        
+        // Try to read today's log file first, then the most recent one
+        $logFileToRead = $todayLogFile;
+        if (!file_exists($logFileToRead) && !empty($availableLogFiles)) {
+            $logFileToRead = $logDir . $availableLogFiles[0];
+        }
+        
+        if (file_exists($logFileToRead)) {
+            $content = file_get_contents($logFileToRead);
+            // Parse CodeIgniter log format
+            $lines = explode("\n", $content);
+            foreach ($lines as $line) {
+                if (strpos($line, 'INFO') !== false || strpos($line, 'ERROR') !== false || strpos($line, 'CRITICAL') !== false) {
+                    $logs[] = $line;
+                }
+            }
+            $logs = array_reverse(array_slice($logs, -100)); // Get last 100 log entries
+        }
+        
+        return view('admin/view_logs', [
+            'logs' => $logs,
+            'availableLogFiles' => $availableLogFiles,
+            'currentLogFile' => basename($logFileToRead),
+            'title' => 'Application Logs'
+        ]);
     }
 } 

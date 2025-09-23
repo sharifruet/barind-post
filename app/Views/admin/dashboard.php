@@ -31,6 +31,17 @@ $isReporter = $userRole === 'reporter';
         </div>
     </div>
     
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-mosque display-4 text-info mb-3"></i>
+                <h5 class="card-title">Prayer Times</h5>
+                <p class="card-text">Manage prayer times for all cities in Bangladesh.</p>
+                <a href="/admin/prayer-times" class="btn btn-info btn-sm text-white">Go to Prayer Times</a>
+            </div>
+        </div>
+    </div>
+    
     <?php if (!$isReporter): ?>
         <div class="col-md-4">
             <div class="card border-0 shadow-sm h-100">

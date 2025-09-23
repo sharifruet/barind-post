@@ -97,3 +97,12 @@ $routes->get('/barind-post', 'PublicSite::about');
 $routes->get('/rss', 'PublicSite::rss');
 $routes->get('/rss/category/(:segment)', 'PublicSite::rssCategory/$1');
 $routes->get('/rss-info', 'PublicSite::rssInfo');
+
+// Admin Prayer Times Management Routes
+$routes->get('/admin/prayer-times', 'Admin::prayerTimes');
+$routes->get('/admin/prayer-times/(:num)', 'Admin::prayerTimes/$1');
+$routes->get('/admin/prayer-times/fetch/(:num)/(:num)', 'Admin::fetchPrayerTimes/$1/$2');
+$routes->get('/admin/prayer-times/delete/(:num)/(:num)', 'Admin::deletePrayerTimes/$1/$2');
+
+// Admin Logs Route
+$routes->get('/admin/logs', 'Admin::viewLogs');

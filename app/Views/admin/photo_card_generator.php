@@ -1,8 +1,25 @@
 <?= $this->extend('admin/layout') ?>
 <?= $this->section('content') ?>
 
-<!-- Google Fonts - Noto Sans Bengali -->
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<script>
+   const banglaMonths = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
+
+    // Convert English digits to Bangla digits
+    function toBanglaDigits(number) {
+      const banglaDigits = ["০","১","২","৩","৪","৫","৬","৭","৮","৯"];
+      return number.toString().split("").map(d => banglaDigits[d] || d).join("");
+    }
+
+    // Format date as "১০ জুন ২০২৫"
+    function formatBanglaDate(dateString) {
+      const date = new Date(dateString);
+      const day = toBanglaDigits(date.getDate());
+      const month = banglaMonths[date.getMonth()];
+      const year = toBanglaDigits(date.getFullYear());
+      return `${month} ${day}, ${year}`;
+    }
+</script>
 
 <div class="container-fluid">
     <div class="row">
@@ -61,29 +78,43 @@
                             <div class="mb-3">
                                 <label for="templateSelect" class="form-label">Choose template:</label>
                                 <select class="form-select" id="templateSelect">
-                                    <option value="default">Default (White)</option>
-                                    <option value="header_footer">Header & Footer Layout</option>
+                                    <option value="template-1">Template 1</option>
+                                    <option value="template-2">Template 2</option>
                                 </select>
+                            </div>
+
+                            <!-- Custom Title Text -->
+                            <div class="mb-3" id="customTitleSection">
+                                <label for="customTitle" class="form-label">Custom Title Text:</label>
+                                <textarea class="form-control" id="customTitle" rows="3" placeholder="Enter custom title text or leave empty to use news title"></textarea>
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Leave empty to use the original news title, or enter custom text for the photo card.
+                                </small>
                             </div>
 
                             <!-- Customization Options -->
                             <div class="mb-3">
                                 <label class="form-label">Customization:</label>
                                 <div class="row">
-                                    <div class="col-6">
+                                    <div class="col-4">
                                         <label for="titleSize" class="form-label">Title Size:</label>
                                         <input type="range" class="form-range" id="titleSize" min="30" max="80" value="48">
                                         <small class="text-muted" id="titleSizeValue">48px</small>
                                     </div>
-                                    <div class="col-6">
+                                    <div class="col-4">
                                         <label for="titleColor" class="form-label">Title Color:</label>
-                                        <input type="color" class="form-control form-control-color" id="titleColor" value="#96031a">
+                                        <input type="color" class="form-control form-control-color" id="titleColor" value="#D51111">
+                                    </div>
+                                    <div class="col-4">
+                                        <label for="backgroundColor" class="form-label">Background Color:</label>
+                                        <input type="color" class="form-control form-control-color" id="backgroundColor" value="#ffffff">
                                     </div>
                                 </div>
                                 <div class="mt-2">
                                     <small class="text-info">
                                         <i class="fas fa-info-circle me-1"></i>
-                                        Titles will be automatically wrapped to a maximum of 2 lines. Long titles will be truncated with "..." if needed.
+                                        Titles will be automatically wrapped to a maximum of 4 lines. Long titles will be truncated with "..." if needed.
                                     </small>
                                 </div>
                             </div>
@@ -149,7 +180,7 @@
 
 <script>
 // Global variables
-let canvas, ctx, newsSelect, templateSelect, titleSize, titleSizeValue, titleColor;
+let canvas, ctx, newsSelect, templateSelect, titleSize, titleSizeValue, titleColor, backgroundColor, customTitle, customTitleSection, backgroundColorSection;
 let generateBtn, previewContainer, resultContainer, downloadSection, downloadBtn, copyUrlBtn;
 let logo; // Global logo variable
 
@@ -161,6 +192,10 @@ document.addEventListener('DOMContentLoaded', function() {
     titleSize = document.getElementById('titleSize');
     titleSizeValue = document.getElementById('titleSizeValue');
     titleColor = document.getElementById('titleColor');
+    backgroundColor = document.getElementById('backgroundColor');
+    customTitle = document.getElementById('customTitle');
+    customTitleSection = document.getElementById('customTitleSection');
+    backgroundColorSection = document.getElementById('backgroundColorSection');
     generateBtn = document.getElementById('generateBtn');
     previewContainer = document.getElementById('previewContainer');
     resultContainer = document.getElementById('resultContainer');
@@ -183,9 +218,30 @@ function setupEventListeners() {
     });
 
     // Update preview when selection changes
-    newsSelect.addEventListener('change', updatePreview);
-    templateSelect.addEventListener('change', updatePreview);
+    newsSelect.addEventListener('change', function() {
+        // Auto-populate custom title field with news title
+        const selectedOption = this.selectedOptions[0];
+        if (selectedOption && customTitle) {
+            customTitle.value = selectedOption.dataset.title || '';
+        }
+        updatePreview();
+    });
+    templateSelect.addEventListener('change', function() {
+        // Set template-specific color defaults
+        if (this.value === 'template-2') {
+            // Set Template 2 defaults: white text on red background
+            titleColor.value = '#ffffff';
+            backgroundColor.value = '#D51111';
+        } else {
+            // Set Template 1 defaults: red text on white background
+            titleColor.value = '#D51111';
+            backgroundColor.value = '#ffffff';
+        }
+        updatePreview();
+    });
     titleColor.addEventListener('change', updatePreview);
+    backgroundColor.addEventListener('change', updatePreview);
+    customTitle.addEventListener('input', updatePreview);
 
     // Generate button click handler
     generateBtn.addEventListener('click', handleGenerateClick);
@@ -201,7 +257,7 @@ function handleGenerateClick() {
             return;
         }
 
-        const title = selectedOption.dataset.title;
+        const originalTitle = selectedOption.dataset.title;
         const lead = selectedOption.dataset.lead;
         const content = selectedOption.dataset.content;
         const imageUrl = selectedOption.dataset.image;
@@ -210,6 +266,10 @@ function handleGenerateClick() {
         const template = templateSelect.value;
         const fontSize = parseInt(titleSize.value);
         const color = titleColor.value;
+        const bgColor = backgroundColor.value;
+        
+        // Use custom title if provided, otherwise use original title
+        const title = customTitle.value.trim() ? customTitle.value.trim() : originalTitle;
         
         console.log('Generating photo card with:', {
             title: title,
@@ -223,7 +283,7 @@ function handleGenerateClick() {
         generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
 
         // Generate the photo card
-        generatePhotoCard(title, lead, content, imageUrl, date, category, template, fontSize, color, false);
+        generatePhotoCard(title, lead, content, imageUrl, date, category, template, fontSize, color, bgColor, false);
 
         // Reset button
         setTimeout(() => {
@@ -251,7 +311,7 @@ function updatePreview() {
             return;
         }
 
-        const title = selectedOption.dataset.title;
+        const originalTitle = selectedOption.dataset.title;
         const lead = selectedOption.dataset.lead;
         const content = selectedOption.dataset.content;
         const imageUrl = selectedOption.dataset.image;
@@ -260,484 +320,192 @@ function updatePreview() {
         const template = templateSelect.value;
         const fontSize = parseInt(titleSize.value);
         const color = titleColor.value;
+        const bgColor = backgroundColor.value;
+        
+        // Use custom title if provided, otherwise use original title
+        const title = customTitle.value.trim() ? customTitle.value.trim() : originalTitle;
 
         // Generate preview
-        generatePhotoCard(title, lead, content, imageUrl, date, category, template, fontSize, color, true);
+        generatePhotoCard(title, lead, content, imageUrl, date, category, template, fontSize, color, bgColor, true);
 }
 
-function generatePhotoCard(title, lead, content, imageUrl, date, category, template, fontSize, color, isPreview = false) {
-        // Set canvas dimensions based on news image
-        let width = 1200; // Default width
-        let height = 630; // Default height
-        
-        // If we have a news image, get its dimensions
-        if (imageUrl && imageUrl !== '') {
-            const newsImage = new Image();
-            newsImage.crossOrigin = 'anonymous';
-            newsImage.onload = function() {
-                // Set canvas width to exactly match news image width
-                width = newsImage.width;
-                
-                // Store original image dimensions for layout calculations
-                const originalImageHeight = newsImage.height;
-                
-                // For header_footer template, calculate total height including title and footer
-                if (template === 'header_footer') {
-                    const imageHeight = originalImageHeight; // Image takes full height
-                    const titleHeight = Math.max(200, originalImageHeight * 0.2); // Minimum 200px or 20% of height
-                    const footerHeight = Math.max(80, originalImageHeight * 0.1); // Minimum 80px or 10% of height
-                    height = imageHeight + titleHeight + footerHeight;
-                } else {
-                    height = originalImageHeight; // Use exact image height for other templates
-                }
-                
-                // Set canvas dimensions
-                canvas.width = width;
-                canvas.height = height;
-                
-                // Now generate the photo card with the correct dimensions
-                generatePhotoCardContent(title, lead, content, imageUrl, date, category, template, fontSize, color, isPreview, originalImageHeight);
-            };
-            newsImage.onerror = function() {
-                console.log('News image failed to load, using default dimensions');
-                // Use default dimensions if image fails to load
-                canvas.width = width;
-                canvas.height = height;
-                generatePhotoCardContent(title, lead, content, imageUrl, date, category, template, fontSize, color, isPreview, height);
-            };
-            newsImage.src = imageUrl;
-        } else {
-            console.log('No image URL provided, using default dimensions');
-            // No image, use default dimensions
-            canvas.width = width;
-            canvas.height = height;
-            generatePhotoCardContent(title, lead, content, imageUrl, date, category, template, fontSize, color, isPreview, height);
-        }
+function generatePhotoCard(title, lead, content, imageUrl, date, category, template, fontSize, color, bgColor, isPreview = false) {
+    generatePhotocardX(
+        imageUrl,
+        '<?= base_url('public/logo.png') ?>',
+        title,
+        'বরিন্দ পোস্ট',
+        category,
+        formatBanglaDate(date), fontSize, color, bgColor, template
+    ).then(dataUrl => {
+        // Use the dataUrl (e.g., display in an img element or download)
+        displayResult(isPreview, canvas.width, canvas.height);
+        console.log('Photocard generated successfully');
+    }).catch(error => {
+        console.error('Error generating photocard:', error);
+    });
+   
 }
 
-function generatePhotoCardContent(title, lead, content, imageUrl, date, category, template, fontSize, color, isPreview = false, originalImageHeight = null) {
-        console.log('generatePhotoCardContent called with:', {
-            title: title,
-            template: template,
-            category: category,
-            imageUrl: imageUrl
-        });
+async function generatePhotocardX(imageUrl, logoUrl, title, name, section, date, fontSize, color, bgColor, template) {
+    return new Promise((resolve, reject) => {
+        // Load the main image
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
         
-        const width = canvas.width;
-        const height = canvas.height;
-
-        // Clear canvas
-        ctx.clearRect(0, 0, width, height);
-
-        // Set background based on template
-        switch (template) {
-            case 'header_footer':
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, width, height);
-                break;
-            default:
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, width, height);
-                break;
-        }
-
-        // Load logo image for later use
-        logo = new Image();
-        logo.crossOrigin = 'anonymous';
-        logo.onload = function() {
-            console.log('Logo loaded successfully');
-            // Continue with image loading - logo will be drawn on top later
-            loadNewsImage(imageUrl, category, template, width, height, originalImageHeight, fontSize, color, title, isPreview, date);
-        };
-        logo.onerror = function() {
-            console.error('Logo failed to load');
-            // Continue without logo
-            loadNewsImage(imageUrl, category, template, width, height, originalImageHeight, fontSize, color, title, isPreview, date);
-        };
-        logo.src = '/logo.png';
-        console.log('Logo source set to:', logo.src);
-    }
-
-    // Load news image function
-    function loadNewsImage(imageUrl, category, template, width, height, originalImageHeight, fontSize, color, title, isPreview, date) {
-        console.log('loadNewsImage called with imageUrl:', imageUrl);
-        if (imageUrl && imageUrl !== '') {
-            const newsImage = new Image();
-            newsImage.crossOrigin = 'anonymous';
-            newsImage.onload = function() {
-                console.log('News image loaded successfully');
-                if (template === 'header_footer') {
-                    console.log('Drawing image for header_footer template');
-                    // For header_footer template, use exact image dimensions
-                    // Use the exact image dimensions - full height
-                    const drawWidth = newsImage.width;
-                    const drawHeight = newsImage.height;
-                    const drawX = (width - drawWidth) / 2; // Center horizontally
-                    const drawY = 0; // Start from top
-                    
-                    console.log('Image drawing params:', {
-                        drawWidth: drawWidth,
-                        drawHeight: drawHeight,
-                        drawX: drawX,
-                        drawY: drawY
-                    });
-                    
-                    ctx.drawImage(newsImage, drawX, drawY, drawWidth, drawHeight);
-                } else {
-                    // For other templates, draw the full image
-                    ctx.drawImage(newsImage, 0, 0, width, height);
-                }
-                
-                // Add text overlay first
-                addTextOverlay(category, template, fontSize, color, title, width, height, originalImageHeight, isPreview, date);
-                
-                // Draw logo LAST to ensure it's on top of everything
-                setTimeout(() => {
-                    console.log('Drawing logo LAST - complete:', logo.complete, 'naturalWidth:', logo.naturalWidth, 'src:', logo.src);
-                    
-                    // Force logo to load if not ready
-                    if (!logo.complete || logo.naturalWidth === 0) {
-                        console.log('Logo not ready, trying to reload...');
-                        logo.onload = function() {
-                            drawLogoOnTop(template, width, height, originalImageHeight);
-                            displayResult(isPreview, width, height);
-                        };
-                        logo.src = logo.src; // Reload
-                    } else {
-                        drawLogoOnTop(template, width, height, originalImageHeight);
-                        displayResult(isPreview, width, height);
-                    }
-                }, 200); // Increased delay to ensure everything else is drawn first
-            };
-            newsImage.onerror = function() {
-                // Continue without news image
-                addTextOverlay(category, template, fontSize, color, title, width, height, originalImageHeight, isPreview, date);
-                
-                // Draw logo and display result
-                setTimeout(() => {
-                    drawLogoOnTop(template, width, height, originalImageHeight);
-                    displayResult(isPreview, width, height);
-                }, 100);
-            };
-            newsImage.src = imageUrl;
-        } else {
-            addTextOverlay(category, template, fontSize, color, title, width, height, originalImageHeight, isPreview, date);
+        img.onload = function() {
+            // Calculate dimensions
+            const originalWidth = img.width;
+            const originalHeight = img.height;
+            const targetWidth = 800;
+            const aspectRatio = originalHeight / originalWidth;
+            const scaledHeight = targetWidth * aspectRatio;
             
-            // Draw logo and display result
-            setTimeout(() => {
-                drawLogoOnTop(template, width, height, originalImageHeight);
-                displayResult(isPreview, width, height);
-            }, 100);
-        }
-    }
-
-
-
-    // Add text overlay function
-    function addTextOverlay(category, template, fontSize, color, title, width, height, originalImageHeight, isPreview, date) {
-        console.log('addTextOverlay called with template:', template, 'category:', category);
-        if (template === 'header_footer') {
-            console.log('Calling addHeaderFooterTextOverlay');
-            addHeaderFooterTextOverlay(category, template, fontSize, color, title, width, height, originalImageHeight, isPreview, date);
-        } else {
-            console.log('Calling addDefaultTextOverlay');
-            addDefaultTextOverlay(template, fontSize, color, title, width, height, isPreview);
-        }
-    }
-
-    // Add header footer text overlay function
-    function addHeaderFooterTextOverlay(category, template, fontSize, color, title, width, height, originalImageHeight, isPreview, date) {
-        // Set font and ensure opaque text rendering
-        ctx.font = `bold ${fontSize}px "Noto Sans Bengali", Arial, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.globalAlpha = 1.0; // Ensure full opacity
-        
-        // Set text color from the color picker
-        ctx.fillStyle = color;
-        
-        // Use the news title for display with fallback
-        let displayText = title || 'No Title Available';
-        
-        console.log('Title debug:', {
-            title: title,
-            displayText: displayText,
-            fontSize: fontSize
-        });
-        
-        // Calculate layout: Image → Title → Footer
-        // Use the original image height for layout calculations
-        const imageHeight = originalImageHeight || height; // Use original image height if available
-        const titleHeight = Math.max(200, imageHeight * 0.2); // Minimum 200px or 20% of image height
-        const footerHeight = Math.max(60, imageHeight * 0.08); // Minimum 60px or 8% of image height
-        
-        const titleX = width / 2; // Center horizontally
-        const lineHeight = fontSize + 35; // Increased line spacing from +25 to +35
-        const titlePadding = 15;
-        const maxTitleWidth = width - 100;
-        
-        // Wrap text to maximum 2 lines
-        // Ensure displayText is a string before splitting
-        if (typeof displayText !== 'string') {
-            displayText = String(displayText || 'No Title Available');
-        }
-        const words = displayText.split(' ');
-        const lines = [];
-        let currentLine = words[0] || '';
-        
-        for (let i = 1; i < words.length; i++) {
-            const word = words[i];
-            const testLine = currentLine + ' ' + word;
-            const testWidth = ctx.measureText(testLine).width;
+            // Text section height and footer height
+            const textSectionHeight = 250;
+            const footerHeight = 80;
+            const totalHeight = scaledHeight + textSectionHeight + footerHeight;
             
-            if (testWidth < maxTitleWidth) {
-                currentLine = testLine;
-            } else {
-                if (lines.length === 0) {
+            // Set canvas dimensions
+            canvas.width = targetWidth;
+            canvas.height = totalHeight;
+
+            console.log('Canvas dimensions:', {width: canvas.width, height: canvas.height});
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            console.log('ctx', ctx);
+            
+            // Draw the main image (resized to fit width)
+            ctx.drawImage(img, 0, 0, targetWidth, scaledHeight);
+            
+            console.log('Image drawn successfully');
+            
+            // Draw white text section
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, scaledHeight, targetWidth, textSectionHeight);
+            
+            // Configure text styling for title
+            ctx.fillStyle = color;
+            ctx.font = `${fontSize}px "Noto Sans Bengali", Arial, sans-serif`;
+            ctx.textAlign = 'center';
+         
+            // Word wrap the title text
+            const maxWidth = targetWidth - 40; // 20px padding on each side
+            const lineHeight = fontSize*1.1;
+            const words = title.split(' ');
+            const lines = [];
+            let currentLine = '';
+            
+            for (let word of words) {
+                const testLine = currentLine + (currentLine ? ' ' : '') + word;
+                const metrics = ctx.measureText(testLine);
+                
+                if (metrics.width > maxWidth && currentLine !== '') {
                     lines.push(currentLine);
                     currentLine = word;
                 } else {
-                    const remainingWords = words.slice(i);
-                    const secondLine = remainingWords.join(' ');
-                    const secondLineWidth = ctx.measureText(secondLine).width;
-                    
-                    if (secondLineWidth <= maxTitleWidth) {
-                        lines.push(currentLine);
-                        lines.push(secondLine);
-                        break;
-                    } else {
-                        let truncatedLine = '';
-                        for (let j = 0; j < remainingWords.length; j++) {
-                            const testTruncated = truncatedLine + (j > 0 ? ' ' : '') + remainingWords[j] + '...';
-                            if (ctx.measureText(testTruncated).width <= maxTitleWidth) {
-                                truncatedLine = testTruncated;
-                            } else {
-                                break;
-                            }
-                        }
-                        lines.push(currentLine);
-                        lines.push(truncatedLine || '...');
-                        break;
-                    }
+                    currentLine = testLine;
                 }
             }
-        }
-        
-        if (lines.length === 0) {
-            lines.push(currentLine);
-        } else if (lines.length === 1 && currentLine !== lines[0]) {
-            lines.push(currentLine);
-        }
-        
-        if (lines.length > 2) {
-            lines.splice(2);
-        }
-        
-        // Position title in the title section, after the logo
-        const titleY = imageHeight + 120; // Position after logo in title section
-        
-        // Draw red background for entire title section
-        const titleBackgroundY = imageHeight; // Start from end of image
-        
-        // Debug logging
-        console.log('Layout debug:', {
-            imageHeight: imageHeight,
-            titleHeight: titleHeight,
-            titleY: titleY,
-            titleBackgroundY: titleBackgroundY,
-            canvasHeight: canvas.height,
-            lines: lines
-        });
-        ctx.fillStyle = '#96031a'; // Red background
-        ctx.fillRect(0, titleBackgroundY, width, titleHeight);
-        
-        // Draw title lines with white text
-        ctx.fillStyle = '#ffffff'; // White text on red background
-        ctx.font = `bold ${fontSize}px "Noto Sans Bengali", Arial, sans-serif`; // Ensure font is set
-        ctx.textAlign = 'center';
-        ctx.globalAlpha = 1.0; // Ensure full opacity
-        
-        lines.forEach((line, index) => {
-            const y = titleY - ((lines.length - 1 - index) * lineHeight) / 2;
-            // Use canvas height instead of original height
-            if (y >= 0 && y < canvas.height) {
-                console.log('Drawing title line:', line, 'at Y:', y); // Debug log
-                ctx.fillText(line, titleX, y);
+            if (currentLine) {
+                lines.push(currentLine);
             }
-        });
-        
-        // Draw footer right after title section
-        const footerY = (originalImageHeight || height) + titleHeight; // Position right after title section
-        
-        // Draw footer background
-        ctx.fillStyle = '#000000'; // Black background
-        ctx.fillRect(0, footerY, width, footerHeight);
-        
-        // Draw footer text
-        ctx.font = `16px "Noto Sans Bengali", Arial, sans-serif`;
-        ctx.fillStyle = '#ffffff';
-        
-        // Left side: "Barind Post | Category"
-        ctx.textAlign = 'left';
-        const leftText = `বরিন্দ পোস্ট | ${category}`;
-        ctx.fillText(leftText, 20, footerY + (footerHeight / 2) + 5);
-        
-        // Right side: Date
-        ctx.textAlign = 'right';
-        const dateText = new Date(date).toLocaleDateString('bn-BD', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-        ctx.fillText(dateText, width - 20, footerY + (footerHeight / 2) + 5);
-    }
-
-    // Add default text overlay function
-    function addDefaultTextOverlay(template, fontSize, color, title, width, height, isPreview) {
-        // Set font and ensure opaque text rendering
-        ctx.font = `bold ${fontSize}px "Noto Sans Bengali", Arial, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.globalAlpha = 1.0; // Ensure full opacity
-        
-        // Set text color from the color picker
-        ctx.fillStyle = color;
-        
-        // Use the news title for display
-        let displayText = title;
-        
-        // Calculate text position - overlay on the image
-        const titleX = width / 2; // Center horizontally
-        const lineHeight = fontSize + 10;
-        const titlePadding = 15;
-        const maxTitleWidth = width - 100;
-        
-        // Wrap text to maximum 2 lines
-        const words = displayText.split(' ');
-        const lines = [];
-        let currentLine = words[0];
-        
-        // Calculate the total height needed for the text (will be calculated after lines are determined)
-        let totalTextHeight = 0;
-        let titleY = 0;
-        
-        for (let i = 1; i < words.length; i++) {
-            const word = words[i];
-            const testLine = currentLine + ' ' + word;
-            const testWidth = ctx.measureText(testLine).width;
             
-            if (testWidth < maxTitleWidth) {
-                currentLine = testLine;
-            } else {
-                // If we already have 1 line and adding this word would exceed width,
-                // check if we can fit it on the second line
-                if (lines.length === 0) {
-                    lines.push(currentLine);
-                    currentLine = word;
-                } else {
-                    // We already have 1 line, try to fit remaining words on second line
-                    const remainingWords = words.slice(i);
-                    const secondLine = remainingWords.join(' ');
-                    const secondLineWidth = ctx.measureText(secondLine).width;
-                    
-                    if (secondLineWidth <= maxTitleWidth) {
-                        // All remaining words fit on second line
-                        lines.push(currentLine);
-                        lines.push(secondLine);
-                        break;
-                    } else {
-                        // Second line is too long, truncate with ellipsis
-                        let truncatedLine = '';
-                        for (let j = 0; j < remainingWords.length; j++) {
-                            const testTruncated = truncatedLine + (j > 0 ? ' ' : '') + remainingWords[j] + '...';
-                            if (ctx.measureText(testTruncated).width <= maxTitleWidth) {
-                                truncatedLine = testTruncated;
-                            } else {
-                                break;
-                            }
-                        }
-                        lines.push(currentLine);
-                        lines.push(truncatedLine || '...');
-                        break;
-                    }
+            // Draw title lines (max 4 lines)
+            const maxLines = 4;
+            const startY = scaledHeight + 50;
+            
+            for (let i = 0; i < Math.min(lines.length, maxLines); i++) {
+                let lineText = lines[i];
+                if (i === maxLines - 1 && lines.length > maxLines) {
+                    // Add ellipsis if text is truncated
+                    lineText = lineText + '...';
                 }
+                ctx.fillText(lineText,targetWidth/2, startY + (i * lineHeight) + (4-lines.length)*33 );
             }
-        }
-        
-        // Add the last line if we haven't reached 2 lines yet
-        if (lines.length === 0) {
-            lines.push(currentLine);
-        } else if (lines.length === 1 && currentLine !== lines[0]) {
-            lines.push(currentLine);
-        }
-        
-        // Ensure we don't exceed 2 lines
-        if (lines.length > 2) {
-            lines.splice(2);
-        }
-        
-        // Calculate the total height needed for the text
-        totalTextHeight = (lines.length * lineHeight) + (titlePadding * 2);
-        
-        // Position text at the bottom of the image, accounting for multiple lines
-        if (lines.length === 1) {
-            titleY = height - 15; // Single line at bottom
-        } else {
-            // For 2 lines, adjust position to ensure both lines fit
-            titleY = height - 15 - ((lines.length - 1) * lineHeight);
-        }
-        
-        // Draw title lines with full-width semi-transparent background
-        const titleMargin = 20;
-        
-        // Calculate background dimensions - full width
-        const backgroundWidth = width; // Full width of image
-        const backgroundHeight = (lines.length * lineHeight) + (titlePadding * 2);
-        const backgroundX = 0; // Start from left edge
-        const backgroundY = titleY - (lines.length * lineHeight) - titlePadding;
-        
-        // Draw semi-transparent white background
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.fillRect(backgroundX, backgroundY, backgroundWidth, backgroundHeight);
-        
-        // Set text color from the color picker before drawing text
-        ctx.fillStyle = color;
-        
-        // Draw title lines
-        lines.forEach((line, index) => {
-            // For 2-line text, position from bottom up
-            const y = titleY - ((lines.length - 1 - index) * lineHeight);
-            if (y >= 0 && y < height) { // Ensure text is within canvas bounds
-                ctx.fillText(line, titleX, y);
-            }
-        });
-    }
+            
+            // Draw gray footer
+            const footerY = scaledHeight + textSectionHeight;
+            if(template === 'template-1'){
+                ctx.fillStyle = '#f0f0f0';
+            }else{
+                ctx.fillStyle = '#DDDDDD';
 
-    // Draw footer function
-    function drawFooter(category, originalImageHeight = null, date = null) {
-        const footerHeight = Math.max(60, (originalImageHeight || height) * 0.08); // Minimum 60px or 8% of height
-        const footerY = height - footerHeight; // This should be right after the title section
+            }
+            ctx.fillRect(0, footerY, targetWidth, footerHeight);
+
+            ctx.strokeStyle = '#999999';;
+            ctx.rect((targetWidth/2-75), footerY+45, 150, 30);
+            ctx.stroke();
+
+            ctx.font = '20px "Noto Sans Bengali", Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#999999';
+            ctx.fillText('বিস্তারিত কমেন্টে', targetWidth/2, footerY+68);
+ 
+            
+            // Load and draw logo
+            const logo = new Image();
+            logo.crossOrigin = 'anonymous';
+            
+            logo.onload = function() {
+                // Calculate logo dimensions (150px width, maintain aspect ratio)
+                const logoWidth = 65;
+                const logoAspectRatio = logo.height / logo.width;
+                const logoHeight = logoWidth * logoAspectRatio;
+                
+                // Center logo vertically in footer
+                const logoY = footerY + (footerHeight - logoHeight) / 2;
+                ctx.drawImage(logo, 20, logoY, logoWidth, logoHeight);
+                
+                // Draw footer text
+                ctx.fillStyle = '#666666';
+                ctx.font = 'bold 34px "Noto Sans Bengali", Arial, sans-serif';
+                ctx.textAlign = 'left';
+                
+                const textX = 20 + logoWidth + 20; // Logo width + padding
+                const textY = footerY + footerHeight / 2 + 14; // Center vertically with slight offset
+                
+                const footerText = `${name}`;
+                ctx.fillText(footerText, textX, textY);
+
+                ctx.font = '24px "Noto Sans Bengali", Arial, sans-serif';
+                ctx.textAlign = 'end';
+                ctx.fillText(`${date}`, targetWidth-4, textY);
+                
+                resolve(canvas.toDataURL());
+            };
+            
+            logo.onerror = function() {
+                //If logo fails to load, still draw the text
+                ctx.fillStyle = '#666666';
+                ctx.font = '30px "Noto Sans Bengali", Arial, sans-serif';
+                ctx.textAlign = 'left';
+                
+                const textX = 20;
+                const textY = footerY + footerHeight / 2 + 6;
+                
+                const footerText = `${name} | ${section} | ${date}`;
+                ctx.fillText(footerText, textX, textY);
+                
+                resolve(canvas.toDataURL());
+            };
+            
+            logo.src = logoUrl;
+        };
         
-        // Draw footer background
-        ctx.fillStyle = '#000000'; // Black background
-        ctx.fillRect(0, footerY, width, footerHeight);
+        img.onerror = function() {
+            reject(new Error('Failed to load main image'));
+        };
         
-        // Draw footer text
-        ctx.font = `16px "Noto Sans Bengali", Arial, sans-serif`;
-        ctx.fillStyle = '#ffffff';
-        
-        // Left side: "Barind Post | Category"
-        ctx.textAlign = 'left';
-        const leftText = `বরিন্দ পোস্ট | ${category}`;
-        ctx.fillText(leftText, 20, footerY + (footerHeight / 2) + 5);
-        
-        // Right side: Date
-        ctx.textAlign = 'right';
-        const dateText = new Date(date).toLocaleDateString('bn-BD', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-        ctx.fillText(dateText, width - 20, footerY + (footerHeight / 2) + 5);
-    }
+        img.src = imageUrl;
+
+       
+    });
+}
+
 
     // Display result function
     function displayResult(isPreview, width, height) {
@@ -794,64 +562,6 @@ function generatePhotoCardContent(title, lead, content, imageUrl, date, category
         }
     }
 
-    // Draw logo on top function
-    function drawLogoOnTop(template, width, height, originalImageHeight) {
-        console.log('drawLogoOnTop called - logo ready:', logo.complete, 'naturalWidth:', logo.naturalWidth);
-        
-        if (logo.complete && logo.naturalWidth !== 0) {
-            console.log('Drawing logo on top of everything');
-            
-            if (template === 'header_footer') {
-                // For header_footer template, logo goes in title section
-                const imageHeight = originalImageHeight || height;
-                const titleHeight = Math.max(200, imageHeight * 0.2);
-                
-                // Position logo 50% on image and 50% on title background
-                const logoWidth = 80;
-                const logoHeight = (logo.height / logo.width) * logoWidth;
-                const logoX = (width - logoWidth) / 2; // Center horizontally
-                const logoY = imageHeight - (logoHeight / 2); // 50% on image, 50% on title background
-                
-                // Draw silver semi-transparent background behind logo
-                const backgroundPadding = 10;
-                const backgroundWidth = logoWidth + (backgroundPadding * 2);
-                const backgroundHeight = logoHeight + (backgroundPadding * 2);
-                const backgroundX = logoX - backgroundPadding;
-                const backgroundY = logoY - backgroundPadding;
-                
-                // Draw semi-transparent silver background
-                ctx.fillStyle = 'rgba(192, 192, 192, 0.8)';
-                ctx.fillRect(backgroundX, backgroundY, backgroundWidth, backgroundHeight);
-                
-                // Draw the logo on top
-                console.log('Drawing logo at:', logoX, logoY, 'size:', logoWidth, 'x', logoHeight);
-                ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
-            } else {
-                // For other templates, logo in top-right corner
-                const logoWidth = 80;
-                const logoHeight = (logo.height / logo.width) * logoWidth;
-                const logoX = width - logoWidth - 20;
-                const logoY = 20;
-                
-                // Draw silver background
-                const backgroundPadding = 10;
-                const backgroundWidth = logoWidth + (backgroundPadding * 2);
-                const backgroundHeight = logoHeight + (backgroundPadding * 2);
-                const backgroundX = logoX - backgroundPadding;
-                const backgroundY = logoY - backgroundPadding;
-                
-                // Draw background
-                ctx.fillStyle = 'rgba(192, 192, 192, 0.9)';
-                ctx.fillRect(backgroundX, backgroundY, backgroundWidth, backgroundHeight);
-                
-                // Draw logo
-                console.log('Drawing logo at:', logoX, logoY, 'size:', logoWidth, 'x', logoHeight);
-                ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
-            }
-        } else {
-            console.log('Logo still not ready after reload');
-        }
-    }
 </script>
 
 <style>

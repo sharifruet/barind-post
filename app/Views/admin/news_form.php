@@ -119,23 +119,30 @@ $isReporter = $userRole === 'reporter';
             <select name="reporterRole" class="form-select">
                 <option value="">Select Reporter Role</option>
                 <?php 
-                // Get user's assigned reporter roles
+                // Get user's assigned reporter roles only
                 $reporterRoleModel = new \App\Models\ReporterRoleModel();
                 $userReporterRoles = $reporterRoleModel->getUserRoles(session('user_id'));
                 
-                // If user is admin/editor, show all active roles
-                if (in_array(session('user_role'), ['admin', 'editor'])) {
-                    $userReporterRoles = $reporterRoleModel->getActiveRoles();
+                // Get user model for names
+                $userModel = new \App\Models\UserModel();
+                
+                if ($isEdit) {
+                    // In edit mode, show the creator's name
+                    $creator = $userModel->find($news['author_id']);
+                    $creatorName = $creator ? $creator['name'] : 'Unknown User';
+                    
+                    // Add creator's name as an option
+                    echo '<option value="' . esc($creatorName) . '"' . ($news['reporterRole'] == $creatorName ? ' selected' : '') . '>' . esc($creatorName) . '</option>';
+                } else {
+                    // In add mode, show current user's name
+                    $currentUser = $userModel->find(session('user_id'));
+                    $userName = $currentUser ? $currentUser['name'] : 'Unknown User';
+                    
+                    // Add current user's name as an option
+                    echo '<option value="' . esc($userName) . '" selected>' . esc($userName) . '</option>';
                 }
                 
-                // Get logged-in user's name
-                $userModel = new \App\Models\UserModel();
-                $currentUser = $userModel->find(session('user_id'));
-                $userName = $currentUser ? $currentUser['name'] : 'Unknown User';
-                
-                // Add user's name as an option
-                echo '<option value="' . esc($userName) . '"' . ($isEdit && $news['reporterRole'] == $userName ? ' selected' : '') . '>' . esc($userName) . '</option>';
-                
+                // Show only assigned reporter roles
                 foreach ($userReporterRoles as $role): ?>
                     <option value="<?= esc($role['name']) ?>" <?= $isEdit && $news['reporterRole'] == $role['name'] ? 'selected' : '' ?>><?= esc($role['name']) ?></option>
                 <?php endforeach; ?>

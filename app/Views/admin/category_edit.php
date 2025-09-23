@@ -12,6 +12,14 @@
                 <label class="form-label">Slug</label>
                 <input type="text" name="slug" class="form-control" value="<?= esc($category['slug']) ?>" required>
             </div>
+            <div class="mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="isSpecial" value="1" id="isSpecial" <?= isset($category['isSpecial']) && $category['isSpecial'] ? 'checked' : '' ?>>
+                    <label class="form-check-label" for="isSpecial">
+                        Special Category (shows on second line of header)
+                    </label>
+                </div>
+            </div>
             <button type="submit" class="btn btn-success">Update</button>
             <a href="/admin/categories" class="btn btn-secondary">Cancel</a>
         </form>

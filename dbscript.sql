@@ -38,31 +38,33 @@ INSERT INTO users (name, email, password, role, created_at, updated_at) VALUES
 CREATE TABLE IF NOT EXISTS categories (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
-    slug VARCHAR(100) NOT NULL UNIQUE
+    slug VARCHAR(100) NOT NULL UNIQUE,
+    isSpecial BOOLEAN DEFAULT FALSE
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Insert Bengali newspaper categories
-INSERT INTO categories (name, slug) VALUES
-  ('জাতীয়', 'national'),
-  ('রাজনীতি', 'politics'),
-  ('অর্থনীতি', 'economy'),
-  ('খেলাধুলা', 'sports'),
-  ('বিনোদন', 'entertainment'),
-  ('শিক্ষা', 'education'),
-  ('স্বাস্থ্য', 'health'),
-  ('প্রযুক্তি', 'technology'),
-  ('আন্তর্জাতিক', 'international'),
-  ('সম্পাদকীয়', 'editorial'),
-  ('লেটার টু এডিটর', 'letters'),
-  ('বিশেষ প্রতিবেদন', 'special-report'),
-  ('কৃষি', 'agriculture'),
-  ('পরিবেশ', 'environment'),
-  ('নারী', 'women'),
-  ('শিশু', 'children'),
-  ('ধর্ম', 'religion'),
-  ('সংস্কৃতি', 'culture'),
-  ('ভ্রমণ', 'travel'),
-  ('বিজ্ঞান', 'science');
+-- Insert Bengali newspaper categories with isSpecial field
+INSERT INTO categories (name, slug, isSpecial) VALUES
+  ('সারাদেশ', 'national', FALSE),
+  ('রাজনীতি', 'politics', FALSE),
+  ('অর্থনীতি', 'economy', FALSE),
+  ('খেলাধুলা', 'sports', FALSE),
+  ('বিনোদন', 'entertainment', FALSE),
+  ('শিক্ষা', 'education', FALSE),
+  ('স্বাস্থ্য', 'health', FALSE),
+  ('বিজ্ঞান ও প্রযুক্তি', 'science-technology', FALSE),
+  ('আন্তর্জাতিক', 'international', FALSE),
+  ('সম্পাদকীয়', 'editorial', TRUE),
+  ('লেটার টু এডিটর', 'letters', TRUE),
+  ('বিশেষ প্রতিবেদন', 'special-report', TRUE),
+  ('কৃষি', 'agriculture', FALSE),
+  ('পরিবেশ', 'environment', FALSE),
+  ('নারী', 'women', FALSE),
+  ('ইসলাম', 'islam', FALSE),
+  ('সংস্কৃতি', 'culture', FALSE),
+  ('ভ্রমণ', 'travel', FALSE),
+  ('লাইফস্টাইল', 'lifestyle', FALSE),
+  ('ক্যাম্পাস', 'campus', FALSE),
+  ('প্রবাস', 'emigration', FALSE);
 
 -- Create news table
 CREATE TABLE IF NOT EXISTS news (
@@ -367,3 +369,92 @@ INSERT INTO user_reporter_roles (user_id, reporter_role_id) VALUES
 (1, 2), -- Alice Reporter also gets 'আন্তর্জাতিক ডেস্ক'
 (2, 3), -- Bob Subeditor gets 'নাটোর প্রতিনিধি'
 (3, 4); -- Eve Editor gets 'রাজশাহী প্রতিনিধি'
+
+
+CREATE TABLE IF NOT EXISTS cities (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    latitude DECIMAL(9, 6) NOT NULL,
+    longitude DECIMAL(9, 6) NOT NULL
+);
+
+INSERT INTO cities (name, latitude, longitude) VALUES
+('ঢাকা', 23.810300, 90.412500),
+('চট্টগ্রাম', 22.356900, 91.783200),
+('খুলনা', 22.845600, 89.540300),
+('সিলেট', 24.894900, 91.868700),
+('রাজশাহী', 24.374000, 88.601100),
+('বরিশাল', 22.701000, 90.353500),
+('রংপুর', 25.743900, 89.275200),
+('কুমিল্লা', 23.460700, 91.180900),
+('ময়মনসিংহ', 24.747100, 90.420300),
+('গাজীপুর', 23.999900, 90.420300),
+('নারায়ণগঞ্জ', 23.623800, 90.500000),
+('নরসিংদী', 23.919300, 90.717600),
+('কিশোরগঞ্জ', 24.444900, 90.776600),
+('টাঙ্গাইল', 24.251300, 89.916700),
+('মানিকগঞ্জ', 23.861700, 90.000000),
+('মুন্সিগঞ্জ', 23.542200, 90.530500),
+('ফরিদপুর', 23.607000, 89.842000),
+('গোপালগঞ্জ', 23.007200, 89.826600),
+('মাদারীপুর', 23.164100, 90.189000),
+('শরীয়তপুর', 23.242300, 90.434800),
+('ব্রাহ্মণবাড়িয়া', 23.957100, 91.111900),
+('চাঁদপুর', 23.233300, 90.666700),
+('ফেনী', 23.017600, 91.409000),
+('নোয়াখালী', 22.869600, 91.099500),
+('লক্ষ্মীপুর', 22.944100, 90.830500),
+('কক্সবাজার', 21.427200, 92.005800),
+('বান্দরবান', 22.195300, 92.218400),
+('খাগড়াছড়ি', 23.110500, 91.987000),
+('রাঙামাটি', 22.732400, 92.298500),
+('বগুড়া', 24.848100, 89.373000),
+('পাবনা', 24.014000, 89.237200),
+('সিরাজগঞ্জ', 24.453400, 89.700000),
+('নাটোর', 24.420600, 88.986100),
+('নওগাঁ', 24.804000, 88.948800),
+('জয়পুরহাট', 25.101500, 89.027600),
+('দিনাজপুর', 25.627000, 88.633200),
+('ঠাকুরগাঁও', 26.033900, 88.461700),
+('পঞ্চগড়', 26.341100, 88.554200),
+('নীলফামারী', 25.931000, 88.856000),
+('লালমনিরহাট', 25.992300, 89.284700),
+('গাইবান্ধা', 25.329700, 89.543000),
+('কুড়িগ্রাম', 25.807200, 89.636200),
+('সাতক্ষীরা', 22.708500, 89.071500),
+('যশোর', 23.163400, 89.218200),
+('ঝিনাইদহ', 23.544700, 89.153300),
+('চুয়াডাঙ্গা', 23.640600, 88.841500),
+('মেহেরপুর', 23.762200, 88.631800),
+('মাগুরা', 23.487300, 89.419800),
+('নড়াইল', 23.172500, 89.512900),
+('বাগেরহাট', 22.651600, 89.785600),
+('পিরোজপুর', 22.579700, 89.975800),
+('ঝালকাঠি', 22.640600, 90.198700),
+('পটুয়াখালী', 22.359600, 90.329000),
+('ভোলা', 22.686100, 90.648600),
+('হবিগঞ্জ', 24.374000, 91.415500),
+('মৌলভীবাজার', 24.482900, 91.777400),
+('সুনামগঞ্জ', 25.065800, 91.395000),
+('নেত্রকোণা', 24.881300, 90.728500),
+('শেরপুর', 25.018200, 90.017700),
+('জামালপুর', 24.937500, 89.937800);
+
+-- Create prayer_times table for storing prayer times from Adhan API
+CREATE TABLE IF NOT EXISTS prayer_times (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    city_id INT UNSIGNED NOT NULL,
+    date DATE NOT NULL,
+    fajr TIME NOT NULL,
+    sunrise TIME NOT NULL,
+    dhuhr TIME NOT NULL,
+    asr TIME NOT NULL,
+    maghrib TIME NOT NULL,
+    isha TIME NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (city_id) REFERENCES cities(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_city_date (city_id, date),
+    INDEX idx_city_id (city_id),
+    INDEX idx_date (date)
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
