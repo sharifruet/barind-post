@@ -104,5 +104,16 @@ $routes->get('/admin/prayer-times/(:num)', 'Admin::prayerTimes/$1');
 $routes->get('/admin/prayer-times/fetch/(:num)/(:num)', 'Admin::fetchPrayerTimes/$1/$2');
 $routes->get('/admin/prayer-times/delete/(:num)/(:num)', 'Admin::deletePrayerTimes/$1/$2');
 
+// Prayer Times API Routes
+$routes->get('/prayer-time/(:num)', 'PrayerTimes::index/$1');
+$routes->get('/prayer-time/(:num)/(:num)', 'PrayerTimes::fetchCityYear/$1/$2');
+$routes->get('/prayer-time/city/(:num)/(:any)', 'PrayerTimes::getCityDate/$1/$2');
+$routes->get('/prayer-time/debug-api', 'PrayerTimes::debugApi');
+
+// Public Prayer Times AJAX Routes
+$routes->get('/prayer-time/today', 'PrayerTimes::getToday');
+$routes->get('/prayer-time/today/(:num)', 'PrayerTimes::getToday/$1');
+$routes->get('/prayer-time/cities', 'PrayerTimes::getCities');
+
 // Admin Logs Route
 $routes->get('/admin/logs', 'Admin::viewLogs');

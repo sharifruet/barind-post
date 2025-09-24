@@ -170,25 +170,33 @@ class PrayerTimes extends BaseAdminController
                 }
                 
                 if (isset($data['data']) && is_array($data['data'])) {
-                    $totalDays = count($data['data']);
-                    log_message('info', "Processing {$totalDays} days of prayer times data...");
-                    
+                    $totalDays = 0;
                     $processedCount = 0;
-                    foreach ($data['data'] as $day) {
-                        if (isset($day['timings'])) {
-                            $prayerTimes[] = [
-                                'date' => $day['date']['gregorian']['date'],
-                                'fajr' => $this->parseTime($day['timings']['Fajr']),
-                                'sunrise' => $this->parseTime($day['timings']['Sunrise']),
-                                'dhuhr' => $this->parseTime($day['timings']['Dhuhr']),
-                                'asr' => $this->parseTime($day['timings']['Asr']),
-                                'maghrib' => $this->parseTime($day['timings']['Maghrib']),
-                                'isha' => $this->parseTime($day['timings']['Isha'])
-                            ];
-                            $processedCount++;
+                    
+                    // The API returns data organized by months (1-12)
+                    foreach ($data['data'] as $month => $days) {
+                        if (is_array($days)) {
+                            $totalDays += count($days);
+                            log_message('info', "Processing month {$month} with " . count($days) . " days");
+                            
+                            foreach ($days as $day) {
+                                if (isset($day['timings']) && isset($day['date']['gregorian']['date'])) {
+                                    $prayerTimes[] = [
+                                        'date' => $this->parseDate($day['date']['gregorian']['date']),
+                                        'fajr' => $this->parseTime($day['timings']['Fajr']),
+                                        'sunrise' => $this->parseTime($day['timings']['Sunrise']),
+                                        'dhuhr' => $this->parseTime($day['timings']['Dhuhr']),
+                                        'asr' => $this->parseTime($day['timings']['Asr']),
+                                        'maghrib' => $this->parseTime($day['timings']['Maghrib']),
+                                        'isha' => $this->parseTime($day['timings']['Isha'])
+                                    ];
+                                    $processedCount++;
+                                }
+                            }
                         }
                     }
                     
+                    log_message('info', "Processing {$totalDays} days of prayer times data...");
                     log_message('info', "Successfully processed {$processedCount} days of prayer times data");
                 } else {
                     log_message('error', "Invalid API response structure. Expected 'data' array not found.");
@@ -221,10 +229,37 @@ class PrayerTimes extends BaseAdminController
     }
 
     /**
+     * Parse date string from API response (DD-MM-YYYY to YYYY-MM-DD)
+     */
+    private function parseDate($dateString)
+    {
+        // Convert from DD-MM-YYYY to YYYY-MM-DD format
+        // Example: "17-12-2025" -> "2025-12-17"
+        $date = \DateTime::createFromFormat('d-m-Y', $dateString);
+        if ($date) {
+            return $date->format('Y-m-d');
+        }
+        
+        // Fallback: try to parse as-is if already in correct format
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateString)) {
+            return $dateString;
+        }
+        
+        // Log error and return original if parsing fails
+        log_message('error', "Failed to parse date: {$dateString}");
+        return $dateString;
+    }
+
+    /**
      * Store prayer times in database
      */
     public function storePrayerTimes($cityId, $year, $prayerTimes)
     {
+        // Ensure models are initialized if not already done
+        if (!$this->prayerTimesModel) {
+            $this->prayerTimesModel = new PrayerTimesModel();
+        }
+        
         $storedCount = 0;
         $totalRecords = count($prayerTimes);
         
@@ -264,6 +299,88 @@ class PrayerTimes extends BaseAdminController
     }
 
     /**
+     * Debug API response structure
+     * GET /prayer-time/debug-api
+     */
+    public function debugApi()
+    {
+        $latitude = 23.810300;
+        $longitude = 90.412500;
+        $year = 2025;
+        
+        // Adhan API endpoint
+        $apiUrl = "http://api.aladhan.com/v1/calendar/{$year}";
+        
+        $params = [
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'method' => 3, // Muslim World League (MWL)
+            'school' => 0  // Shafi (or you can use 1 for Hanafi)
+        ];
+
+        $url = $apiUrl . '?' . http_build_query($params);
+        
+        $client = \Config\Services::curlrequest();
+        
+        try {
+            $response = $client->get($url, [
+                'timeout' => 60,
+                'headers' => [
+                    'User-Agent' => 'BarindPost/1.0',
+                    'Accept' => 'application/json'
+                ]
+            ]);
+
+            $statusCode = $response->getStatusCode();
+            $responseBody = $response->getBody();
+            $data = json_decode($responseBody, true);
+            
+            $debugInfo = [
+                'url' => $url,
+                'status_code' => $statusCode,
+                'json_error' => json_last_error_msg(),
+                'response_keys' => array_keys($data),
+                'data_structure' => 'data is organized by months (1-12)',
+                'data_months' => isset($data['data']) ? array_keys($data['data']) : 'No data key',
+            ];
+            
+            if (isset($data['data']) && is_array($data['data'])) {
+                $totalDays = 0;
+                foreach ($data['data'] as $month => $days) {
+                    if (is_array($days)) {
+                        $totalDays += count($days);
+                    }
+                }
+                $debugInfo['total_days'] = $totalDays;
+                
+                // Get first month and first day
+                $firstMonth = array_keys($data['data'])[0] ?? null;
+                if ($firstMonth && isset($data['data'][$firstMonth][0])) {
+                    $firstDay = $data['data'][$firstMonth][0];
+                    $debugInfo['first_day_keys'] = array_keys($firstDay);
+                    
+                    if (isset($firstDay['timings'])) {
+                        $debugInfo['timings_keys'] = array_keys($firstDay['timings']);
+                        $debugInfo['sample_timings'] = $firstDay['timings'];
+                    }
+                    
+                    if (isset($firstDay['date'])) {
+                        $debugInfo['date_structure'] = $firstDay['date'];
+                    }
+                }
+            }
+            
+            return $this->response->setJSON($debugInfo);
+            
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'error' => $e->getMessage(),
+                'url' => $url
+            ]);
+        }
+    }
+
+    /**
      * Get prayer times for a specific city and date
      * GET /prayer-time/city/1/2025-01-15
      */
@@ -288,6 +405,70 @@ class PrayerTimes extends BaseAdminController
             'city' => $city['name'],
             'date' => $date,
             'prayer_times' => $prayerTime
+        ]);
+    }
+
+    /**
+     * Get today's prayer times for a specific city (AJAX endpoint)
+     * GET /prayer-time/today/1
+     */
+    public function getToday($cityId = null)
+    {
+        // If no city ID provided, default to Dhaka (assuming ID 1)
+        if (!$cityId) {
+            $cityId = 1; // Default to Dhaka
+        }
+
+        // Ensure models are initialized
+        if (!$this->cityModel) {
+            $this->cityModel = new CityModel();
+        }
+        if (!$this->prayerTimesModel) {
+            $this->prayerTimesModel = new PrayerTimesModel();
+        }
+
+        $city = $this->cityModel->find($cityId);
+        if (!$city) {
+            return $this->response->setStatusCode(404)->setJSON([
+                'error' => 'City not found.'
+            ]);
+        }
+
+        $today = date('Y-m-d');
+        $prayerTime = $this->prayerTimesModel->getByCityAndDate($cityId, $today);
+        
+        if (!$prayerTime) {
+            return $this->response->setStatusCode(404)->setJSON([
+                'error' => 'Prayer times not found for today.',
+                'city' => $city['name'],
+                'date' => $today
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'city' => $city['name'],
+            'date' => $today,
+            'prayer_times' => $prayerTime
+        ]);
+    }
+
+    /**
+     * Get all cities for dropdown (AJAX endpoint)
+     * GET /prayer-time/cities
+     */
+    public function getCities()
+    {
+        // Ensure model is initialized
+        if (!$this->cityModel) {
+            $this->cityModel = new CityModel();
+        }
+
+        $cities = $this->cityModel->getAllCities();
+        
+        return $this->response->setJSON([
+            'success' => true,
+            'cities' => $cities
         ]);
     }
 }

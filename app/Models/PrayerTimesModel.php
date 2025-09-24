@@ -34,12 +34,12 @@ class PrayerTimesModel extends Model
     protected $validationRules = [
         'city_id' => 'required|integer',
         'date' => 'required|valid_date',
-        'fajr' => 'required|valid_time',
-        'sunrise' => 'required|valid_time',
-        'dhuhr' => 'required|valid_time',
-        'asr' => 'required|valid_time',
-        'maghrib' => 'required|valid_time',
-        'isha' => 'required|valid_time'
+        'fajr' => 'required|regex_match[/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/]',
+        'sunrise' => 'required|regex_match[/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/]',
+        'dhuhr' => 'required|regex_match[/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/]',
+        'asr' => 'required|regex_match[/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/]',
+        'maghrib' => 'required|regex_match[/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/]',
+        'isha' => 'required|regex_match[/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/]'
     ];
 
     protected $validationMessages = [
@@ -53,27 +53,27 @@ class PrayerTimesModel extends Model
         ],
         'fajr' => [
             'required' => 'Fajr time is required',
-            'valid_time' => 'Fajr time must be a valid time'
+            'regex_match' => 'Fajr time must be in HH:MM format'
         ],
         'sunrise' => [
             'required' => 'Sunrise time is required',
-            'valid_time' => 'Sunrise time must be a valid time'
+            'regex_match' => 'Sunrise time must be in HH:MM format'
         ],
         'dhuhr' => [
             'required' => 'Dhuhr time is required',
-            'valid_time' => 'Dhuhr time must be a valid time'
+            'regex_match' => 'Dhuhr time must be in HH:MM format'
         ],
         'asr' => [
             'required' => 'Asr time is required',
-            'valid_time' => 'Asr time must be a valid time'
+            'regex_match' => 'Asr time must be in HH:MM format'
         ],
         'maghrib' => [
             'required' => 'Maghrib time is required',
-            'valid_time' => 'Maghrib time must be a valid time'
+            'regex_match' => 'Maghrib time must be in HH:MM format'
         ],
         'isha' => [
             'required' => 'Isha time is required',
-            'valid_time' => 'Isha time must be a valid time'
+            'regex_match' => 'Isha time must be in HH:MM format'
         ]
     ];
 

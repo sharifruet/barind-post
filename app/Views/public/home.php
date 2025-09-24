@@ -355,6 +355,124 @@ $customStyles = '
         .col-md-8 .news-card {
             border: 1px solid #dee2e6 !important;
         }
+        
+        /* Prayer Times Box Styles */
+        .prayer-times-box {
+            background: linear-gradient(135deg, #5aa17a 0%, #2d6a4f 100%);
+            color: white;
+            border-radius: 14px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+            position: relative;
+            overflow: hidden;
+        }
+        /* Decorative crescent and pattern */
+        .prayer-times-box:before {
+            content: "";
+            position: absolute;
+            top: -30px;
+            right: -30px;
+            width: 140px;
+            height: 140px;
+            background: radial-gradient(circle at 40% 40%, rgba(255,255,255,0.25) 0 35%, transparent 36% 100%);
+            border-radius: 50%;
+            filter: blur(1px);
+            pointer-events: none;
+        }
+        .prayer-times-box:after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            height: 8px;
+            background-image: linear-gradient(to right, rgba(255,255,255,0.25) 20%, rgba(255,255,255,0.05) 20% 40%, rgba(255,255,255,0.25) 40% 60%, rgba(255,255,255,0.05) 60% 80%, rgba(255,255,255,0.25) 80%);
+            opacity: 0.5;
+        }
+        .prayer-times-header {
+            margin-bottom: 1rem;
+        }
+        .prayer-times-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: 0.5px;
+        }
+        .prayer-times-footer {
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+        .prayer-area-text {
+            font-size: 0.95rem;
+            opacity: 0.95;
+            font-weight: 500;
+        }
+        .settings-button {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.35);
+            border-radius: 8px;
+            padding: 0.35rem 0.6rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .settings-button:hover {
+            background: rgba(255,255,255,0.25);
+        }
+        .city-selector {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        .city-selector option {
+            background: #2d6a4f;
+            color: white;
+        }
+        .city-selector.hidden {
+            display: none;
+        }
+        .prayer-times-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .prayer-time-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.22);
+        }
+        .prayer-time-item:last-child {
+            border-bottom: none;
+        }
+        .prayer-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .prayer-time {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        .loading {
+            text-align: center;
+            padding: 1rem;
+            color: rgba(255,255,255,0.9);
+        }
+        .error {
+            text-align: center;
+            padding: 1rem;
+            color: #ffd1d1;
+            background: rgba(255,255,255,0.12);
+            border-radius: 8px;
+        }
 ';
 ?>
 
@@ -465,6 +583,25 @@ $customStyles = '
         
         <!-- Right Column - 4 columns for news with photos -->
         <div class="col-md-4">
+            <!-- Prayer Times Box -->
+            <div class="prayer-times-box">
+                <div class="prayer-times-header">
+                    <h3 class="prayer-times-title">নামাজের সময়</h3>
+                </div>
+                <div id="prayerTimesContent">
+                    <div class="loading">Loading prayer times...</div>
+                </div>
+                <div class="prayer-times-footer">
+                    <span id="prayerAreaText" class="prayer-area-text">ঢাকা ও পার্শবর্তী এলাকার জন্য</span>
+                    <button id="settingsButton" type="button" class="settings-button" aria-label="Change city">⚙️</button>
+                </div>
+                <div style="margin-top: 0.5rem;">
+                    <select id="citySelector" class="city-selector hidden" aria-label="Select city">
+                        <option value="">Loading cities...</option>
+                    </select>
+                </div>
+            </div>
+            
             <div class="latest-news-sidebar">
                 <h4 class="mb-3 text-primary">আরও সর্বশেষ সংবাদ</h4>
                 <div class="list-group list-group-flush">
@@ -538,4 +675,146 @@ $customStyles = '
     */
     ?>
 </div>
+
+<script>
+    // Prayer Times functionality
+    let currentCityId = 1; // Default to Dhaka
+    let currentCityName = 'ঢাকা';
+
+    function updateAreaText() {
+        const areaText = document.getElementById('prayerAreaText');
+        if (areaText) {
+            areaText.textContent = `${currentCityName} ও পার্শবর্তী এলাকার জন্য`;
+        }
+    }
+
+    // Load cities for dropdown
+    async function loadCities() {
+        try {
+            const response = await fetch('/prayer-time/cities');
+            const data = await response.json();
+            
+            if (data.success) {
+                const citySelector = document.getElementById('citySelector');
+                citySelector.innerHTML = '';
+                
+                // Find Dhaka city and set it as default
+                let dhakaCity = null;
+                data.cities.forEach(city => {
+                    const lower = (city.name || '').toLowerCase();
+                    if (lower.includes('ঢাকা') || lower.includes('dhaka')) {
+                        dhakaCity = city;
+                    }
+                });
+                
+                // If Dhaka found, set it as current city
+                if (dhakaCity) {
+                    currentCityId = dhakaCity.id;
+                    currentCityName = dhakaCity.name;
+                }
+
+                // Build options
+                data.cities.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city.id;
+                    option.textContent = city.name;
+                    if (city.id == currentCityId) {
+                        option.selected = true;
+                    }
+                    citySelector.appendChild(option);
+                });
+
+                updateAreaText();
+            }
+        } catch (error) {
+            console.error('Error loading cities:', error);
+        }
+    }
+
+    // Load prayer times for selected city
+    async function loadPrayerTimes(cityId = null) {
+        const content = document.getElementById('prayerTimesContent');
+        content.innerHTML = '<div class="loading">Loading prayer times...</div>';
+        
+        try {
+            const url = cityId ? `/prayer-time/today/${cityId}` : '/prayer-time/today';
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data.success) {
+                const prayerTimes = data.prayer_times;
+                // If backend returns city name, sync it
+                if (data.city) {
+                    currentCityName = data.city;
+                    updateAreaText();
+                }
+                content.innerHTML = `
+                    <ul class="prayer-times-list">
+                        <li class="prayer-time-item">
+                            <span class="prayer-name">ফজর</span>
+                            <span class="prayer-time">${prayerTimes.fajr}</span>
+                        </li>
+                        <li class="prayer-time-item">
+                            <span class="prayer-name">সূর্যোদয়</span>
+                            <span class="prayer-time">${prayerTimes.sunrise}</span>
+                        </li>
+                        <li class="prayer-time-item">
+                            <span class="prayer-name">যোহর</span>
+                            <span class="prayer-time">${prayerTimes.dhuhr}</span>
+                        </li>
+                        <li class="prayer-time-item">
+                            <span class="prayer-name">আসর</span>
+                            <span class="prayer-time">${prayerTimes.asr}</span>
+                        </li>
+                        <li class="prayer-time-item">
+                            <span class="prayer-name">মাগরিব</span>
+                            <span class="prayer-time">${prayerTimes.maghrib}</span>
+                        </li>
+                        <li class="prayer-time-item">
+                            <span class="prayer-name">এশা</span>
+                            <span class="prayer-time">${prayerTimes.isha}</span>
+                        </li>
+                    </ul>
+                `;
+            } else {
+                content.innerHTML = `<div class="error">${data.error || 'Prayer times not available'}</div>`;
+            }
+        } catch (error) {
+            console.error('Error loading prayer times:', error);
+            content.innerHTML = '<div class="error">Error loading prayer times</div>';
+        }
+    }
+
+    // Settings toggle to show/hide selector
+    document.addEventListener('click', function(e) {
+        const btn = document.getElementById('settingsButton');
+        const selector = document.getElementById('citySelector');
+        if (!btn || !selector) return;
+        if (e.target === btn) {
+            selector.classList.toggle('hidden');
+        }
+    });
+
+    // Handle city selection change
+    document.getElementById('citySelector').addEventListener('change', function() {
+        const selectedCityId = this.value;
+        const selectedText = this.options[this.selectedIndex]?.text || currentCityName;
+        if (selectedCityId) {
+            currentCityId = selectedCityId;
+            currentCityName = selectedText;
+            updateAreaText();
+            loadPrayerTimes(selectedCityId);
+            // Collapse selector after choosing
+            this.classList.add('hidden');
+        }
+    });
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', async function() {
+        await loadCities();
+        updateAreaText();
+        loadPrayerTimes(currentCityId);
+    });
+</script>
+
 <?= $this->endSection() ?> 
