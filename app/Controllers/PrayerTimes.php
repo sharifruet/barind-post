@@ -2,12 +2,12 @@
 
 namespace App\Controllers;
 
-use App\Controllers\BaseAdminController;
+use App\Controllers\BaseController;
 use App\Models\PrayerTimesModel;
 use App\Models\CityModel;
 use CodeIgniter\HTTP\ResponseInterface;
 
-class PrayerTimes extends BaseAdminController
+class PrayerTimes extends BaseController
 {
     protected $prayerTimesModel;
     protected $cityModel;

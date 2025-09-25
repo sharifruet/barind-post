@@ -43,53 +43,8 @@
             font-weight: 600;
             margin: 0;
         }
-        .city-selector {
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 0.5rem;
-            border-radius: 6px;
-            font-size: 0.9rem;
-        }
-        .city-selector option {
-            background: #667eea;
-            color: white;
-        }
-        .prayer-times-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .prayer-time-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-        }
-        .prayer-time-item:last-child {
-            border-bottom: none;
-        }
-        .prayer-name {
-            font-weight: 500;
-            font-size: 0.95rem;
-        }
-        .prayer-time {
-            font-weight: 600;
-            font-size: 1rem;
-        }
-        .loading {
-            text-align: center;
-            padding: 1rem;
-            color: rgba(255,255,255,0.8);
-        }
-        .error {
-            text-align: center;
-            padding: 1rem;
-            color: #ff6b6b;
-            background: rgba(255,255,255,0.1);
-            border-radius: 6px;
-        }
+ 
+   
         
         @media (max-width: 768px) {
             .container {

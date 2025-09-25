@@ -372,7 +372,7 @@ INSERT INTO user_reporter_roles (user_id, reporter_role_id) VALUES
 
 
 CREATE TABLE IF NOT EXISTS cities (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     latitude DECIMAL(9, 6) NOT NULL,
     longitude DECIMAL(9, 6) NOT NULL
@@ -442,8 +442,8 @@ INSERT INTO cities (name, latitude, longitude) VALUES
 
 -- Create prayer_times table for storing prayer times from Adhan API
 CREATE TABLE IF NOT EXISTS prayer_times (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    city_id INT UNSIGNED NOT NULL,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    city_id BIGINT NOT NULL,
     date DATE NOT NULL,
     fajr TIME NOT NULL,
     sunrise TIME NOT NULL,
