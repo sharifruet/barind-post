@@ -6,21 +6,88 @@
 ?>
 
 <style>
-/* Prayer Times Box Styles - Islamic Green Theme */
+/* Prayer Times Box Styles - Multifoil Lobed Arch Pine Green Theme */
 .prayer-times-box {
-    background: linear-gradient(135deg, #2d5016 0%, #3d6b1a 25%, #4a7c1f 50%, #3d6b1a 75%, #2d5016 100%);
+    background: linear-gradient(135deg, #01796f 0%, #028a7b 25%, #039b87 50%, #028a7b 75%, #01796f 100%);
     color: white;
-    border-radius: 20px;
+    border-radius: 20px 20px 0 0;
     padding: 2rem;
     margin-bottom: 1.5rem;
-    box-shadow: 0 8px 32px rgba(45, 80, 22, 0.4);
+    box-shadow: 0 8px 32px rgba(1, 121, 111, 0.4);
     position: relative;
     overflow: hidden;
     border: 2px solid rgba(255, 255, 255, 0.15);
+    clip-path: polygon(
+        0% 0%,           /* Top left */
+        100% 0%,         /* Top right */
+        100% 85%,        /* Right side down */
+        85% 100%,        /* Bottom right corner */
+        15% 100%,        /* Bottom left corner */
+        0% 85%           /* Left side up */
+    );
 }
 
-/* Islamic Geometric Pattern Background - Green Theme */
-.prayer-times-box:before {
+/* Multifoil Lobed Arch - Main Structure */
+.prayer-times-box::before {
+    content: "";
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 140px;
+    height: 70px;
+    background: linear-gradient(135deg, #01796f 0%, #028a7b 50%, #01796f 100%);
+    border-radius: 70px 70px 0 0;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-bottom: none;
+    box-shadow: 0 4px 12px rgba(1, 121, 111, 0.3);
+    z-index: 1;
+    clip-path: polygon(
+        0% 100%,         /* Bottom left */
+        20% 80%,         /* Left lobe start */
+        15% 60%,         /* Left lobe peak */
+        25% 45%,         /* Left lobe end */
+        40% 30%,         /* Center lobe start */
+        50% 20%,         /* Center lobe peak */
+        60% 30%,         /* Center lobe end */
+        75% 45%,         /* Right lobe start */
+        85% 60%,         /* Right lobe peak */
+        80% 80%,         /* Right lobe end */
+        100% 100%        /* Bottom right */
+    );
+}
+
+/* Multifoil Arch Inner Layer */
+.prayer-times-box::after {
+    content: "";
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 60px;
+    background: linear-gradient(135deg, rgba(1, 121, 111, 0.8) 0%, rgba(2, 138, 123, 0.6) 50%, rgba(1, 121, 111, 0.8) 100%);
+    border-radius: 60px 60px 0 0;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-bottom: none;
+    z-index: 2;
+    clip-path: polygon(
+        0% 100%,         /* Bottom left */
+        22% 82%,         /* Left lobe start */
+        18% 65%,         /* Left lobe peak */
+        28% 50%,         /* Left lobe end */
+        42% 35%,         /* Center lobe start */
+        50% 25%,         /* Center lobe peak */
+        58% 35%,         /* Center lobe end */
+        72% 50%,         /* Right lobe start */
+        82% 65%,         /* Right lobe peak */
+        78% 82%,         /* Right lobe end */
+        100% 100%        /* Bottom right */
+    );
+}
+
+/* Islamic Geometric Pattern Background - Mihrab Theme */
+.prayer-times-box .geometric-pattern {
     content: "";
     position: absolute;
     top: -50px;
@@ -35,43 +102,88 @@
     filter: blur(2px);
     pointer-events: none;
     animation: rotate 20s linear infinite;
+    z-index: 0;
 }
 
-/* Masjid Dome Decorative Element - Green Theme */
-.prayer-times-box:after {
-    content: "";
+/* Mihrab Decorative Pillars */
+.prayer-times-box .mihrab-pillar {
     position: absolute;
-    top: -20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80px;
-    height: 40px;
-    background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 100%);
-    border-radius: 50px 50px 0 0;
-    border: 2px solid rgba(255,255,255,0.4);
+    top: 0;
+    width: 8px;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 100%);
+    border-radius: 4px;
     pointer-events: none;
 }
 
-/* Islamic Geometric Border Pattern - Green Theme */
-.prayer-times-box::before {
-    content: "";
+.prayer-times-box .mihrab-pillar.left {
+    left: 20px;
+}
+
+.prayer-times-box .mihrab-pillar.right {
+    right: 20px;
+}
+
+/* Multifoil Arch Individual Lobe Decorations */
+.prayer-times-box .lobe-decoration {
+    position: absolute;
+    top: -10px;
+    width: 20px;
+    height: 20px;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4) 0 40%, transparent 40% 100%);
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.3);
+    box-shadow: 0 2px 6px rgba(1, 121, 111, 0.3);
+    z-index: 3;
+}
+
+.prayer-times-box .lobe-decoration.left {
+    left: calc(50% - 60px);
+    transform: translateX(-50%);
+}
+
+.prayer-times-box .lobe-decoration.center {
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 24px;
+}
+
+.prayer-times-box .lobe-decoration.right {
+    left: calc(50% + 60px);
+    transform: translateX(-50%);
+}
+
+/* Multifoil Arch Keystone */
+.prayer-times-box .keystone {
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 18px;
+    height: 18px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.2) 100%);
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+    box-shadow: 0 2px 8px rgba(1, 121, 111, 0.3);
+    z-index: 4;
+}
+
+/* Mihrab Inner Pattern */
+.prayer-times-box .mihrab-pattern {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     background-image: 
-        linear-gradient(45deg, rgba(255,255,255,0.15) 25%, transparent 25%),
-        linear-gradient(-45deg, rgba(255,255,255,0.15) 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.15) 75%),
-        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.15) 75%);
-    background-size: 20px 20px;
-    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-    opacity: 0.4;
+        radial-gradient(circle at 50% 0%, rgba(255,255,255,0.1) 0 40%, transparent 40% 100%),
+        linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%);
     pointer-events: none;
+    z-index: 1;
 }
 
-/* Crescent Moon Decorative Element - Green Theme */
+/* Crescent Moon Decorative Element - Pine Green Theme */
 .prayer-times-box .crescent-moon {
     position: absolute;
     top: 15px;
@@ -84,7 +196,7 @@
     pointer-events: none;
 }
 
-/* Star Decorative Elements - Green Theme */
+/* Star Decorative Elements - Pine Green Theme */
 .prayer-times-box .star {
     position: absolute;
     width: 12px;
@@ -113,7 +225,7 @@
     animation: twinkle 2s ease-in-out infinite 1s;
 }
 
-/* Minaret Decorative Element - Green Theme */
+/* Minaret Decorative Element - Pine Green Theme */
 .prayer-times-box .minaret {
     position: absolute;
     bottom: 0;
@@ -138,7 +250,7 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
-/* Islamic Calligraphy Style Header - Green Theme */
+/* Islamic Calligraphy Style Header - Mihrab Theme */
 .prayer-times-title {
     font-family: Arial, sans-serif;
     font-size: 2.2rem;
@@ -150,10 +262,97 @@
     z-index: 10;
     color: #ffffff;
     text-align: center;
+    margin-top: 1rem;
+}
+
+/* Multifoil Arch Decoration Lines */
+.prayer-times-box .arch-lines {
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 50px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-bottom: none;
+    border-radius: 50px 50px 0 0;
+    pointer-events: none;
+    z-index: 2;
+    clip-path: polygon(
+        0% 100%,         /* Bottom left */
+        20% 80%,         /* Left lobe start */
+        15% 60%,         /* Left lobe peak */
+        25% 45%,         /* Left lobe end */
+        40% 30%,         /* Center lobe start */
+        50% 20%,         /* Center lobe peak */
+        60% 30%,         /* Center lobe end */
+        75% 45%,         /* Right lobe start */
+        85% 60%,         /* Right lobe peak */
+        80% 80%,         /* Right lobe end */
+        100% 100%        /* Bottom right */
+    );
+}
+
+.prayer-times-box .arch-lines::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom: none;
+    border-radius: 40px 40px 0 0;
+    clip-path: polygon(
+        0% 100%,         /* Bottom left */
+        22% 82%,         /* Left lobe start */
+        18% 65%,         /* Left lobe peak */
+        28% 50%,         /* Left lobe end */
+        42% 35%,         /* Center lobe start */
+        50% 25%,         /* Center lobe peak */
+        58% 35%,         /* Center lobe end */
+        72% 50%,         /* Right lobe start */
+        82% 65%,         /* Right lobe peak */
+        78% 82%,         /* Right lobe end */
+        100% 100%        /* Bottom right */
+    );
+}
+
+/* Multifoil Arch Floral Decorations */
+.prayer-times-box .floral-decoration {
+    position: absolute;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.prayer-times-box .floral-decoration.left {
+    left: calc(50% - 45px);
+    transform: translateX(-50%);
+}
+
+.prayer-times-box .floral-decoration.center-left {
+    left: calc(50% - 20px);
+    transform: translateX(-50%);
+}
+
+.prayer-times-box .floral-decoration.center-right {
+    left: calc(50% + 20px);
+    transform: translateX(-50%);
+}
+
+.prayer-times-box .floral-decoration.right {
+    left: calc(50% + 45px);
+    transform: translateX(-50%);
 }
 
 
-/* Enhanced Prayer Time Items - Green Theme */
+/* Enhanced Prayer Time Items - Pine Green Theme */
 .prayer-time-item {
     display: flex;
     justify-content: space-between;
@@ -184,7 +383,7 @@
     text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
 
-/* Per-prayer icons - Green Theme */
+/* Per-prayer icons - Pine Green Theme */
 .prayer-time-item .prayer-name:before {
     display: inline-block;
     margin-right: 6px;
@@ -270,7 +469,7 @@
     margin-bottom: 1rem;
 }
 
-/* Date/Time bar - Green Theme */
+/* Date/Time bar - Pine Green Theme */
 .date-time-bar {
     display: flex;
     flex-wrap: wrap;
@@ -314,7 +513,7 @@
 }
 
 .city-selector option {
-    background: #2d5016;
+    background: #01796f;
     color: white;
 }
 
@@ -346,12 +545,30 @@
 }
 </style>
 
-<!-- Prayer Times Box with Islamic Art Design -->
+<!-- Prayer Times Box with Multifoil Lobed Arch Design -->
 <div class="prayer-times-box">
-    <!-- Islamic Pattern Overlay -->
-    <div class="islamic-pattern"></div>
+    <!-- Mihrab Pattern Overlay -->
+    <div class="mihrab-pattern"></div>
     
-    <!-- Decorative Elements -->
+    <!-- Geometric Pattern Background -->
+    <div class="geometric-pattern"></div>
+    
+    <!-- Multifoil Lobed Arch Decorative Elements -->
+    <div class="mihrab-pillar left"></div>
+    <div class="mihrab-pillar right"></div>
+    <div class="lobe-decoration left"></div>
+    <div class="lobe-decoration center"></div>
+    <div class="lobe-decoration right"></div>
+    <div class="keystone"></div>
+    <div class="arch-lines"></div>
+    
+    <!-- Floral Decorations for Multifoil Arch -->
+    <div class="floral-decoration left"></div>
+    <div class="floral-decoration center-left"></div>
+    <div class="floral-decoration center-right"></div>
+    <div class="floral-decoration right"></div>
+    
+    <!-- Traditional Decorative Elements -->
     <div class="crescent-moon"></div>
     <div class="star"></div>
     <div class="star"></div>
@@ -461,27 +678,27 @@ async function loadPrayerTimes(cityId = null) {
                 <ul class="prayer-times-list">
                     <li class="prayer-time-item fajr">
                         <span class="prayer-name">ফজর</span>
-                        <span class="prayer-time">${prayerTimes.fajr}</span>
+                        <span class="prayer-time">${toBanglaNumerals(prayerTimes.fajr)}</span>
                     </li>
                     <li class="prayer-time-item sunrise">
                         <span class="prayer-name">সূর্যোদয়</span>
-                        <span class="prayer-time">${prayerTimes.sunrise}</span>
+                        <span class="prayer-time">${toBanglaNumerals(prayerTimes.sunrise)}</span>
                     </li>
                     <li class="prayer-time-item dhuhr">
                         <span class="prayer-name">যোহর</span>
-                        <span class="prayer-time">${prayerTimes.dhuhr}</span>
+                        <span class="prayer-time">${toBanglaNumerals(prayerTimes.dhuhr)}</span>
                     </li>
                     <li class="prayer-time-item asr">
                         <span class="prayer-name">আসর</span>
-                        <span class="prayer-time">${prayerTimes.asr}</span>
+                        <span class="prayer-time">${toBanglaNumerals(prayerTimes.asr)}</span>
                     </li>
                     <li class="prayer-time-item maghrib">
                         <span class="prayer-name">মাগরিব</span>
-                        <span class="prayer-time">${prayerTimes.maghrib}</span>
+                        <span class="prayer-time">${toBanglaNumerals(prayerTimes.maghrib)}</span>
                     </li>
                     <li class="prayer-time-item isha">
                         <span class="prayer-name">এশা</span>
-                        <span class="prayer-time">${prayerTimes.isha}</span>
+                        <span class="prayer-time">${toBanglaNumerals(prayerTimes.isha)}</span>
                     </li>
                 </ul>
             `;
@@ -542,30 +759,124 @@ document.addEventListener('DOMContentLoaded', async function() {
     setInterval(updateClockAndDates, 1000);
 });
 
-// Format and render English date, Hijri date, and current time
+// Convert English numerals to Bangla numerals
+function toBanglaNumerals(str) {
+    const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    return str.replace(/\d/g, (digit) => banglaDigits[parseInt(digit)]);
+}
+
+// Convert English weekday names to Bangla
+function getBanglaWeekday(weekday) {
+    const weekdays = {
+        'Sunday': 'রবিবার',
+        'Monday': 'সোমবার', 
+        'Tuesday': 'মঙ্গলবার',
+        'Wednesday': 'বুধবার',
+        'Thursday': 'বৃহস্পতিবার',
+        'Friday': 'শুক্রবার',
+        'Saturday': 'শনিবার'
+    };
+    return weekdays[weekday] || weekday;
+}
+
+// Convert English month names to Bangla
+function getBanglaMonth(month) {
+    const months = {
+        'January': 'জানুয়ারি',
+        'February': 'ফেব্রুয়ারি',
+        'March': 'মার্চ',
+        'April': 'এপ্রিল',
+        'May': 'মে',
+        'June': 'জুন',
+        'July': 'জুলাই',
+        'August': 'আগস্ট',
+        'September': 'সেপ্টেম্বর',
+        'October': 'অক্টোবর',
+        'November': 'নভেম্বর',
+        'December': 'ডিসেম্বর'
+    };
+    return months[month] || month;
+}
+
+// Convert Hijri month names to Bangla
+function getBanglaHijriMonth(month) {
+    const hijriMonths = {
+        'Muharram': 'মুহাররম',
+        'Safar': 'সফর',
+        'Rabiʻ I': 'রবিউল আউয়াল',
+        'Rabiʻ II': 'রবিউস সানি',
+        'Jumada I': 'জুমাদাল আউয়াল',
+        'Jumada II': 'জুমাদাস সানি',
+        'Rajab': 'রজব',
+        'Shaʻban': 'শাবান',
+        'Ramadan': 'রমজান',
+        'Shawwal': 'শাওয়াল',
+        'Dhuʻl-Qiʻdah': 'জিলকদ',
+        'Dhuʻl-Hijjah': 'জিলহজ'
+    };
+    return hijriMonths[month] || month;
+}
+
+// Convert Hijri weekday names to Bangla
+function getBanglaHijriWeekday(weekday) {
+    const hijriWeekdays = {
+        'Sun': 'রবি',
+        'Mon': 'সোম',
+        'Tue': 'মঙ্গল',
+        'Wed': 'বুধ',
+        'Thu': 'বৃহস্পতি',
+        'Fri': 'শুক্র',
+        'Sat': 'শনি'
+    };
+    return hijriWeekdays[weekday] || weekday;
+}
+
+// Format and render English date, Hijri date, and current time in Bangla
 function updateClockAndDates() {
     const now = new Date();
-    const english = new Intl.DateTimeFormat('en-GB', {
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-    }).format(now);
+    
+    // English date in Bangla
+    const englishWeekday = new Intl.DateTimeFormat('en-GB', { weekday: 'long' }).format(now);
+    const englishMonth = new Intl.DateTimeFormat('en-GB', { month: 'long' }).format(now);
+    const englishDay = new Intl.DateTimeFormat('en-GB', { day: 'numeric' }).format(now);
+    const englishYear = new Intl.DateTimeFormat('en-GB', { year: 'numeric' }).format(now);
+    
+    const banglaWeekday = getBanglaWeekday(englishWeekday);
+    const banglaMonth = getBanglaMonth(englishMonth);
+    const banglaDay = toBanglaNumerals(englishDay);
+    const banglaYear = toBanglaNumerals(englishYear);
+    
+    const english = `${banglaWeekday}, ${banglaDay} ${banglaMonth} ${banglaYear}`;
+    
+    // Hijri date in Bangla
     let hijri;
     try {
-        // Hijri date using Islamic calendar via Intl API (fallback if unsupported)
-        hijri = new Intl.DateTimeFormat('en-TN-u-ca-islamic', {
-            weekday: 'short', year: 'numeric', month: 'long', day: 'numeric'
-        }).format(now);
+        const hijriWeekday = new Intl.DateTimeFormat('en-TN-u-ca-islamic', { weekday: 'short' }).format(now);
+        const hijriMonth = new Intl.DateTimeFormat('en-TN-u-ca-islamic', { month: 'long' }).format(now);
+        const hijriDay = new Intl.DateTimeFormat('en-TN-u-ca-islamic', { day: 'numeric' }).format(now);
+        const hijriYear = new Intl.DateTimeFormat('en-TN-u-ca-islamic', { year: 'numeric' }).format(now);
+        
+        const banglaHijriWeekday = getBanglaHijriWeekday(hijriWeekday);
+        const banglaHijriMonth = getBanglaHijriMonth(hijriMonth);
+        const banglaHijriDay = toBanglaNumerals(hijriDay);
+        const banglaHijriYear = toBanglaNumerals(hijriYear);
+        
+        hijri = `${banglaHijriWeekday}, ${banglaHijriMonth} ${banglaHijriDay}, ${banglaHijriYear} হিজরি`;
     } catch (e) {
-        hijri = 'Hijri date unavailable';
+        hijri = 'হিজরি তারিখ পাওয়া যায়নি';
     }
+    
+    // Time in Bangla numerals
     const time = new Intl.DateTimeFormat('en-GB', {
         hour: '2-digit', minute: '2-digit', second: '2-digit'
     }).format(now);
+    const banglaTime = toBanglaNumerals(time);
 
     const englishEl = document.getElementById('englishDateText');
     const hijriEl = document.getElementById('hijriDateText');
     const timeEl = document.getElementById('currentTimeText');
     if (englishEl) englishEl.textContent = english;
     if (hijriEl) hijriEl.textContent = hijri;
-    if (timeEl) timeEl.textContent = time;
+    if (timeEl) timeEl.textContent = banglaTime;
 }
 </script>
