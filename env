@@ -29,9 +29,9 @@ app.CSPEnabled = false
 #--------------------------------------------------------------------
 
 database.default.hostname = localhost
-database.default.database = wahidiya_barind_post
-database.default.username = wahidiya_common
-database.default.password = !BadPassw0rd
+database.default.database = your_database_name
+database.default.username = your_database_user
+database.default.password = your_database_password
 database.default.DBDriver = MySQLi
 database.default.DBPrefix =
 database.default.port = 3306
@@ -50,17 +50,26 @@ database.default.DBCollat = utf8mb4_unicode_ci
 # database.tests.port = 3306
 
 #--------------------------------------------------------------------
+# AUTOMATION (n8n) — see N8N_NEWS_AUTOMATION_PLAN.md
+#--------------------------------------------------------------------
+# Left commented out on purpose: the /api/v1 automation routes fail closed (reject
+# every request) until both values below are set. Never commit real values here.
+
+# automation.apiKey =
+# automation.authorId =
+
+#--------------------------------------------------------------------
 # ENCRYPTION
 #--------------------------------------------------------------------
 
-encryption.key = 'bXq6v8E$5zFd!gT2@kL9wYp3sR7cU1jHn4*'
+encryption.key = your_32_character_random_string_here
 
 #--------------------------------------------------------------------
 # SESSION
 #--------------------------------------------------------------------
 
 session.driver = 'CodeIgniter\Session\Handlers\FileHandler'
-session.savePath = '/home/wahidiya/barindpost.com/writable/session'
+session.savePath = '/absolute/path/to/your/writable/session'
 
 #--------------------------------------------------------------------
 # LOGGER

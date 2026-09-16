@@ -1,3 +1,15 @@
+<?php
+$sportsNavEvents = [];
+try {
+    $db = \Config\Database::connect();
+    if ($db->tableExists('sports_events')) {
+        helper('sports_event');
+        $sportsNavEvents = model('App\Models\SportsEventModel')->getActiveNavEvents();
+    }
+} catch (\Throwable $e) {
+    $sportsNavEvents = [];
+}
+?>
 <div class="bg-white sticky-top shadow-sm mb-4">
     <div class="container">
         <div class="row align-items-center">
@@ -59,6 +71,13 @@
                 <div class="d-flex flex-row w-100 justify-content-between align-items-center">
                     <!-- Special Categories -->
                     <div class="d-flex flex-wrap">
+                        <?php if (!empty($sportsNavEvents)): ?>
+                            <?php foreach ($sportsNavEvents as $se): ?>
+                                <a class="nav-link text-danger small me-3 fw-semibold" href="<?= esc(sports_event_url($se)) ?>" style="font-size:0.85rem;">
+                                    <i class="fas fa-trophy me-1"></i><?= esc($se['title_bn'], 'raw') ?>
+                                </a>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                         <?php if (!empty($specialCategories)): ?>
                             <?php foreach ($specialCategories as $cat): ?>
                                 <a class="nav-link text-muted small me-3" href="/section/<?= esc($cat['slug']) ?>" style="font-size:0.85rem;">

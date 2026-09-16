@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use App\Models\PrayerTimesModel;
-use App\Models\CityModel;
+use App\Models\CitiesModel;
 use CodeIgniter\HTTP\ResponseInterface;
 
 class PrayerTimes extends BaseController
@@ -16,7 +16,7 @@ class PrayerTimes extends BaseController
     {
         parent::initController($request, $response, $logger);
         $this->prayerTimesModel = new PrayerTimesModel();
-        $this->cityModel = new CityModel();
+        $this->cityModel = new CitiesModel();
     }
 
     /**
@@ -421,7 +421,7 @@ class PrayerTimes extends BaseController
 
         // Ensure models are initialized
         if (!$this->cityModel) {
-            $this->cityModel = new CityModel();
+            $this->cityModel = new \App\Models\CitiesModel();
         }
         if (!$this->prayerTimesModel) {
             $this->prayerTimesModel = new PrayerTimesModel();
@@ -461,7 +461,7 @@ class PrayerTimes extends BaseController
     {
         // Ensure model is initialized
         if (!$this->cityModel) {
-            $this->cityModel = new CityModel();
+            $this->cityModel = new \App\Models\CitiesModel();
         }
 
         $cities = $this->cityModel->getAllCities();

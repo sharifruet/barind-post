@@ -80,66 +80,10 @@ function limitTo15Words($text) {
 }
 
 $customStyles = '
-        .category-pill {
-            margin-right: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-        .hero {
-            background: linear-gradient(90deg, #f8fafc 60%, #e9ecef 100%);
-            border-radius: 1.5rem;
-            padding: 2.5rem 2rem 2rem 2rem;
-            margin-bottom: 2.5rem;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
-        }
-        .featured-img {
-            border-top-left-radius: 1rem;
-            border-top-right-radius: 1rem;
-            object-fit: cover;
-            height: 280px;
-        }
-        .featured-badge {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background: #dc3545;
-            color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 1rem;
-            font-size: 0.8rem;
-            font-weight: 600;
-            z-index: 10;
-        }
-        .category-section {
-            border-top: 2px solid #f8f9fa;
-            padding-top: 2rem;
-        }
-        .category-title {
-            color: #2c3e50;
-            font-weight: 700;
-            border-left: 4px solid #007bff;
-            padding-left: 1rem;
-        }
-        .view-all-btn {
-            transition: all 0.3s ease;
-        }
-        .view-all-btn:hover {
-            transform: translateX(5px);
-        }
-        .single-featured {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .single-featured .card {
-            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-        }
-        .single-featured .featured-img {
-            height: 400px;
-        }
-        
         /* Featured news layout styles */
         .featured-hero {
             position: relative;
-            height: 500px;
+            aspect-ratio: 16/9;
             overflow: hidden;
             border-radius: 1rem;
             margin-bottom: 2rem;
@@ -189,22 +133,6 @@ $customStyles = '
             text-decoration: underline;
         }
         
-        /* Ensure inline styles work on overlay */
-        .featured-hero-overlay[style*="background-color"] {
-            z-index: 15 !important;
-        }
-        
-        /* Alternative: Use CSS class for background colors */
-        .featured-hero-overlay.bg-beige {
-            background-color: beige !important;
-            z-index: 15 !important;
-        }
-        
-        .featured-hero-overlay.bg-light {
-            background-color: #f8f9fa !important;
-            z-index: 15 !important;
-        }
-        
         .featured-hero-lead {
             font-size: 1.1rem;
             line-height: 1.5;
@@ -213,97 +141,24 @@ $customStyles = '
             text-shadow: 1px 1px 3px rgba(255,255,255,0.8);
         }
         
-        /* Responsive adjustments for featured hero */
-        @media (max-width: 768px) {
-            .featured-hero {
-                height: 300px;
-                margin-bottom: 1rem;
-            }
-            
-            .featured-hero-title {
-                font-size: 1.5rem;
-            }
-            
-            .featured-hero-title a {
-                font-size: 1.5rem;
-            }
-            
-            .featured-hero-lead {
-                font-size: 0.9rem;
-            }
-            
-            .featured-hero-overlay {
-                padding: 1rem;
-                justify-content: center;
-            }
+        /* Kicker styling */
+        .kicker {
+            font-size: 0.9em !important;
+            font-weight: bold !important;
+            margin-bottom: 0.5rem !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            line-height: 1.2 !important;
         }
         
-        @media (max-width: 576px) {
-            .featured-hero {
-                height: 250px;
-            }
-            
-            .featured-hero-title {
-                font-size: 1.3rem;
-            }
-            
-            .featured-hero-title a {
-                font-size: 1.3rem;
-            }
-            
-            .featured-hero-lead {
-                font-size: 0.85rem;
-            }
-            
-            .featured-hero-overlay {
-                padding: 0.75rem;
-            }
+        .featured-hero .kicker {
+            font-size: 1rem !important;
+            margin-bottom: 0.75rem !important;
         }
         
-        .featured-sidebar {
-            height: 500px;
-            overflow-y: auto;
-        }
-        
-        .featured-sidebar-card {
-            height: 240px;
-            margin-bottom: 1rem;
-            border-radius: 0.75rem;
-            overflow: hidden;
-            position: relative;
-        }
-        
-        .featured-sidebar-card:last-child {
-            margin-bottom: 0;
-        }
-        
-        .featured-sidebar-card img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .featured-sidebar-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(transparent, rgba(0,0,0,0.8));
-            padding: 1rem;
-            color: white;
-        }
-        
-        .featured-sidebar-title {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            line-height: 1.3;
-        }
-        
-        .featured-sidebar-lead {
-            font-size: 0.9rem;
-            line-height: 1.4;
-            opacity: 0.9;
+        .news-card .kicker {
+            font-size: 0.8em !important;
+            margin-bottom: 0.4rem !important;
         }
         
         /* Sidebar news styles */
@@ -318,6 +173,8 @@ $customStyles = '
             border-left: 3px solid transparent;
             border-bottom: 1px solid #e9ecef;
             transition: all 0.3s ease;
+            padding: 0.5rem 0.25rem;
+            font-size: 0.85em;
         }
         
         .latest-news-sidebar .list-group-item:last-child {
@@ -330,32 +187,88 @@ $customStyles = '
             transform: translateX(5px);
         }
         
-        /* Column borders for news items */
-        .news-card {
-            border-right: 1px solid #e9ecef !important;
-            border-bottom: 1px solid #e9ecef !important;
+        .latest-news-sidebar h4 {
+            font-size: 1rem;
         }
         
-        /* Remove right border from last column in each row */
-        .col-md-4:nth-child(3n) .news-card {
-            border-right: none !important;
+        /* Most Read News Sidebar */
+        .most-read-sidebar {
+            background: #f8f9fa;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         
-        /* Remove bottom border from last row */
-        .row:last-child .news-card {
-            border-bottom: none !important;
+        .most-read-sidebar .list-group-item {
+            border-left: 3px solid transparent;
+            border-bottom: 1px solid #e9ecef;
+            transition: all 0.3s ease;
         }
         
-        .latest-news-sidebar .badge {
-            font-size: 0.7rem;
-            min-width: 20px;
+        .most-read-sidebar .list-group-item:last-child {
+            border-bottom: none;
         }
         
-        /* Add 1px border to left column news cards */
-        .col-md-8 .news-card {
-            border: 1px solid #dee2e6 !important;
+        .most-read-sidebar .list-group-item:hover {
+            border-left-color: #dc3545;
+            background-color: #fff;
+            transform: translateX(5px);
         }
         
+        .most-read-sidebar h6 {
+            font-size: 0.9rem;
+            line-height: 1.3;
+            margin-bottom: 0.25rem;
+        }
+        
+        .most-read-sidebar h6 a {
+            color: #212529;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .most-read-sidebar h6 a:hover {
+            color: #dc3545;
+        }
+        
+        .most-read-sidebar small {
+            font-size: 0.75rem;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .featured-hero {
+                margin-bottom: 1rem;
+            }
+            
+            .featured-hero-title {
+                font-size: 1.5rem;
+            }
+            
+            .featured-hero-lead {
+                font-size: 0.9rem;
+            }
+            
+            .featured-hero-overlay {
+                padding: 1rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            /* Featured hero maintains 16:9 aspect ratio */
+            
+            .featured-hero-title {
+                font-size: 1.3rem;
+            }
+            
+            .featured-hero-lead {
+                font-size: 0.85rem;
+            }
+            
+            .featured-hero-overlay {
+                padding: 0.75rem;
+            }
+        }
 ';
 ?>
 
@@ -372,109 +285,148 @@ $customStyles = '
     include __DIR__.'/ad_placeholder.php'; 
     */
     ?>
-    <?php if (!empty($featuredNews)): ?>
-        <div class="row g-4 mb-5">
-            <?php 
-            $firstNews = array_shift($featuredNews); // Get first news for hero section
-            ?>
-            
-            <!-- Hero Featured News (50% width) -->
-            <div class="col-12 col-md-6">
-                <div class="featured-hero">
-                    <?php if (!empty($firstNews['image_url'])): ?>
-                        <img src="<?= esc(get_image_url($firstNews['image_url'])) ?>" style="width:100%;"  alt="<?= esc($firstNews['image_alt_text'] ?? '') ?>">
-                    <?php endif; ?>
-                    <div class="featured-hero-overlay">
-                        <h3 class="featured-hero-title">
-                            <a href="/news/<?= esc($firstNews['slug']) ?>" class="text-decoration-none text-dark"><?= esc($firstNews['title'], 'raw') ?></a>
-                        </h3>
-                        <div class="featured-hero-lead"><?= esc(limitTo15Words($firstNews['lead_text']), 'raw') ?></div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Remaining Featured News (50% width, 2 columns) -->
-            <div class="col-12 col-md-6">
-                <div class="row g-3">
-                    <?php foreach ($featuredNews as $news): ?>
-                        <div class="col-6 col-md-6">
-                            <div class="card news-card h-100 border-0 shadow-sm position-relative">
-                                <?php if (!empty($news['image_url'])): ?>
-                                    <img src="<?= esc(get_image_url($news['image_url'])) ?>" class="card-img-top featured-img" alt="<?= esc($news['image_alt_text'] ?? '') ?>">
-                                <?php endif; ?>
-                                <div class="card-body">
-                                    <h5 class="card-title">
-                                        <a href="/news/<?= esc($news['slug']) ?>" class="text-decoration-none text-dark fw-semibold"><?= esc($news['title'], 'raw') ?></a>
-                                    </h5>
-                                    <p class="card-text small text-muted mb-1">
-                                        <?= date('M d, Y', strtotime($news['published_at'])) ?>
-                                    </p>
-                                    <p class="card-text">
-                                        <?= esc(limitTo15Words($news['lead_text']), 'raw') ?>
-                                    </p>
+    <!-- Main Content Layout: 10 columns left + 2 columns right -->
+    <div class="row">
+        <!-- Left Column - 10 columns for featured and latest news -->
+        <div class="col-md-9">
+            <!-- Featured News Section -->
+            <?php if (!empty($featuredNews)): ?>
+                <div class="mb-5">
+                    <div class="row g-5">
+                        <?php 
+                        // Limit to maximum 7 featured news
+                        $featuredNews = array_slice($featuredNews, 0, 7);
+                        $firstNews = array_shift($featuredNews); // Get first news for hero section
+                        $rightColumnNews = array_slice($featuredNews, 0, 2); // Get next 2 news for right column
+                        $secondRowNews = array_slice($featuredNews, 2, 4); // Get next 4 news for second row
+                        ?>
+                        
+                        <!-- First Row: Hero News (8 cols) + Right Column (4 cols) -->
+                        <div class="row g-4 mb-4">
+                            <!-- Hero Featured News (9 columns) -->
+                            <div class="col-md-9">
+                                <?= view('public/widgets/news_card_widget', ['news' => $firstNews, 'size' => 'hero','showKicker' => true, 'showDate' => false, 'showLead' => true ]) ?>
+                            </div>
+                            
+                            <!-- Right Column News (3 columns) -->
+                            <div class="col-md-3">
+                                <div class="row g-3">
+                                    <?php foreach ($rightColumnNews as $news): ?>
+                                        <div class="col-12">
+                                            <?= view('public/widgets/news_card_widget', [ 'news' => $news,  'size' => 'large',  'showKicker' => true,  'showDate' => false,  'showLead' => true  ]) ?>
+                                        </div>
+                                    <?php endforeach; ?>
                                 </div>
                             </div>
                         </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        </div>
-    <?php endif; ?>
-
-
-    <div class="mb-4">
-        <?php 
-        foreach ($categories as $cat): 
-        ?>
-            <a href="/section/<?= esc($cat['slug']) ?>" class="btn btn-outline-danger category-pill px-3 py-1 mt-1">
-                <?= esc($cat['name'], 'raw') ?>
-            </a>
-        <?php 
-        endforeach; 
-        ?>
-    </div>
-    <h2 class="mb-4">সর্বশেষ সংবাদ</h2>
-    <div class="row">
-        <!-- Left Column - 8 columns for news with photos -->
-        <div class="col-md-8">
-            <div class="row g-4 mb-5">
-                <?php 
-                // Get news for left column (starting from first news since hero is removed)
-                $leftColumnNews = array_slice($latestNews, 0, 6); // Get 6 news for left column
-                foreach ($leftColumnNews as $news): ?>
-                    <div class="col-md-4">
-                        <div class="card news-card h-100 border-0 shadow-sm">
-                            <?php if (!empty($news['image_url'])): ?>
-                                <img src="<?= esc(get_image_url($news['image_url'])) ?>" class="card-img-top news-img" alt="<?= esc($news['image_alt_text'] ?? '') ?>">
-                            <?php endif; ?>
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <a href="/news/<?= esc($news['slug']) ?>" class="text-decoration-none text-dark fw-semibold"><?= esc($news['title'], 'raw') ?></a>
-                                </h5>
-                                <p class="card-text small text-muted mb-1">
-                                    <?= date('M d, Y', strtotime($news['published_at'])) ?>
-                                </p>
-                                <p class="card-text">
-                                    <?= esc(limitTo15Words($news['lead_text']), 'raw') ?>
-                                </p>
+                        
+                        <!-- Second Row: 4 News (3 columns each) -->
+                        <?php if (!empty($secondRowNews)): ?>
+                            <div class="row g-4">
+                                <?php foreach ($secondRowNews as $news): ?>
+                                    <div class="col-md-3">
+                                        <?= view('public/widgets/news_card_widget', [  'news' => $news,  'size' => 'medium',  'showKicker' => true,  'showDate' => false,  'showLead' => true
+                                        ]) ?>
+                                    </div>
+                                <?php endforeach; ?>
                             </div>
-                        </div>
+                        <?php endif; ?>
                     </div>
-                <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+
+            <!-- Category Pills -->
+            <div class="mb-4">
+                <?php 
+                foreach ($categories as $cat): 
+                ?>
+                    <a href="/section/<?= esc($cat['slug']) ?>" class="btn btn-outline-danger category-pill px-3 py-1 mt-1">
+                        <?= esc($cat['name'], 'raw') ?>
+                    </a>
+                <?php 
+                endforeach; 
+                ?>
             </div>
+
         </div>
         
-        <!-- Right Column - 4 columns for news with photos -->
-        <div class="col-md-4">
-            <!-- Prayer Times Widget -->
-            <?= view('public/widgets/prayer_times_widget') ?>
+        <!-- Right Column - 2 columns for prayer times and more news -->
+        <div class="col-md-3">
+            <!-- Prayer Times Widget - Top Right -->
+            <div class="mb-4">
+                <?= view('public/widgets/prayer_times_widget') ?>
+            </div>
             
+            <!-- Most Read News Section -->
+            <?php if (!empty($mostReadNews)): ?>
+                <div class="most-read-sidebar mb-4">
+                    <h4 class="mb-3 text-danger">সর্বাধিক পঠিত</h4>
+                    <div class="list-group list-group-flush">
+                        <?php foreach ($mostReadNews as $index => $news): ?>
+                            <div class="list-group-item d-flex align-items-start p-2 border-0">
+                                <div class="flex-shrink-0 me-2">
+                                    <span class="badge bg-danger rounded-circle" style="width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem;">
+                                        <?= $index + 1 ?>
+                                    </span>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">
+                                        <a href="/news/<?= esc($news['slug']) ?>" class="text-decoration-none text-dark fw-semibold">
+                                            <?= esc($news['title'], 'raw') ?>
+                                        </a>
+                                    </h6>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+            
+           
+        </div>
+    </div>
+
+     <!-- Latest News Section -->
+     <div class="row">
+        <div class="col-md-12"> <h2 class="mb-4">সর্বশেষ সংবাদ</h2> </div>
+        <div class="col-md-9 row g-4 mb-5">
+            <?php 
+            // Get news for left column
+            $leftColumnNews = array_slice($latestNews, 0, 9); // Get 9 news for left column (3x3 grid)
+            foreach ($leftColumnNews as $news): ?>
+                <div class="col-md-4">
+                    <div class="card news-card h-100 border-0 shadow-sm">
+                        <?php if (!empty($news['image_url'])): ?>
+                            <img src="<?= esc(get_image_url($news['image_url'])) ?>" class="card-img-top news-img" style="aspect-ratio: 16/9; object-fit: cover;" alt="<?= esc($news['image_alt_text'] ?? '') ?>">
+                        <?php endif; ?>
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <a href="/news/<?= esc($news['slug']) ?>" class="text-decoration-none text-dark fw-semibold"><?= esc($news['title'], 'raw') ?></a>
+                            </h5>
+                            <p class="card-text small text-muted mb-1">
+                                <?= date('M d, Y', strtotime($news['published_at'])) ?>
+                            </p>
+                            <p class="card-text">
+                                <?= esc(limitTo15Words($news['lead_text']), 'raw') ?>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+        <div class="col-md-3">
+            <?php if (!empty($sportsWidgets)): ?>
+                <?php foreach ($sportsWidgets as $sw): ?>
+                    <?= view('public/widgets/sports_event_widget', ['event' => $sw['event'], 'matches' => $sw['matches']]) ?>
+                <?php endforeach; ?>
+            <?php endif; ?>
+            <!-- More News Sidebar -->
             <div class="latest-news-sidebar">
-                <h4 class="mb-3 text-primary">আরও সর্বশেষ সংবাদ</h4>
+                <h4 class="mb-3 text-primary">আরও পড়ুন</h4>
                 <div class="list-group list-group-flush">
                     <?php 
                     // Get additional news for right sidebar (skip the ones used in left column)
-                    $rightColumnNews = array_slice($latestNews, 6, 10); // Get 15 news starting from index 6
+                    $rightColumnNews = array_slice($latestNews, 9, 10); // Get 10 news starting from index 9
                     
                     if (!empty($rightColumnNews)): 
                         foreach ($rightColumnNews as $news): 
@@ -491,7 +443,6 @@ $customStyles = '
             </div>
         </div>
     </div>
-
     <?php if (!empty($categoryNews)): ?>
         <?php foreach ($categoryNews as $categorySection): ?>
             <?php if (!empty($categorySection['news'])): ?>
@@ -510,7 +461,7 @@ $customStyles = '
                             <div class="col-md-3">
                                 <div class="card news-card h-100 border-0 shadow-sm">
                                     <?php if (!empty($news['image_url'])): ?>
-                                        <img src="<?= esc(get_image_url($news['image_url'])) ?>" class="card-img-top news-img" alt="<?= esc($news['image_alt_text'] ?? '') ?>">
+                                        <img src="<?= esc(get_image_url($news['image_url'])) ?>" class="card-img-top news-img" style="aspect-ratio: 16/9; object-fit: cover;" alt="<?= esc($news['image_alt_text'] ?? '') ?>">
                                     <?php endif; ?>
                                     <div class="card-body">
                                         <h6 class="card-title">

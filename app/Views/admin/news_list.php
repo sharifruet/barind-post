@@ -43,6 +43,7 @@ $isReporter = $userRole === 'reporter';
                     <th>Category</th>
                     <th>Status</th>
                     <th>Featured</th>
+                    <th>Breaking</th>
                     <?php if (!$isReporter): ?>
                         <th>Author</th>
                     <?php endif; ?>
@@ -54,7 +55,14 @@ $isReporter = $userRole === 'reporter';
                 <?php foreach ($news as $item): ?>
                     <tr>
                         <td><?= esc($item['id']) ?></td>
-                        <td><?= esc($item['title']) ?></td>
+                        <td>
+                            <?php if (!empty($item['kicker'])): ?>
+                                <div class="kicker-preview" style="color: <?= esc($item['kicker_color'] ?: '#dc3545') ?>; font-size: 0.8em; font-weight: bold; margin-bottom: 2px;">
+                                    <?= esc($item['kicker']) ?>
+                                </div>
+                            <?php endif; ?>
+                            <?= esc($item['title']) ?>
+                        </td>
                         <td>
                             <?php
                             $cat = array_filter($categories, fn($c) => $c['id'] == $item['category_id']);
@@ -73,18 +81,33 @@ $isReporter = $userRole === 'reporter';
                                 <span class="text-muted">-</span>
                             <?php endif; ?>
                         </td>
+                        <td>
+                            <?php if (!empty($item['kicker'])): ?>
+                                <span class="badge" style="background-color: <?= esc($item['kicker_color']) ?>"><?= esc($item['kicker']) ?></span>
+                            <?php else: ?>
+                                <span class="text-muted">-</span>
+                            <?php endif; ?>
+                        </td>
                         <?php if (!$isReporter): ?>
                             <td><?= esc($userMap[$item['author_id']] ?? 'Unknown') ?></td>
                         <?php endif; ?>
                         <td><?= esc($item['published_at']) ?></td>
                         <td>
                             <a href="/admin/news/edit/<?= esc($item['id']) ?>" class="btn btn-sm btn-warning">Edit</a>
-                            <form method="post" action="/admin/news/toggle-featured/<?= esc($item['id']) ?>" style="display:inline;">
-                                <button type="submit" class="btn btn-sm btn-<?= $item['featured'] ? 'secondary' : 'success' ?>" 
-                                        onclick="return confirm('<?= $item['featured'] ? 'Unfeature' : 'Feature' ?> this news article?')">
-                                    <?= $item['featured'] ? 'Unfeature' : 'Feature' ?>
-                                </button>
-                            </form>
+                            <?php if (session('user_role') === 'admin'): ?>
+                                <form method="post" action="/admin/news/toggle-featured/<?= esc($item['id']) ?>" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-<?= $item['featured'] ? 'secondary' : 'success' ?>" 
+                                            onclick="return confirm('<?= $item['featured'] ? 'Unfeature' : 'Feature' ?> this news article?')">
+                                        <?= $item['featured'] ? 'Unfeature' : 'Feature' ?>
+                                    </button>
+                                </form>
+                                <form method="post" action="/admin/news/toggle-breaking/<?= esc($item['id']) ?>" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-<?= (!empty($item['kicker']) && $item['kicker'] === 'ব্রেকিং') ? 'secondary' : 'danger' ?>" 
+                                            onclick="return confirm('<?= (!empty($item['kicker']) && $item['kicker'] === 'ব্রেকিং') ? 'Remove breaking kicker' : 'Add breaking kicker' ?>?')">
+                                        <i class="fas fa-bolt"></i> <?= (!empty($item['kicker']) && $item['kicker'] === 'ব্রেকিং') ? 'Unbreak' : 'Breaking' ?>
+                                    </button>
+                                </form>
+                            <?php endif; ?>
                             <form method="post" action="/admin/news/delete/<?= esc($item['id']) ?>" style="display:inline;">
                                 <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this news article?')">Delete</button>
                             </form>

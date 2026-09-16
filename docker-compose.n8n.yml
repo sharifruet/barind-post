@@ -1,0 +1,23 @@
+# Local automation stack for the news-publishing pipeline (N8N_NEWS_AUTOMATION_PLAN.md).
+# Kept separate from docker-compose.yml on purpose: n8n is a personal automation tool
+# that talks to the production site over its API, not part of this app's own stack.
+#
+# Usage:
+#   cp n8n.env.example .env.n8n   # then fill in a real N8N_ENCRYPTION_KEY
+#   docker compose -f docker-compose.n8n.yml up -d
+#   open http://localhost:5678
+
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: barindpost_n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    env_file:
+      - .env.n8n
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+volumes:
+  n8n_data:

@@ -30,6 +30,7 @@ $routes->get('/admin/news/edit/(:num)', 'Admin::newsEdit/$1');
 $routes->post('/admin/news/edit/(:num)', 'Admin::newsUpdate/$1');
 $routes->post('/admin/news/delete/(:num)', 'Admin::newsDelete/$1');
 $routes->post('/admin/news/toggle-featured/(:num)', 'Admin::toggleFeatured/$1');
+$routes->post('/admin/news/toggle-breaking/(:num)', 'Admin::toggleBreakingNews/$1');
 
 // Photo Card Generation Routes (Admin only) - Front-end JavaScript based
 $routes->get('/admin/photo-card-generator', 'Admin::photoCardGenerator');
@@ -45,6 +46,10 @@ $routes->post('/image-upload/delete', 'ImageUpload::delete');
 $routes->post('/image-upload/set-featured', 'ImageUpload::setFeatured');
 $routes->get('/image-upload/get-images/(:num)', 'ImageUpload::getImages/$1');
 $routes->get('/image-upload/existing-images', 'ImageUpload::getExistingImages');
+
+// Prayer Times API Routes
+$routes->get('/api/prayer-times/today/(:num)', 'PrayerTimes::getToday/$1');
+$routes->get('/api/prayer-times/cities', 'PrayerTimes::getCities');
 
 // Reusable Image Routes
 $routes->get('/image-upload/all-images', 'ImageUpload::getAllImages');
@@ -117,3 +122,62 @@ $routes->get('/prayer-time/cities', 'PrayerTimes::getCities');
 
 // Admin Logs Route
 $routes->get('/admin/logs', 'Admin::viewLogs');
+
+// Kicker Management Routes
+$routes->get('/admin/kickers', 'Admin::kickers');
+$routes->get('/admin/kickers/create', 'Admin::createKicker');
+$routes->post('/admin/kickers/create', 'Admin::createKicker');
+$routes->get('/admin/kickers/edit/(:num)', 'Admin::editKicker/$1');
+$routes->post('/admin/kickers/edit/(:num)', 'Admin::editKicker/$1');
+$routes->post('/admin/kickers/delete/(:num)', 'Admin::deleteKicker/$1');
+$routes->get('/admin/kickers/api', 'Admin::getKickers');
+
+// Sports Events — Admin
+$routes->get('/admin/sports-events', 'AdminSportsEvents::index');
+$routes->get('/admin/sports-events/create', 'AdminSportsEvents::create');
+$routes->post('/admin/sports-events/create', 'AdminSportsEvents::store');
+$routes->get('/admin/sports-events/edit/(:num)', 'AdminSportsEvents::edit/$1');
+$routes->post('/admin/sports-events/edit/(:num)', 'AdminSportsEvents::update/$1');
+$routes->post('/admin/sports-events/delete/(:num)', 'AdminSportsEvents::delete/$1');
+$routes->get('/admin/sports-events/manage/(:num)', 'AdminSportsEvents::manage/$1');
+$routes->get('/admin/sports-events/participants', 'AdminSportsEvents::participants');
+$routes->post('/admin/sports-events/participants/add', 'AdminSportsEvents::addParticipant');
+$routes->get('/admin/sports-events/participants/edit/(:num)', 'AdminSportsEvents::editParticipant/$1');
+$routes->post('/admin/sports-events/participants/edit/(:num)', 'AdminSportsEvents::updateParticipant/$1');
+$routes->post('/admin/sports-events/participants/delete/(:num)', 'AdminSportsEvents::deleteParticipant/$1');
+$routes->get('/admin/sports-events/venues', 'AdminSportsEvents::venues');
+$routes->post('/admin/sports-events/venues/add', 'AdminSportsEvents::addVenue');
+$routes->get('/admin/sports-events/venues/edit/(:num)', 'AdminSportsEvents::editVenue/$1');
+$routes->post('/admin/sports-events/venues/edit/(:num)', 'AdminSportsEvents::updateVenue/$1');
+$routes->post('/admin/sports-events/venues/delete/(:num)', 'AdminSportsEvents::deleteVenue/$1');
+$routes->get('/admin/sports-events/(:num)/teams', 'AdminSportsEvents::eventTeams/$1');
+$routes->post('/admin/sports-events/(:num)/teams/add', 'AdminSportsEvents::addEventTeam/$1');
+$routes->post('/admin/sports-events/(:num)/teams/update/(:num)', 'AdminSportsEvents::updateEventTeam/$1/$2');
+$routes->post('/admin/sports-events/(:num)/teams/remove/(:num)', 'AdminSportsEvents::removeEventTeam/$1/$2');
+$routes->get('/admin/sports-events/(:num)/matches', 'AdminSportsEvents::matches/$1');
+$routes->get('/admin/sports-events/(:num)/matches/create', 'AdminSportsEvents::createMatch/$1');
+$routes->post('/admin/sports-events/(:num)/matches/create', 'AdminSportsEvents::storeMatch/$1');
+$routes->get('/admin/sports-events/(:num)/matches/edit/(:num)', 'AdminSportsEvents::editMatch/$1/$2');
+$routes->post('/admin/sports-events/(:num)/matches/edit/(:num)', 'AdminSportsEvents::updateMatch/$1/$2');
+$routes->post('/admin/sports-events/(:num)/matches/delete/(:num)', 'AdminSportsEvents::deleteMatch/$1/$2');
+$routes->get('/admin/sports-events/(:num)/standings', 'AdminSportsEvents::standings/$1');
+$routes->get('/admin/sports-events/(:num)/news', 'AdminSportsEvents::eventNews/$1');
+
+// Sports Events — Public
+$routes->get('/sports/(:segment)', 'SportsEvent::hub/$1');
+$routes->get('/sports/(:segment)/fixtures', 'SportsEvent::fixtures/$1');
+$routes->get('/sports/(:segment)/results', 'SportsEvent::results/$1');
+$routes->get('/sports/(:segment)/standings', 'SportsEvent::standings/$1');
+$routes->get('/sports/(:segment)/stats', 'SportsEvent::stats/$1');
+$routes->get('/sports/(:segment)/teams', 'SportsEvent::teams/$1');
+$routes->get('/sports/(:segment)/team/(:segment)', 'SportsEvent::team/$1/$2');
+$routes->get('/sports/(:segment)/match/(:segment)', 'SportsEvent::match/$1/$2');
+$routes->get('/sports/(:segment)/news', 'SportsEvent::news/$1');
+
+// Automation API (n8n) — see N8N_NEWS_AUTOMATION_PLAN.md. Guarded by the 'apikey' filter.
+$routes->group('api/v1', ['filter' => 'apikey'], static function ($routes) {
+    $routes->get('news/exists', 'Api\NewsController::exists');
+    $routes->post('news', 'Api\NewsController::create');
+    $routes->get('categories', 'Api\NewsController::categories');
+    $routes->get('tags', 'Api\NewsController::tags');
+});

@@ -66,17 +66,43 @@ INSERT INTO categories (name, slug, isSpecial) VALUES
   ('ক্যাম্পাস', 'campus', FALSE),
   ('প্রবাস', 'emigration', FALSE);
 
+-- Create kickers table for managing kicker text and colors
+CREATE TABLE IF NOT EXISTS kickers (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    text VARCHAR(255) NOT NULL,
+    color VARCHAR(7) NOT NULL DEFAULT '#dc3545',
+    usage_count INT UNSIGNED DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_kicker_text (text)
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Insert some default kickers
+INSERT INTO kickers (text, color, usage_count) VALUES
+  ('বিশেষ খবর', '#dc3545', 0),
+  ('শীর্ষ খবর', '#fd7e14', 0),
+  ('জরুরি খবর', '#dc3545', 0),
+  ('এক্সক্লুসিভ', '#6f42c1', 0),
+  ('লাইভ', '#28a745', 0),
+  ('আপডেট', '#17a2b8', 0),
+  ('ব্রেকিং', '#dc3545', 0),
+  ('ভিডিও', '#e83e8c', 0),
+  ('ফিচার', '#20c997', 0),
+  ('অনলাইন', '#6c757d', 0);
+
 -- Create news table
 CREATE TABLE IF NOT EXISTS news (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     subtitle VARCHAR(255),
     lead_text TEXT,
+    reporterRole VARCHAR(100) NULL,
     content TEXT NOT NULL,
     author_id INT UNSIGNED NOT NULL,
     category_id INT UNSIGNED,
     status ENUM('draft', 'published', 'archived') NOT NULL DEFAULT 'draft',
     featured BOOLEAN NOT NULL DEFAULT FALSE,
+    kicker_id INT UNSIGNED NULL,
     created_at DATETIME NULL,
     updated_at DATETIME NULL,
     published_at DATETIME NULL,
@@ -85,11 +111,16 @@ CREATE TABLE IF NOT EXISTS news (
     image_alt_text VARCHAR(255),
     slug VARCHAR(255),
     source VARCHAR(255),
+    source_url VARCHAR(500) NULL,
+    content_hash CHAR(64) NULL,
     dateline VARCHAR(255),
     word_count INT UNSIGNED,
     language VARCHAR(5) NOT NULL DEFAULT 'bn',
     FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
+    FOREIGN KEY (kicker_id) REFERENCES kickers(id) ON DELETE SET NULL,
+    UNIQUE KEY uq_news_source_url (source_url),
+    KEY idx_news_content_hash (content_hash)
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- Sample news articles
@@ -458,3 +489,108 @@ CREATE TABLE IF NOT EXISTS prayer_times (
     INDEX idx_city_id (city_id),
     INDEX idx_date (date)
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Add indexes for better performance on special news queries
+
+-- Sports Events module
+CREATE TABLE IF NOT EXISTS sports_events (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    slug VARCHAR(100) NOT NULL UNIQUE,
+    custom_url VARCHAR(100) UNIQUE,
+    title_bn VARCHAR(255) NOT NULL,
+    title_en VARCHAR(255),
+    sport_profile VARCHAR(50) DEFAULT 'football',
+    description_bn TEXT,
+    banner_image VARCHAR(500),
+    logo_image VARCHAR(500),
+    news_tag_slug VARCHAR(100),
+    start_date DATE,
+    end_date DATE,
+    status ENUM('draft', 'active', 'archived') DEFAULT 'draft',
+    show_in_nav BOOLEAN DEFAULT FALSE,
+    show_homepage_widget BOOLEAN DEFAULT FALSE,
+    config JSON,
+    created_at DATETIME,
+    updated_at DATETIME
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS sports_participants (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name_bn VARCHAR(150) NOT NULL,
+    name_en VARCHAR(150),
+    short_code VARCHAR(10),
+    flag_url VARCHAR(500),
+    type ENUM('team', 'individual') DEFAULT 'team',
+    created_at DATETIME,
+    updated_at DATETIME
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS sports_event_entries (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    event_id INT UNSIGNED NOT NULL,
+    participant_id INT UNSIGNED NOT NULL,
+    group_name VARCHAR(20),
+    seed INT UNSIGNED,
+    created_at DATETIME,
+    updated_at DATETIME,
+    UNIQUE KEY unique_event_participant (event_id, participant_id),
+    FOREIGN KEY (event_id) REFERENCES sports_events(id) ON DELETE CASCADE,
+    FOREIGN KEY (participant_id) REFERENCES sports_participants(id) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS sports_venues (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name_bn VARCHAR(200) NOT NULL,
+    name_en VARCHAR(200),
+    city VARCHAR(100),
+    country VARCHAR(100),
+    capacity INT UNSIGNED,
+    image_url VARCHAR(500),
+    created_at DATETIME,
+    updated_at DATETIME
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS sports_matches (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    event_id INT UNSIGNED NOT NULL,
+    participant_a_id INT UNSIGNED NOT NULL,
+    participant_b_id INT UNSIGNED NOT NULL,
+    venue_id INT UNSIGNED,
+    kickoff_at DATETIME,
+    stage VARCHAR(50) DEFAULT 'group',
+    group_name VARCHAR(20),
+    match_slug VARCHAR(200) NOT NULL,
+    status VARCHAR(20) DEFAULT 'scheduled',
+    summary_bn TEXT,
+    news_id INT UNSIGNED,
+    sport_data JSON,
+    referee VARCHAR(150),
+    attendance INT UNSIGNED,
+    created_at DATETIME,
+    updated_at DATETIME,
+    UNIQUE KEY unique_event_match_slug (event_id, match_slug),
+    FOREIGN KEY (event_id) REFERENCES sports_events(id) ON DELETE CASCADE,
+    FOREIGN KEY (participant_a_id) REFERENCES sports_participants(id) ON DELETE CASCADE,
+    FOREIGN KEY (participant_b_id) REFERENCES sports_participants(id) ON DELETE CASCADE,
+    FOREIGN KEY (venue_id) REFERENCES sports_venues(id) ON DELETE SET NULL
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS sports_match_events (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    match_id INT UNSIGNED NOT NULL,
+    event_minute VARCHAR(20),
+    period VARCHAR(20),
+    event_type VARCHAR(50) NOT NULL,
+    participant_id INT UNSIGNED,
+    player_name VARCHAR(150),
+    detail VARCHAR(255),
+    sort_order INT DEFAULT 0,
+    created_at DATETIME,
+    updated_at DATETIME,
+    FOREIGN KEY (match_id) REFERENCES sports_matches(id) ON DELETE CASCADE,
+    FOREIGN KEY (participant_id) REFERENCES sports_participants(id) ON DELETE SET NULL
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Optional: link news to sports events (run if columns don't exist)
+-- ALTER TABLE news ADD COLUMN event_id INT UNSIGNED NULL AFTER category_id;
+-- ALTER TABLE news ADD COLUMN match_id INT UNSIGNED NULL AFTER event_id;

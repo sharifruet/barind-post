@@ -52,10 +52,14 @@ $customScripts = '
     ?>
     
     <div class="row">
-        <!-- Center Column - 12 columns for main news content -->
-        <div class="col-md-12">
+        <!-- Left Column - 10 columns for main news content -->
+        <div class="col-md-9">
             <a href="javascript:history.back()" class="btn btn-outline-danger back-btn mb-3">&larr; Back</a>
             <article itemscope itemtype="https://schema.org/NewsArticle">
+                <?php if (!empty($news['kicker'])): ?>
+                    <div class="kicker" style="<?= get_kicker_style($news) ?>"><?= esc($news['kicker']) ?></div>
+                <?php endif; ?>
+                
                 <h1 class="mb-2 mt-3 fw-bold display-5" itemprop="headline"><?= $news['title'] ?></h1>
                 <?php if (!empty($news['subtitle'])): ?>
                     <h4 class="text-muted mb-3 fw-normal" itemprop="alternativeHeadline"><?= $news['subtitle'] ?></h4>
@@ -109,7 +113,7 @@ $customScripts = '
                         <figure class="mb-3">
                             <img src="<?= esc(get_image_url($news['image_url'])) ?>" 
                                  alt="<?= esc($news['image_alt_text'] ?? $news['title']) ?>" 
-                                 style="width:100%"
+                                 style="width:100%; aspect-ratio: 16/9; object-fit: cover;"
                                  itemprop="image">
                             <?php if (!empty($news['image_caption'])): ?>
                                 <figcaption class="text-center text-muted mt-2 small">ছবিঃ <?= esc($news['image_caption']) ?></figcaption>
@@ -190,6 +194,40 @@ $customScripts = '
                 </div>
             </article>
         </div>
+        
+        <!-- Right Column - 2 columns for prayer times and more news -->
+        <div class="col-md-3">
+            <!-- Prayer Times Widget - Top Right -->
+            <div class="mb-4">
+                <?= view('public/widgets/prayer_times_widget') ?>
+            </div>
+            
+            <!-- More News Sidebar -->
+            <div class="latest-news-sidebar">
+                <h4 class="mb-3 text-primary">আরও পড়ুন</h4>
+                <div class="list-group list-group-flush">
+                    <?php 
+                    // Get latest news for sidebar
+                    $newsModel = new \App\Models\NewsModel();
+                    $sidebarNews = $newsModel->where('status', 'published')
+                        ->where('id !=', $news['id']) // Exclude current news
+                        ->orderBy('published_at', 'DESC')
+                        ->limit(10)
+                        ->findAll();
+                    
+                    if (!empty($sidebarNews)): 
+                        foreach ($sidebarNews as $sidebarItem): 
+                            echo view('public/widgets/single_news_widget', ['news' => $sidebarItem]);
+                        endforeach;
+                    else: ?>
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-newspaper"></i>
+                            <p class="mb-0">আরও সংবাদ নেই</p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
     </div>
     
     <!-- Bottom Banner Ad -->
@@ -202,6 +240,19 @@ $customScripts = '
     */
     ?>
 </div>
+
+<style>
+/* Kicker styling for news view */
+.kicker {
+    font-size: 1.1em !important;
+    font-weight: bold !important;
+    margin-bottom: 0.75rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    line-height: 1.2 !important;
+    display: block;
+}
+</style>
 
 <script>
 function copyToClipboard() {

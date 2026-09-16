@@ -4,8 +4,8 @@
  * Run this script to ensure session directory exists and has proper permissions
  */
 
-// Define the session directory path
-$sessionDir = '/home/wahidiya/barindpost.com/writable/session';
+// Define the session directory path (pass a custom path as the first CLI argument)
+$sessionDir = $argv[1] ?? __DIR__ . '/writable/session';
 
 echo "Fixing session directory permissions...\n";
 
@@ -48,6 +48,6 @@ if (file_put_contents($testFile, 'test') !== false) {
 
 echo "\nSession directory setup complete!\n";
 echo "If you still have issues, try running:\n";
-echo "chmod -R 755 /home/wahidiya/barindpost.com/writable/\n";
-echo "chown -R www-data:www-data /home/wahidiya/barindpost.com/writable/\n";
+echo "chmod -R 755 " . dirname($sessionDir) . "/\n";
+echo "chown -R www-data:www-data " . dirname($sessionDir) . "/\n";
 ?> 

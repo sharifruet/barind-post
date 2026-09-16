@@ -31,10 +31,10 @@ if (empty($news)) {
                 <img src="<?= esc(get_image_url($news['image_url'])) ?>" 
                      class="<?= esc($imageSize) ?>" 
                      alt="<?= esc($news['image_alt_text'] ?? '') ?>"
-                     style="width: 60px; height: 45px; object-fit: cover; border-radius: 4px;">
+                     style="width: 60px; aspect-ratio: 16/9; object-fit: cover; border-radius: 4px;">
             <?php else: ?>
                 <div class="<?= esc($imageSize) ?>" 
-                     style="width: 60px; height: 45px; background-color: #f8f9fa; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                     style="width: 60px; aspect-ratio: 16/9; background-color: #f8f9fa; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-image text-muted"></i>
                 </div>
             <?php endif; ?>

@@ -8,6 +8,7 @@ use App\Models\CategoryModel;
 use App\Models\TagModel;
 use App\Models\PrayerTimesModel;
 use App\Models\CityModel;
+use App\Models\KickerModel;
 use Exception;
 
 class Admin extends BaseAdminController
@@ -172,16 +173,8 @@ class Admin extends BaseAdminController
         $userRole = session('user_role');
         $userId = session('user_id');
         
-        // Role-based news filtering
-        if ($userRole === 'reporter') {
-            // Reporters can only see their own news
-            $news = $newsModel->where('author_id', $userId)
-                             ->orderBy('created_at', 'DESC')
-                             ->findAll();
-        } else {
-            // Editors, sub-editors, and admins can see all news
-            $news = $newsModel->orderBy('created_at', 'DESC')->findAll();
-        }
+        // Get news with kicker info based on user role
+        $news = $newsModel->getNewsListForAdmin($userRole, $userId);
         
         $categories = $categoryModel->findAll();
         
@@ -194,14 +187,9 @@ class Admin extends BaseAdminController
         }
         
         // Get view counts for each news article
-        $db = \Config\Database::connect();
-        $viewCounts = [];
-        foreach ($news as $article) {
-            $count = $db->table('news_views')
-                        ->where('news_id', $article['id'])
-                        ->countAllResults();
-            $viewCounts[$article['id']] = $count;
-        }
+        $newsModel = new \App\Models\NewsModel();
+        $newsIds = array_column($news, 'id');
+        $viewCounts = $newsModel->getViewCounts($newsIds);
         
         return view('admin/news_list', [
             'news' => $news, 
@@ -231,7 +219,7 @@ class Admin extends BaseAdminController
         // Get current user's role
         $userRole = session('user_role');
         
-        // Generate unique code for clean, shareable URLs
+        // Generate unique code for clean, shareable URLs only for new articles
         if (empty($data['slug'])) {
             // Use unique code for better sharing and professional look
             $data['slug'] = generate_unique_code(0, $data['published_at'] ?? null);
@@ -239,6 +227,19 @@ class Admin extends BaseAdminController
         
         // Handle featured checkbox - if not checked, set to false
         $data['featured'] = $this->request->getPost('featured') ? 1 : 0;
+        
+        // Breaking news is now handled through kicker selection
+        
+        // Handle kicker and kicker color
+        $data['kicker'] = $this->request->getPost('kicker') ?: null;
+        $data['kicker_color'] = $this->request->getPost('kicker_color') ?: null;
+        
+        // Handle kicker usage tracking for new articles
+        if (!empty($data['kicker'])) {
+            $kickerModel = new KickerModel();
+            $kickerModel->createOrUpdate($data['kicker'], $data['kicker_color']);
+            $kickerModel->incrementUsage($data['kicker']);
+        }
         
         // Role-based status handling
         if ($userRole === 'reporter') {
@@ -297,8 +298,8 @@ class Admin extends BaseAdminController
         $userRole = session('user_role');
         $userId = session('user_id');
         
-        // Get the news article
-        $news = $newsModel->find($id);
+        // Get the news article with kicker info
+        $news = $newsModel->findWithKicker($id);
         
         // Check if news exists
         if (!$news) {
@@ -350,14 +351,37 @@ class Admin extends BaseAdminController
             return redirect()->to('/admin/news');
         }
         
-        // Generate unique code for clean, shareable URLs
-        if (empty($data['slug'])) {
+        // Only generate new slug if it's truly empty and this is a new article
+        // For existing articles, preserve the existing slug unless explicitly changed
+        if (empty($data['slug']) && empty($news['slug'])) {
             // Use unique code for better sharing and professional look
             $data['slug'] = generate_unique_code($id, $data['published_at'] ?? null);
+        } elseif (empty($data['slug']) && !empty($news['slug'])) {
+            // Preserve existing slug if form doesn't send one
+            $data['slug'] = $news['slug'];
         }
         
         // Handle featured checkbox - if not checked, set to false
         $data['featured'] = $this->request->getPost('featured') ? 1 : 0;
+        
+        // Breaking news is now handled through kicker selection
+        
+        // Handle kicker and kicker color
+        $oldKicker = $news['kicker'];
+        $data['kicker'] = $this->request->getPost('kicker') ?: null;
+        $data['kicker_color'] = $this->request->getPost('kicker_color') ?: null;
+        
+        // Handle kicker usage tracking for updates
+        $kickerModel = new KickerModel();
+        if (!empty($oldKicker) && $oldKicker !== $data['kicker']) {
+            // Decrement usage for old kicker
+            $kickerModel->decrementUsage($oldKicker);
+        }
+        if (!empty($data['kicker'])) {
+            // Create or update new kicker and increment usage
+            $kickerModel->createOrUpdate($data['kicker'], $data['kicker_color']);
+            $kickerModel->incrementUsage($data['kicker']);
+        }
         
         // Role-based status handling for updates
         if ($userRole === 'reporter') {
@@ -744,6 +768,65 @@ class Admin extends BaseAdminController
         
         return redirect()->to('/admin/news');
     }
+
+    public function toggleBreakingNews($id)
+    {
+        $newsModel = new NewsModel();
+        
+        // Get current user's role
+        $userRole = session('user_role');
+        
+        // Only admins can toggle breaking news status
+        if ($userRole !== 'admin') {
+            session()->setFlashdata('error', 'Only administrators can toggle breaking news status.');
+            return redirect()->to('/admin/news');
+        }
+        
+        // Get the news article with kicker info
+        $news = $newsModel->findWithKicker($id);
+        
+        if (!$news) {
+            session()->setFlashdata('error', 'News article not found.');
+            return redirect()->to('/admin/news');
+        }
+        
+        // Toggle breaking news by setting/removing "ব্রেকিং" kicker
+        $kickerModel = new KickerModel();
+        $breakingKicker = $kickerModel->getByText('ব্রেকিং');
+        
+        if (!$breakingKicker) {
+            // Create breaking kicker if it doesn't exist
+            $kickerModel->insert([
+                'text' => 'ব্রেকিং',
+                'color' => '#dc3545',
+                'usage_count' => 0
+            ]);
+            $breakingKicker = $kickerModel->getByText('ব্রেকিং');
+        }
+        
+        $currentKickerId = $news['kicker_id'] ?? null;
+        $isCurrentlyBreaking = ($currentKickerId == $breakingKicker['id']);
+        
+        if ($isCurrentlyBreaking) {
+            // Remove breaking kicker
+            $updateData = ['kicker_id' => null];
+            $status = 'removed from breaking news';
+            // Decrement usage count
+            $kickerModel->decrementUsage('ব্রেকিং');
+        } else {
+            // Set breaking kicker
+            $updateData = ['kicker_id' => $breakingKicker['id']];
+            $status = 'marked as breaking news';
+            // Increment usage count
+            $kickerModel->incrementUsage('ব্রেকিং');
+        }
+        
+        $newsModel->update($id, $updateData);
+        session()->setFlashdata('success', "News article {$status} successfully.");
+        
+        return redirect()->to('/admin/news');
+    }
+
 
     public function photoCardGenerator()
     {
@@ -1567,5 +1650,98 @@ class Admin extends BaseAdminController
             'currentLogFile' => basename($logFileToRead),
             'title' => 'Application Logs'
         ]);
+    }
+
+    /**
+     * Kicker Management Methods
+     */
+    public function kickers()
+    {
+        $kickerModel = new KickerModel();
+        $kickers = $kickerModel->getAllKickers();
+        
+        return view('admin/kickers', [
+            'kickers' => $kickers,
+            'title' => 'Manage Kickers'
+        ]);
+    }
+
+    public function createKicker()
+    {
+        if ($this->request->getMethod() === 'post') {
+            $kickerModel = new KickerModel();
+            
+            $data = [
+                'text' => $this->request->getPost('text'),
+                'color' => $this->request->getPost('color')
+            ];
+            
+            if ($kickerModel->insert($data)) {
+                return redirect()->to('/admin/kickers')->with('success', 'Kicker created successfully');
+            } else {
+                return redirect()->back()->withInput()->with('errors', $kickerModel->errors());
+            }
+        }
+        
+        return view('admin/kicker_form', [
+            'title' => 'Create New Kicker'
+        ]);
+    }
+
+    public function editKicker($id)
+    {
+        $kickerModel = new KickerModel();
+        $kicker = $kickerModel->find($id);
+        
+        if (!$kicker) {
+            return redirect()->to('/admin/kickers')->with('error', 'Kicker not found');
+        }
+        
+        if ($this->request->getMethod() === 'post') {
+            $data = [
+                'text' => $this->request->getPost('text'),
+                'color' => $this->request->getPost('color')
+            ];
+            
+            if ($kickerModel->update($id, $data)) {
+                return redirect()->to('/admin/kickers')->with('success', 'Kicker updated successfully');
+            } else {
+                return redirect()->back()->withInput()->with('errors', $kickerModel->errors());
+            }
+        }
+        
+        return view('admin/kicker_form', [
+            'kicker' => $kicker,
+            'title' => 'Edit Kicker'
+        ]);
+    }
+
+    public function deleteKicker($id)
+    {
+        $kickerModel = new KickerModel();
+        $kicker = $kickerModel->find($id);
+        
+        if (!$kicker) {
+            return redirect()->to('/admin/kickers')->with('error', 'Kicker not found');
+        }
+        
+        // Check if kicker is being used
+        if ($kicker['usage_count'] > 0) {
+            return redirect()->to('/admin/kickers')->with('error', 'Cannot delete kicker that is currently being used');
+        }
+        
+        if ($kickerModel->delete($id)) {
+            return redirect()->to('/admin/kickers')->with('success', 'Kicker deleted successfully');
+        } else {
+            return redirect()->to('/admin/kickers')->with('error', 'Failed to delete kicker');
+        }
+    }
+
+    public function getKickers()
+    {
+        $kickerModel = new KickerModel();
+        $kickers = $kickerModel->getAllKickers();
+        
+        return $this->response->setJSON($kickers);
     }
 } 

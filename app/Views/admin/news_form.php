@@ -103,6 +103,23 @@ $isReporter = $userRole === 'reporter';
 <form method="post" enctype="multipart/form-data" action="<?= $isEdit ? '/admin/news/edit/' . esc($news['id']) : '/admin/news/create' ?>">
     <div class="row g-3 mb-3">
         <div class="col-md-12">
+            <label class="form-label">Kicker/Shoulder Note</label>
+            <div class="row g-2">
+                <div class="col-md-8">
+                    <select id="kicker-select" class="form-select" onchange="handleKickerSelection()">
+                        <option value="">-- Choose from existing or create new --</option>
+                        <!-- Existing kickers will be loaded here -->
+                    </select>
+                    <input type="text" id="kicker-input" name="kicker" class="form-control mt-2" value="<?= $isEdit ? esc($news['kicker']) : '' ?>" placeholder="Or enter new kicker text" style="display: none;">
+                </div>
+                <div class="col-md-4">
+                    <input type="color" id="kicker-color" name="kicker_color" class="form-control form-control-color" value="<?= $isEdit && $news['kicker_color'] ? esc($news['kicker_color']) : '#dc3545' ?>" title="Choose kicker color">
+                    <small class="form-text text-muted">Kicker color</small>
+                </div>
+            </div>
+            <small class="form-text text-muted">Short phrase that appears above the headline. Choose from existing kickers or create a new one.</small>
+        </div>
+        <div class="col-md-6">
             <label class="form-label">Title</label>
             <input type="text" name="title" class="form-control" value="<?= $isEdit ? esc($news['title']) : '' ?>" required>
         </div>
@@ -309,6 +326,7 @@ $isReporter = $userRole === 'reporter';
                 </label>
             </div>
         </div>
+        <!-- Breaking news is now handled through kicker selection -->
     </div>
     <button type="submit" class="btn btn-success">Save</button>
     <a href="/admin/news" class="btn btn-secondary">Cancel</a>
@@ -1467,6 +1485,120 @@ document.querySelector('input[name="title"]').addEventListener('input', function
     }
 });
 
+// Kicker Management JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    const kickerSelect = document.getElementById('kicker-select');
+    const kickerInput = document.getElementById('kicker-input');
+    const kickerColor = document.getElementById('kicker-color');
+    
+    // Load existing kickers
+    loadKickers();
+    
+    // Handle manual input in text field
+    kickerInput.addEventListener('input', function() {
+        if (this.value.trim()) {
+            kickerSelect.value = '';
+        }
+    });
+    
+    // Add option to create new kicker
+    kickerSelect.addEventListener('focus', function() {
+        if (this.value === '' && !this.querySelector('option[value="new"]')) {
+            const newOption = document.createElement('option');
+            newOption.value = 'new';
+            newOption.textContent = '✏️ Create new kicker...';
+            this.appendChild(newOption);
+        }
+    });
+});
+
+function loadKickers() {
+    fetch('/admin/kickers/api')
+        .then(response => response.json())
+        .then(kickers => {
+            const kickerSelect = document.getElementById('kicker-select');
+            
+            // Clear existing options except the first one
+            kickerSelect.innerHTML = '<option value="">-- Choose from existing or create new --</option>';
+            
+            // Add existing kickers
+            kickers.forEach(kicker => {
+                const option = document.createElement('option');
+                option.value = kicker.text;
+                option.textContent = `${kicker.text} (${kicker.usage_count} uses)`;
+                option.setAttribute('data-color', kicker.color);
+                kickerSelect.appendChild(option);
+            });
+            
+            // Add create new option
+            const newOption = document.createElement('option');
+            newOption.value = 'new';
+            newOption.textContent = '✏️ Create new kicker...';
+            kickerSelect.appendChild(newOption);
+            
+            // Set current value if editing
+            <?php if ($isEdit && !empty($news['kicker'])): ?>
+                kickerSelect.value = '<?= esc($news['kicker']) ?>';
+                handleKickerSelection();
+            <?php endif; ?>
+        })
+        .catch(error => {
+            console.error('Error loading kickers:', error);
+        });
+}
+
+function handleKickerSelection() {
+    const kickerSelect = document.getElementById('kicker-select');
+    const kickerInput = document.getElementById('kicker-input');
+    const kickerColor = document.getElementById('kicker-color');
+    
+    const selectedValue = kickerSelect.value;
+    
+    if (selectedValue === 'new') {
+        // Show text input for new kicker
+        kickerSelect.style.display = 'none';
+        kickerInput.style.display = 'block';
+        kickerInput.focus();
+        kickerInput.value = '';
+    } else if (selectedValue === '') {
+        // Clear everything
+        kickerInput.style.display = 'none';
+        kickerSelect.style.display = 'block';
+        kickerInput.value = '';
+        kickerColor.value = '#dc3545';
+    } else {
+        // Use existing kicker
+        kickerInput.style.display = 'none';
+        kickerSelect.style.display = 'block';
+        kickerInput.value = selectedValue;
+        
+        // Auto-fill color
+        const selectedOption = kickerSelect.options[kickerSelect.selectedIndex];
+        const color = selectedOption.getAttribute('data-color');
+        if (color) {
+            kickerColor.value = color;
+        }
+    }
+}
+
+// Handle Enter key in kicker input to go back to dropdown
+document.getElementById('kicker-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        this.style.display = 'none';
+        document.getElementById('kicker-select').style.display = 'block';
+        document.getElementById('kicker-select').value = this.value;
+    }
+});
+
+// Handle blur event to go back to dropdown if empty
+document.getElementById('kicker-input').addEventListener('blur', function() {
+    if (!this.value.trim()) {
+        this.style.display = 'none';
+        document.getElementById('kicker-select').style.display = 'block';
+        document.getElementById('kicker-select').value = '';
+    }
+});
 
 </script>
 <?= $this->endSection() ?> 

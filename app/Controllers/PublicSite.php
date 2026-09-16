@@ -4,6 +4,8 @@ namespace App\Controllers;
 use App\Models\NewsModel;
 use App\Models\CategoryModel;
 use App\Models\TagModel;
+use App\Models\SportsEventModel;
+use App\Models\SportsMatchModel;
 use CodeIgniter\Controller;
 
 class PublicSite extends Controller
@@ -20,16 +22,13 @@ class PublicSite extends Controller
         $categoryModel = new CategoryModel();
         
         // Get featured news
-        $featuredNews = $newsModel->where('featured', 1)
-                                ->where('status', 'published')
-                                ->orderBy('published_at', 'DESC')
-                                ->findAll(6);
+        $featuredNews = $newsModel->getFeaturedNews(6);
         
         // Get latest news (excluding featured)
-        $latestNews = $newsModel->where('featured', 0)
-                                ->where('status', 'published')
-                                ->orderBy('published_at', 'DESC')
-                                ->findAll(25);
+        $latestNews = $newsModel->getLatestNews(25);
+        
+        // Get most read news from last 3 days
+        $mostReadNews = $newsModel->getMostReadNews(3, 10);
         
         // Get major categories and their news
         $majorCategories = ['national', 'politics', 'economy', 'international'];
@@ -38,10 +37,7 @@ class PublicSite extends Controller
         foreach ($majorCategories as $slug) {
             $category = $categoryModel->where('slug', $slug)->first();
             if ($category) {
-                $news = $newsModel->where('category_id', $category['id'])
-                                ->where('status', 'published')
-                                ->orderBy('published_at', 'DESC')
-                                ->findAll(4); // Get 4 latest news from each category
+                $news = $newsModel->getNewsByCategory($category['id'], 4);
                 
                 $categoryNews[] = [
                     'category' => $category,
@@ -51,12 +47,32 @@ class PublicSite extends Controller
         }
         
         $categories = $categoryModel->findAll();
+
+        $sportsWidgets = [];
+        try {
+            $sportsEventModel = new SportsEventModel();
+            $sportsMatchModel = new SportsMatchModel();
+            if (\Config\Database::connect()->tableExists('sports_events')) {
+                foreach ($sportsEventModel->getHomepageWidgetEvents() as $ev) {
+                    $live = $sportsMatchModel->getLiveMatches((int) $ev['id']);
+                    $today = $sportsMatchModel->getTodayMatches((int) $ev['id']);
+                    $sportsWidgets[] = [
+                        'event'   => $ev,
+                        'matches' => !empty($live) ? $live : $today,
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            $sportsWidgets = [];
+        }
         
         return view('public/home', [
             'featuredNews' => $featuredNews,
             'latestNews' => $latestNews,
+            'mostReadNews' => $mostReadNews,
             'categoryNews' => $categoryNews,
-            'categories' => $categories
+            'categories' => $categories,
+            'sportsWidgets' => $sportsWidgets,
         ]);
     }
 
@@ -69,7 +85,7 @@ class PublicSite extends Controller
         if (!$category) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
-        $news = $newsModel->where('category_id', $category['id'])->where('status', 'published')->orderBy('published_at', 'DESC')->findAll(20);
+        $news = $newsModel->getNewsByCategory($category['id'], 20);
         
         // Set meta tags for the section
         $data = [
@@ -96,29 +112,29 @@ class PublicSite extends Controller
         $categories = $categoryModel->findAll();
         
         // Try to find the news article
-        $news = $newsModel->where('slug', $slug)->where('status', 'published')->first();
+        $news = $newsModel->getNewsBySlug($slug);
         
         // If not found, try with URL decoded slug
         if (!$news) {
             $decodedSlug = urldecode($slug);
-            $news = $newsModel->where('slug', $decodedSlug)->where('status', 'published')->first();
+            $news = $newsModel->getNewsBySlug($decodedSlug);
         }
         
         // If still not found, try with raw URL decoded slug
         if (!$news) {
             $rawSlug = rawurldecode($slug);
-            $news = $newsModel->where('slug', $rawSlug)->where('status', 'published')->first();
+            $news = $newsModel->getNewsBySlug($rawSlug);
         }
         
         // If still not found, try to find by title
         if (!$news) {
-            $news = $newsModel->where('title', $slug)->where('status', 'published')->first();
+            $news = $newsModel->getNewsByTitle($slug);
         }
         
         // If still not found, try with URL decoded title
         if (!$news) {
             $decodedTitle = urldecode($slug);
-            $news = $newsModel->where('title', $decodedTitle)->where('status', 'published')->first();
+            $news = $newsModel->getNewsByTitle($decodedTitle);
         }
         
         if (!$news) {
@@ -129,10 +145,7 @@ class PublicSite extends Controller
         $this->trackNewsView($news['id']);
         
         // Get latest news for the read more section
-        $latestNews = $newsModel->where('status', 'published')
-                                ->where('id !=', $news['id'])
-                                ->orderBy('published_at', 'DESC')
-                                ->findAll(8);
+        $latestNews = $newsModel->getLatestNewsExcluding($news['id'], 8);
         
         // Custom styles for news page
         $customStyles = '
@@ -547,13 +560,7 @@ class PublicSite extends Controller
         if (!$tag) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
-        $db = \Config\Database::connect();
-        $newsIds = $db->table('news_tags')->select('news_id')->where('tag_id', $tag['id'])->get()->getResultArray();
-        $ids = array_column($newsIds, 'news_id');
-        $news = [];
-        if ($ids) {
-            $news = $newsModel->whereIn('id', $ids)->where('status', 'published')->orderBy('published_at', 'DESC')->findAll(20);
-        }
+        $news = $newsModel->getNewsByTag($slug, 20);
         return view('public/tag', [
             'tag' => $tag,
             'news' => $news,
@@ -571,13 +578,7 @@ class PublicSite extends Controller
         $categories = $categoryModel->findAll();
         
         if ($query) {
-            $news = $newsModel->like('title', $query)
-                            ->orLike('subtitle', $query)
-                            ->orLike('lead_text', $query)
-                            ->orLike('content', $query)
-                            ->where('status', 'published')
-                            ->orderBy('published_at', 'DESC')
-                            ->findAll(20);
+            $news = $newsModel->searchNews($query, 20);
         }
         
         return view('public/search', [
@@ -698,9 +699,7 @@ class PublicSite extends Controller
         $categoryModel = new CategoryModel();
         
         // Get all published news
-        $news = $newsModel->where('status', 'published')
-                         ->orderBy('published_at', 'DESC')
-                         ->findAll();
+        $news = $newsModel->getAllPublishedNews();
         
         // Get all categories
         $categories = $categoryModel->findAll();
@@ -775,17 +774,10 @@ class PublicSite extends Controller
      */
     private function trackNewsView($newsId)
     {
-        $db = \Config\Database::connect();
-        
-        // Get visitor's IP address
+        $newsModel = new \App\Models\NewsModel();
         $ipAddress = $this->request->getIPAddress();
         
-        // Insert view record
-        $db->table('news_views')->insert([
-            'news_id' => $newsId,
-            'viewed_at' => date('Y-m-d H:i:s'),
-            'viewer_ip' => $ipAddress
-        ]);
+        return $newsModel->trackView($newsId, $ipAddress);
     }
 
     /**
@@ -797,9 +789,7 @@ class PublicSite extends Controller
         $categoryModel = new CategoryModel();
         
         // Get latest published news (last 50 articles)
-        $news = $newsModel->where('status', 'published')
-                         ->orderBy('published_at', 'DESC')
-                         ->findAll(50);
+        $news = $newsModel->getAllPublishedNews(50);
         
         // Set proper headers for RSS
         $this->response->setContentType('application/rss+xml; charset=UTF-8');
@@ -873,10 +863,7 @@ class PublicSite extends Controller
         }
         
         // Get latest published news from this category (last 30 articles)
-        $news = $newsModel->where('category_id', $category['id'])
-                         ->where('status', 'published')
-                         ->orderBy('published_at', 'DESC')
-                         ->findAll(30);
+        $news = $newsModel->getNewsByCategory($category['id'], 30);
         
         // Set proper headers for RSS
         $this->response->setContentType('application/rss+xml; charset=UTF-8');

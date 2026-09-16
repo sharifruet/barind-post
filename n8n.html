@@ -1,0 +1,833 @@
+<div class="text-base my-auto mx-auto pb-8 [--thread-content-margin:var(--thread-content-margin-xs,calc(var(--spacing)*4))] @w-sm/main:[--thread-content-margin:var(--thread-content-margin-sm,calc(var(--spacing)*6))] @w-lg/main:[--thread-content-margin:var(--thread-content-margin-lg,calc(var(--spacing)*16))] px-(--thread-content-margin)"><div data-conversation-screenshot-content="" class="[--thread-content-max-width:40rem] @w-lg/main:[--thread-content-max-width:48rem] mx-auto max-w-(--thread-content-max-width) flex-1 group/turn-messages focus-visible:outline-hidden relative flex w-full min-w-0 flex-col agent-turn"><div class="flex max-w-full flex-col gap-4 grow"><div data-message-author-role="assistant" data-message-id="d6244e5c-529a-44e9-8538-6fcc1393b885" data-turn-start-message="true" dir="auto" tabindex="0" data-message-model-slug="gpt-5-6" class="min-h-8 text-message relative flex w-full flex-col items-end gap-2 text-start break-words whitespace-normal outline-none keyboard-focused:focus-ring [.text-message+&amp;]:mt-1"><div class="flex w-full flex-col gap-1 empty:hidden"><div class="LR5Y_W_content markdown prose dark:prose-invert wrap-break-word w-full dark markdown-new-styling"><p dir="auto" data-start="0" data-end="243">Yes. This is a very good use case for <strong data-start="38" data-end="45">n8n</strong>, but I would not make n8n itself the whole application. I’d make n8n the <strong data-start="119" data-end="153">orchestration/automation layer</strong>, with your news site, database, AI service, and source collectors as separate components.</p>
+<p dir="auto" data-start="245" data-end="316">For a Bangladesh/Bangla news site, I would design it roughly like this:</p>
+<h2 data-section-id="hysg68" dir="auto" data-start="318" data-end="344">1. Overall architecture</h2>
+<pre class="overflow-visible! px-0!" data-start="346" data-end="2156"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>                 ┌─────────────────────┐
+                 │   News Sources      │
+                 │─────────────────────│
+                 │ RSS / APIs          │
+                 │ News websites       │
+                 │ Facebook/YouTube*   │
+                 └──────────┬──────────┘
+                            │
+                            ▼
+                 ┌─────────────────────┐
+                 │        n8n          │
+                 │ Workflow Engine     │
+                 └──────────┬──────────┘
+                            │
+             ┌──────────────┼──────────────┐
+             ▼              ▼              ▼
+       Fetch Article     Deduplication   Metadata
+             │              │              │
+             └──────────────┼──────────────┘
+                            ▼
+                 ┌─────────────────────┐
+                 │   Content Extractor │
+                 │ HTML → Clean Article │
+                 └──────────┬──────────┘
+                            ▼
+                 ┌─────────────────────┐
+                 │      AI Engine      │
+                 │─────────────────────│
+                 │ Summarize           │
+                 │ Rewrite              │
+                 │ Translate            │
+                 │ Headline             │
+                 │ SEO                  │
+                 │ Tags/Category        │
+                 └──────────┬──────────┘
+                            ▼
+                 ┌─────────────────────┐
+                 │ Editorial Review    │
+                 │     Dashboard       │
+                 └──────────┬──────────┘
+                            ▼
+                 ┌─────────────────────┐
+                 │    News Website     │
+                 │     REST API        │
+                 └─────────────────────┘</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="2158" data-end="2207">* Only where you have appropriate access/rights.</p>
+<hr data-start="2209" data-end="2212">
+<h1 data-section-id="fl1t23" dir="auto" data-start="2214" data-end="2241">2. Recommended tech stack</h1>
+<h3 data-section-id="ynce3h" dir="auto" data-start="2243" data-end="2251">Core</h3>
+<div dir="auto" class="group TyagGW_tableContainer"><div tabindex="-1" class="TyagGW_tableWrapper flex flex-col-reverse w-fit"><table data-start="2253" data-end="2843" dir="auto" class="w-fit min-w-(--thread-content-width)"><thead data-start="2253" data-end="2279"><tr data-start="2253" data-end="2279"><th data-start="2253" data-end="2265" data-col-size="sm" class="last:pe-10">Component</th><th data-start="2265" data-end="2279" data-col-size="md" class="last:pe-10">Technology</th></tr></thead><tbody data-start="2290" data-end="2843"><tr data-start="2290" data-end="2314"><td data-start="2290" data-end="2303" data-col-size="sm">Automation</td><td data-start="2303" data-end="2314" data-col-size="md"><strong data-start="2305" data-end="2312">n8n</strong></td></tr><tr data-start="2315" data-end="2360"><td data-start="2315" data-end="2329" data-col-size="sm">Backend/API</td><td data-start="2329" data-end="2360" data-col-size="md"><strong data-start="2331" data-end="2358">Java 25 + Spring Boot 4</strong></td></tr><tr data-start="2361" data-end="2393"><td data-start="2361" data-end="2372" data-col-size="sm">Database</td><td data-start="2372" data-end="2393" data-col-size="md"><strong data-start="2374" data-end="2391">PostgreSQL 17</strong></td></tr><tr data-start="2394" data-end="2425"><td data-start="2394" data-end="2399" data-col-size="sm">AI</td><td data-start="2399" data-end="2425" data-col-size="md">OpenAI API / other LLM</td></tr><tr data-start="2426" data-end="2495"><td data-start="2426" data-end="2447" data-col-size="sm">Article extraction</td><td data-start="2447" data-end="2495" data-col-size="md">Python service / Trafilatura / BeautifulSoup</td></tr><tr data-start="2496" data-end="2519"><td data-start="2496" data-end="2510" data-col-size="sm">Cache/queue</td><td data-start="2510" data-end="2519" data-col-size="md">Redis</td></tr><tr data-start="2520" data-end="2571"><td data-start="2520" data-end="2529" data-col-size="sm">Search</td><td data-start="2529" data-end="2571" data-col-size="md">PostgreSQL initially, OpenSearch later</td></tr><tr data-start="2572" data-end="2601"><td data-start="2572" data-end="2583" data-col-size="sm">Frontend</td><td data-start="2583" data-end="2601" data-col-size="md">React 19 + MUI</td></tr><tr data-start="2602" data-end="2643"><td data-start="2602" data-end="2617" data-col-size="sm">News website</td><td data-start="2617" data-end="2643" data-col-size="md">Your existing CI4 site</td></tr><tr data-start="2644" data-end="2673"><td data-start="2644" data-end="2663" data-col-size="sm">Containerization</td><td data-start="2663" data-end="2673" data-col-size="md">Docker</td></tr><tr data-start="2674" data-end="2699"><td data-start="2674" data-end="2690" data-col-size="sm">Reverse proxy</td><td data-start="2690" data-end="2699" data-col-size="md">Nginx</td></tr><tr data-start="2700" data-end="2734"><td data-start="2700" data-end="2713" data-col-size="sm">Monitoring</td><td data-start="2713" data-end="2734" data-col-size="md">Datadog / Grafana</td></tr><tr data-start="2735" data-end="2775"><td data-start="2735" data-end="2750" data-col-size="sm">File storage</td><td data-start="2750" data-end="2775" data-col-size="md">S3-compatible storage</td></tr><tr data-start="2776" data-end="2807"><td data-start="2776" data-end="2793" data-col-size="sm">Authentication</td><td data-start="2793" data-end="2807" data-col-size="md">JWT/OAuth2</td></tr><tr data-start="2808" data-end="2843"><td data-start="2808" data-end="2821" data-col-size="sm">Deployment</td><td data-start="2821" data-end="2843" data-col-size="md">VPS/Cloud + Docker</td></tr></tbody></table><div class="relative h-0 self-end select-none"><div class="absolute end-0 flex items-end" style="height: 32.9167px;"><span class="" data-state="closed"><button aria-label="Copy table" class="hover:bg-token-bg-tertiary text-token-text-secondary relative z-10 my-1 rounded-sm p-1 transition-opacity group-[:not(:hover):not(:focus-within)]:pointer-events-none group-[:not(:hover):not(:focus-within)]:opacity-0"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></span></div></div></div></div>
+<p dir="auto" data-start="2845" data-end="2891">However, <strong data-start="2854" data-end="2890">don't build everything initially</strong>.</p>
+<p dir="auto" data-start="2893" data-end="2919">For MVP, I'd actually use:</p>
+<pre class="overflow-visible! px-0!" data-start="2921" data-end="2997"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>n8n
+  +
+PostgreSQL
+  +
+OpenAI API
+  +
+Your existing CI4 News API</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="2999" data-end="3034">That's enough to prove the concept.</p>
+<hr data-start="3036" data-end="3039">
+<h1 data-section-id="7ac9qa" dir="auto" data-start="3041" data-end="3088">3. The most important part: Source Management</h1>
+<p dir="auto" data-start="3090" data-end="3120">Create a <code data-start="3099" data-end="3113">news_sources</code> table.</p>
+<pre class="overflow-visible! px-0!" data-start="3122" data-end="3240"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>news_sources
+
+id
+name
+base_url
+rss_url
+source_type
+language
+category
+active
+fetch_interval
+last_fetched_at</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="3242" data-end="3250">Example:</p>
+<pre class="overflow-visible! px-0!" data-start="3252" data-end="3426"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>Prothom Alo
+https://...
+RSS
+Bangla
+National
+Active
+
+The Daily Star
+https://...
+RSS
+English
+National
+Active
+
+BBC Bangla
+https://...
+RSS
+Bangla
+International
+Active</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="3428" data-end="3485">The system shouldn't hard-code newspapers into workflows.</p>
+<p dir="auto" data-start="3487" data-end="3495">Instead:</p>
+<pre class="overflow-visible! px-0!" data-start="3497" data-end="3585"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>Source Registry
+       ↓
+n8n reads active sources
+       ↓
+Fetch each source</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="3587" data-end="3657">That means you can add a new newspaper without modifying the workflow.</p>
+<hr data-start="3659" data-end="3662">
+<h1 data-section-id="1b7raux" dir="auto" data-start="3664" data-end="3704">4. Don't immediately scrape everything</h1>
+<p dir="auto" data-start="3706" data-end="3741">I strongly recommend this priority:</p>
+<h3 data-section-id="1hofvxj" dir="auto" data-start="3743" data-end="3760">Level 1 — RSS</h3>
+<pre class="overflow-visible! px-0!" data-start="3762" data-end="3797"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>RSS → n8n → Article URL</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<h3 data-section-id="151y9rj" dir="auto" data-start="3799" data-end="3825">Level 2 — Official API</h3>
+<pre class="overflow-visible! px-0!" data-start="3827" data-end="3858"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>API → n8n → Article</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<h3 data-section-id="1u87tzd" dir="auto" data-start="3860" data-end="3892">Level 3 — Website extraction</h3>
+<pre class="overflow-visible! px-0!" data-start="3894" data-end="3935"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>Website → extractor → article</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="3937" data-end="3961">RSS/API is much cleaner.</p>
+<p dir="auto" data-start="3963" data-end="4285">Also, you should check each publisher's terms/robots rules and copyright/licensing position. <strong data-start="4056" data-end="4139">Rewriting an article does not automatically give you the right to republish it.</strong> A safer model is to use the source for discovery and create genuinely original reporting/summaries, with attribution and links where appropriate.</p>
+<hr data-start="4287" data-end="4290">
+<h1 data-section-id="ylbor7" dir="auto" data-start="4292" data-end="4314">5. Article ingestion</h1>
+<p dir="auto" data-start="4316" data-end="4347">Create an <code data-start="4326" data-end="4340">articles_raw</code> table.</p>
+<pre class="overflow-visible! px-0!" data-start="4349" data-end="4500"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>articles_raw
+
+id
+source_id
+source_url
+source_article_id
+title
+author
+published_at
+content
+image_url
+language
+content_hash
+fetched_at
+status</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="4502" data-end="4532">When n8n discovers an article:</p>
+<pre class="overflow-visible! px-0!" data-start="4534" data-end="4668"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>RSS
+ ↓
+Check URL
+ ↓
+Check content hash
+ ↓
+Already exists?
+ ├── YES → Ignore
+ └── NO
+       ↓
+    Extract
+       ↓
+    Save</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<hr data-start="4670" data-end="4673">
+<h1 data-section-id="8sfye2" dir="auto" data-start="4675" data-end="4716">6. Deduplication is extremely important</h1>
+<p dir="auto" data-start="4718" data-end="4726">Suppose:</p>
+<blockquote data-start="4728" data-end="4786">
+<p dir="auto" data-start="4730" data-end="4786">Newspaper A: "Government announces new education policy"</p>
+</blockquote>
+<p dir="auto" data-start="4788" data-end="4791">and</p>
+<blockquote data-start="4793" data-end="4854">
+<p dir="auto" data-start="4795" data-end="4854">Newspaper B: "New education policy announced by government"</p>
+</blockquote>
+<p dir="auto" data-start="4856" data-end="4888">These may be the <strong data-start="4873" data-end="4887">same story</strong>.</p>
+<p dir="auto" data-start="4890" data-end="4905">You don't want:</p>
+<pre class="overflow-visible! px-0!" data-start="4907" data-end="4958"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>Article 1
+Article 2
+Article 3
+Article 4</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="4960" data-end="4973">on your site.</p>
+<p dir="auto" data-start="4975" data-end="5000">I'd eventually implement:</p>
+<h3 data-section-id="1x0hinu" dir="auto" data-start="5002" data-end="5021">Exact duplicate</h3>
+<p dir="auto" data-start="5023" data-end="5043">URL/hash comparison.</p>
+<h3 data-section-id="1hdp7d5" dir="auto" data-start="5045" data-end="5063">Near duplicate</h3>
+<p dir="auto" data-start="5065" data-end="5086">Embedding similarity.</p>
+<p dir="auto" data-start="5088" data-end="5100">For example:</p>
+<pre class="overflow-visible! px-0!" data-start="5102" data-end="5216"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>Article A embedding
+        ↓
+Vector comparison
+        ↓
+Article B = 94% similar
+        ↓
+Same story</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="5218" data-end="5268">PostgreSQL + <strong data-start="5231" data-end="5243">pgvector</strong> is sufficient initially.</p>
+<hr data-start="5270" data-end="5273">
+<h1 data-section-id="qro932" dir="auto" data-start="5275" data-end="5302">7. AI processing pipeline</h1>
+<p dir="auto" data-start="5304" data-end="5350">This is where the project becomes interesting.</p>
+<p dir="auto" data-start="5352" data-end="5379">Instead of one huge prompt:</p>
+<pre class="overflow-visible! px-0!" data-start="5381" data-end="5416"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>"Rewrite this article."</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="5418" data-end="5449">use multiple controlled stages.</p>
+<h3 data-section-id="y3vqi1" dir="auto" data-start="5451" data-end="5478">Stage 1 — Extract facts</h3>
+<p dir="auto" data-start="5480" data-end="5508">AI produces structured JSON:</p>
+<pre class="overflow-visible! px-0!" data-start="5510" data-end="5671"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="relative h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="select-none sticky z-2 top-(--sticky-padding-top)"><div class="flex w-full items-center justify-between py-1.5 ps-4 pe-1.5 font-sans md:ps-5 bg-(--code-block-surface)"><div class="flex max-w-[75%] min-w-0 cursor-default items-center text-sm font-medium justify-self-start text-token-text-primary"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-sm me-2.5 shrink-0"><use href="/cdn/assets/sprites-core-ba6869f7.svg#72c6a7" fill="currentColor"></use></svg>JSON</div><div class="flex flex-row items-center gap-0.5 justify-self-end"><button type="button" class="flex gap-1 items-center select-none py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div></div></div><div class="pointer-events-none absolute inset-x-4 top-12 bottom-4"><div class="pointer-events-none sticky z-40 shrink-0 z-1!" style="top: calc(calc(var(--sticky-padding-top) + 48px) - 1px * 3); margin-bottom: calc(-4px); height: calc(4px); mask-image: linear-gradient(transparent 25%, white 75%);"><div class="sticky bg-token-border-light" style="top: calc(var(--sticky-padding-top) + 48px); height: 1px;"></div></div></div><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class=""><div class="relative"><div class="" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>{
+  "who": [],
+  "what": </span><span class="ͼz">""</span><span>,
+  "when": </span><span class="ͼz">""</span><span>,
+  "where": </span><span class="ͼz">""</span><span>,
+  "why": </span><span class="ͼz">""</span><span>,
+  "key_facts": [],
+  "quotes": [],
+  "numbers": [],
+  "uncertain_claims": []
+}</span></code></pre></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="5673" data-end="5705">This gives you a <strong data-start="5690" data-end="5704">fact layer</strong>.</p>
+<hr data-start="5707" data-end="5710">
+<h3 data-section-id="1v02aj6" dir="auto" data-start="5712" data-end="5751">Stage 2 — Generate original article</h3>
+<p dir="auto" data-start="5753" data-end="5758">Then:</p>
+<pre class="overflow-visible! px-0!" data-start="5760" data-end="5854"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>FACTS
++
+SOURCE INFORMATION
++
+EDITORIAL RULES
+       ↓
+AI
+       ↓
+ORIGINAL ARTICLE</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="5856" data-end="5928">This is much safer than asking an AI to simply paraphrase the newspaper.</p>
+<hr data-start="5930" data-end="5933">
+<h1 data-section-id="1nbwaq8" dir="auto" data-start="5935" data-end="5967">8. Bangla-specific AI pipeline</h1>
+<p dir="auto" data-start="5969" data-end="6025">For your project, I'd make Bangla a first-class feature.</p>
+<p dir="auto" data-start="6027" data-end="6039">For example:</p>
+<pre class="overflow-visible! px-0!" data-start="6041" data-end="6170"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>English source
+      ↓
+Fact extraction
+      ↓
+Bangla generation
+      ↓
+Bangla editorial style
+      ↓
+Final article</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="6172" data-end="6208">You can define your editorial rules:</p>
+<pre class="overflow-visible! px-0!" data-start="6210" data-end="6425"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>Language: Bangla
+Style: Professional Bangladeshi news
+Tone: Neutral
+Avoid: sensationalism
+Paragraph length: short
+Headline: concise
+Use: সহজ বাংলা
+Numbers: configurable
+Dates: Bangla/English configurable</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="6427" data-end="6459">You could have different styles:</p>
+<pre class="overflow-visible! px-0!" data-start="6461" data-end="6562"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>STANDARD
+BREAKING
+POLITICS
+SPORTS
+BUSINESS
+TECHNOLOGY
+ENTERTAINMENT
+ISLAMIC
+INTERNATIONAL</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<hr data-start="6564" data-end="6567">
+<h1 data-section-id="19wto73" dir="auto" data-start="6569" data-end="6599">9. Don't let AI invent facts</h1>
+<p dir="auto" data-start="6601" data-end="6653">This should be one of the central design principles.</p>
+<p dir="auto" data-start="6655" data-end="6691">Your AI pipeline should distinguish:</p>
+<pre class="overflow-visible! px-0!" data-start="6693" data-end="6760"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>SOURCE FACT
+     ↓
+VERIFIED FACT
+     ↓
+GENERATED PROSE</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="6762" data-end="6790">For example, if source says:</p>
+<blockquote data-start="6792" data-end="6847">
+<p dir="auto" data-start="6794" data-end="6847">The minister said the project will cost Tk 500 crore.</p>
+</blockquote>
+<p dir="auto" data-start="6849" data-end="6874">The AI shouldn't produce:</p>
+<blockquote data-start="6876" data-end="6925">
+<p dir="auto" data-start="6878" data-end="6925">The project will definitely create 50,000 jobs.</p>
+</blockquote>
+<p dir="auto" data-start="6927" data-end="6972">unless that information exists in the source.</p>
+<p dir="auto" data-start="6974" data-end="7013">I'd actually store <strong data-start="6993" data-end="7012">fact provenance</strong>.</p>
+<pre class="overflow-visible! px-0!" data-start="7015" data-end="7078"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>fact_id
+article_id
+fact
+source_reference
+confidence</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="7080" data-end="7122">This makes your system much more reliable.</p>
+<hr data-start="7124" data-end="7127">
+<h1 data-section-id="4s654h" dir="auto" data-start="7129" data-end="7149">10. Human approval</h1>
+<p dir="auto" data-start="7151" data-end="7217">I would <strong data-start="7159" data-end="7216">not automatically publish AI-generated news initially</strong>.</p>
+<p dir="auto" data-start="7219" data-end="7223">Use:</p>
+<pre class="overflow-visible! px-0!" data-start="7225" data-end="7306"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>AI Generated
+      ↓
+Editorial Review
+      ↓
+Approve
+      ↓
+Publish</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="7308" data-end="7334">Your dashboard could show:</p>
+<pre class="overflow-visible! px-0!" data-start="7336" data-end="8022"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>┌──────────────────────────────────────────┐
+│ AI NEWS DESK                             │
+├──────────────────────────────────────────┤
+│                                          │
+│ 24 New Articles                          │
+│                                          │
+│ ┌──────────────────────────────────────┐ │
+│ │ Govt announces new policy            │ │
+│ │ Source: Newspaper X                  │ │
+│ │ AI Confidence: 92%                   │ │
+│ │                                      │ │
+│ │ [Review] [Edit] [Reject]             │ │
+│ └──────────────────────────────────────┘ │
+│                                          │
+└──────────────────────────────────────────┘</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<hr data-start="8024" data-end="8027">
+<h1 data-section-id="107bbl" dir="auto" data-start="8029" data-end="8054">11. n8n workflow design</h1>
+<p dir="auto" data-start="8056" data-end="8149">I would split the automation into multiple workflows rather than creating one giant workflow.</p>
+<h3 data-section-id="rp6wom" dir="auto" data-start="8151" data-end="8183">Workflow 01 — Source Fetcher</h3>
+<pre class="overflow-visible! px-0!" data-start="8185" data-end="8307"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>Cron
+ ↓
+Get Active Sources
+ ↓
+Loop Sources
+ ↓
+RSS/API/HTTP
+ ↓
+Extract URLs
+ ↓
+Deduplicate
+ ↓
+Save Raw Articles</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<hr data-start="8309" data-end="8312">
+<h3 data-section-id="158lsaq" dir="auto" data-start="8314" data-end="8350">Workflow 02 — Article Extraction</h3>
+<pre class="overflow-visible! px-0!" data-start="8352" data-end="8531"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>New Raw Article
+       ↓
+Fetch webpage
+       ↓
+Extract main content
+       ↓
+Clean HTML
+       ↓
+Remove navigation/ads
+       ↓
+Extract metadata
+       ↓
+Save article</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<hr data-start="8533" data-end="8536">
+<h3 data-section-id="1xjlv4b" dir="auto" data-start="8538" data-end="8572">Workflow 03 — Story Clustering</h3>
+<pre class="overflow-visible! px-0!" data-start="8574" data-end="8726"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>New Article
+      ↓
+Generate embedding
+      ↓
+pgvector search
+      ↓
+Similar story?
+ ├── YES → attach to story
+ └── NO  → create new story</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<hr data-start="8728" data-end="8731">
+<h3 data-section-id="olgd7m" dir="auto" data-start="8733" data-end="8760">Workflow 04 — AI Writer</h3>
+<pre class="overflow-visible! px-0!" data-start="8762" data-end="8903"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>Story
+ ↓
+Collect source facts
+ ↓
+AI Fact Extraction
+ ↓
+AI Headline
+ ↓
+AI Article
+ ↓
+AI Summary
+ ↓
+AI SEO
+ ↓
+AI Tags
+ ↓
+Save Draft</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<hr data-start="8905" data-end="8908">
+<h3 data-section-id="o9xmp" dir="auto" data-start="8910" data-end="8937">Workflow 05 — Editorial</h3>
+<pre class="overflow-visible! px-0!" data-start="8939" data-end="8993"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>Draft
+ ↓
+Editor reviews
+ ↓
+Edit
+ ↓
+Approve</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<hr data-start="8995" data-end="8998">
+<h3 data-section-id="1lfofxa" dir="auto" data-start="9000" data-end="9028">Workflow 06 — Publishing</h3>
+<pre class="overflow-visible! px-0!" data-start="9030" data-end="9139"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>Approved
+ ↓
+Call CI4 API
+ ↓
+Create article
+ ↓
+Upload image
+ ↓
+Set category
+ ↓
+Set tags
+ ↓
+Publish</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<hr data-start="9141" data-end="9144">
+<h3 data-section-id="r64qdj" dir="auto" data-start="9146" data-end="9183">Workflow 07 — Social Distribution</h3>
+<p dir="auto" data-start="9185" data-end="9203">After publication:</p>
+<pre class="overflow-visible! px-0!" data-start="9205" data-end="9338"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>Published
+     ↓
+Generate Facebook copy
+     ↓
+Generate X copy
+     ↓
+Generate Telegram copy
+     ↓
+Generate notification</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="9340" data-end="9378">You can make each channel independent.</p>
+<hr data-start="9380" data-end="9383">
+<h1 data-section-id="17qu0n" dir="auto" data-start="9385" data-end="9438">12. Your existing news website should expose an API</h1>
+<p dir="auto" data-start="9440" data-end="9548">Since you're already using CodeIgniter for your news portals, I wouldn't let n8n directly insert into MySQL.</p>
+<p dir="auto" data-start="9550" data-end="9558">Instead:</p>
+<pre class="overflow-visible! px-0!" data-start="9560" data-end="9622"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>n8n
+ ↓
+REST API
+ ↓
+CodeIgniter
+ ↓
+MySQL/PostgreSQL</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="9624" data-end="9636">For example:</p>
+<pre class="overflow-visible! px-0!" data-start="9638" data-end="9676"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="relative h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="select-none sticky z-2 top-(--sticky-padding-top)"><div class="flex w-full items-center justify-between py-1.5 ps-4 pe-1.5 font-sans md:ps-5 bg-(--code-block-surface)"><div class="flex max-w-[75%] min-w-0 cursor-default items-center text-sm font-medium justify-self-start text-token-text-primary"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-sm me-2.5 shrink-0"><use href="/cdn/assets/sprites-core-ba6869f7.svg#72c6a7" fill="currentColor"></use></svg>http</div><div class="flex flex-row items-center gap-0.5 justify-self-end"><button type="button" class="flex gap-1 items-center select-none py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div></div></div><div class="pointer-events-none absolute inset-x-4 top-12 bottom-4"><div class="pointer-events-none sticky z-40 shrink-0 z-1!" style="top: calc(calc(var(--sticky-padding-top) + 48px) - 1px * 3); margin-bottom: calc(-4px); height: calc(4px); mask-image: linear-gradient(transparent 25%, white 75%);"><div class="sticky bg-token-border-light" style="top: calc(var(--sticky-padding-top) + 48px); height: 1px;"></div></div></div><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class=""><div class="relative"><div class="" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>POST /api/v1/news/articles</span></code></pre></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="9678" data-end="9686">Request:</p>
+<pre class="overflow-visible! px-0!" data-start="9688" data-end="9966"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="relative h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="select-none sticky z-2 top-(--sticky-padding-top)"><div class="flex w-full items-center justify-between py-1.5 ps-4 pe-1.5 font-sans md:ps-5 bg-(--code-block-surface)"><div class="flex max-w-[75%] min-w-0 cursor-default items-center text-sm font-medium justify-self-start text-token-text-primary"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-sm me-2.5 shrink-0"><use href="/cdn/assets/sprites-core-ba6869f7.svg#72c6a7" fill="currentColor"></use></svg>JSON</div><div class="flex flex-row items-center gap-0.5 justify-self-end"><button type="button" class="flex gap-1 items-center select-none py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div></div></div><div class="pointer-events-none absolute inset-x-4 top-12 bottom-4"><div class="pointer-events-none sticky z-40 shrink-0 z-1!" style="top: calc(calc(var(--sticky-padding-top) + 48px) - 1px * 3); margin-bottom: calc(-4px); height: calc(4px); mask-image: linear-gradient(transparent 25%, white 75%);"><div class="sticky bg-token-border-light" style="top: calc(var(--sticky-padding-top) + 48px); height: 1px;"></div></div></div><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class=""><div class="relative"><div class="" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>{
+  "title": </span><span class="ͼz">"নতুন শিক্ষা নীতি ঘোষণা"</span><span>,
+  "slug": </span><span class="ͼz">"new-education-policy-announced"</span><span>,
+  "summary": </span><span class="ͼz">"..."</span><span>,
+  "content": </span><span class="ͼz">"..."</span><span>,
+  "category_id": </span><span class="ͼy">5</span><span>,
+  "tags": [</span><span class="ͼz">"শিক্ষা"</span><span>, </span><span class="ͼz">"বাংলাদেশ"</span><span>],
+  "source": {
+    "name": </span><span class="ͼz">"Source Newspaper"</span><span>,
+    "url": </span><span class="ͼz">"..."</span><span>
+  },
+  "status": </span><span class="ͼz">"draft"</span><span>
+}</span></code></pre></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="9968" data-end="10047">This gives you a clean boundary between the automation system and your website.</p>
+<hr data-start="10049" data-end="10052">
+<h1 data-section-id="qudh6i" dir="auto" data-start="10054" data-end="10078">13. Database structure</h1>
+<p dir="auto" data-start="10080" data-end="10110">I'd start with something like:</p>
+<pre class="overflow-visible! px-0!" data-start="10112" data-end="10403"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>news_sources
+    │
+    ├── raw_articles
+    │
+    └── stories
+           │
+           ├── story_sources
+           │
+           ├── story_facts
+           │
+           ├── ai_generations
+           │
+           ├── editorial_reviews
+           │
+           └── published_articles</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="10405" data-end="10410">Plus:</p>
+<pre class="overflow-visible! px-0!" data-start="10412" data-end="10487"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>users
+categories
+tags
+article_tags
+media
+workflow_logs
+ai_usage</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<hr data-start="10489" data-end="10492">
+<h1 data-section-id="1gl1srh" dir="auto" data-start="10494" data-end="10519">14. AI generation table</h1>
+<p dir="auto" data-start="10521" data-end="10612">This is worth having because you'll eventually want to know <strong data-start="10581" data-end="10611">which model generated what</strong>.</p>
+<pre class="overflow-visible! px-0!" data-start="10614" data-end="10744"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>ai_generations
+
+id
+article_id
+model
+prompt_version
+input_tokens
+output_tokens
+temperature
+generated_content
+created_at</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="10746" data-end="10782">Then if you change your prompt from:</p>
+<pre class="overflow-visible! px-0!" data-start="10784" data-end="10798"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>v1</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="10800" data-end="10803">to:</p>
+<pre class="overflow-visible! px-0!" data-start="10805" data-end="10819"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>v2</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="10821" data-end="10849">you can compare the results.</p>
+<hr data-start="10851" data-end="10854">
+<h1 data-section-id="1kmtnff" dir="auto" data-start="10856" data-end="10879">15. Prompt management</h1>
+<p dir="auto" data-start="10881" data-end="10922">Don't bury your prompts inside n8n nodes.</p>
+<p dir="auto" data-start="10924" data-end="10931">Create:</p>
+<pre class="overflow-visible! px-0!" data-start="10933" data-end="11032"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>prompts/
+
+headline_v1
+article_bn_v1
+summary_bn_v1
+seo_v1
+facebook_v1
+fact_extraction_v1</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="11034" data-end="11045">Eventually:</p>
+<pre class="overflow-visible! px-0!" data-start="11047" data-end="11075"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>prompt_templates</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="11077" data-end="11093">in the database.</p>
+<p dir="auto" data-start="11095" data-end="11171">Then your editor can change editorial rules without rebuilding the workflow.</p>
+<hr data-start="11173" data-end="11176">
+<h1 data-section-id="6j5on" dir="auto" data-start="11178" data-end="11198">16. Image handling</h1>
+<p dir="auto" data-start="11200" data-end="11233">This deserves separate treatment.</p>
+<p dir="auto" data-start="11235" data-end="11281">I'd <strong data-start="11239" data-end="11280">not simply copy the newspaper's image</strong>.</p>
+<p dir="auto" data-start="11283" data-end="11291">Instead:</p>
+<pre class="overflow-visible! px-0!" data-start="11293" data-end="11439"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>Story
+ ↓
+Determine image requirement
+ ↓
+Licensed image / own image / generated image
+ ↓
+Media processing
+ ↓
+Resize/WebP
+ ↓
+CDN/storage</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="11441" data-end="11472">For AI-generated illustrations:</p>
+<pre class="overflow-visible! px-0!" data-start="11474" data-end="11560"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>Story
+ ↓
+Image prompt
+ ↓
+Image generation
+ ↓
+Editorial approval
+ ↓
+Publish</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="11562" data-end="11617">This could become a major differentiator for your site.</p>
+<hr data-start="11619" data-end="11622">
+<h1 data-section-id="8iqw6d" dir="auto" data-start="11624" data-end="11645">17. Admin dashboard</h1>
+<p dir="auto" data-start="11647" data-end="11679">Eventually I'd build a separate:</p>
+<h3 data-section-id="15zitlk" dir="auto" data-start="11681" data-end="11701"><span role="text"><strong data-start="11685" data-end="11701">AI News Desk</strong></span></h3>
+<p dir="auto" data-start="11703" data-end="11709">using:</p>
+<p dir="auto" data-start="11711" data-end="11729"><strong data-start="11711" data-end="11729">React 19 + MUI</strong></p>
+<p dir="auto" data-start="11731" data-end="11739">Screens:</p>
+<pre class="overflow-visible! px-0!" data-start="11741" data-end="11953"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>Dashboard
+│
+├── Incoming
+├── AI Drafts
+├── Review Queue
+├── Published
+├── Rejected
+│
+├── Sources
+├── Categories
+├── Tags
+├── Prompts
+├── AI Models
+│
+├── Stories
+├── Duplicate Stories
+│
+└── System Logs</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="11955" data-end="12011">The most important screen would be the <strong data-start="11994" data-end="12010">Review Queue</strong>.</p>
+<hr data-start="12013" data-end="12016">
+<h1 data-section-id="sq84iw" dir="auto" data-start="12018" data-end="12040">18. Editorial screen</h1>
+<p dir="auto" data-start="12042" data-end="12074">I'd make it look something like:</p>
+<pre class="overflow-visible! px-0!" data-start="12076" data-end="13008"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>┌──────────────────────────────────────────────────────┐
+│ AI NEWS DESK                                         │
+├───────────────────┬──────────────────────────────────┤
+│ SOURCE             │ GENERATED ARTICLE               │
+│                    │                                  │
+│ Original headline  │ New headline                    │
+│                    │                                  │
+│ Source article     │ Summary                          │
+│                    │                                  │
+│ Key facts          │ Article                          │
+│                    │                                  │
+│                    │                                  │
+│                    │                                  │
+├───────────────────┴──────────────────────────────────┤
+│ [Reject] [Save Draft] [Approve &amp; Publish]             │
+└──────────────────────────────────────────────────────┘</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="13010" data-end="13066">This is much better than making editors work inside n8n.</p>
+<hr data-start="13068" data-end="13071">
+<h1 data-section-id="lwrffh" dir="auto" data-start="13073" data-end="13093">19. Where n8n fits</h1>
+<p dir="auto" data-start="13095" data-end="13148">Think of n8n as the <strong data-start="13115" data-end="13128">conductor</strong>, not the orchestra.</p>
+<pre class="overflow-visible! px-0!" data-start="13150" data-end="13434"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>                 n8n
+                  │
+       ┌──────────┼───────────┐
+       │          │           │
+       ▼          ▼           ▼
+   PostgreSQL     AI       News API
+       │                      │
+       ▼                      ▼
+   pgvector                CI4 Site</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="13436" data-end="13448">n8n handles:</p>
+<ul data-start="13450" data-end="13575">
+<li data-section-id="1j5c688" data-start="13450" data-end="13462">
+<p dir="auto" data-start="13452" data-end="13462">scheduling</p>
+</li>
+<li data-section-id="m45a1e" data-start="13463" data-end="13478">
+<p dir="auto" data-start="13465" data-end="13478">HTTP requests</p>
+</li>
+<li data-section-id="1o4t7e" data-start="13479" data-end="13484">
+<p dir="auto" data-start="13481" data-end="13484">RSS</p>
+</li>
+<li data-section-id="105qmm9" data-start="13485" data-end="13496">
+<p dir="auto" data-start="13487" data-end="13496">API calls</p>
+</li>
+<li data-section-id="7bgnn5" data-start="13497" data-end="13507">
+<p dir="auto" data-start="13499" data-end="13507">AI calls</p>
+</li>
+<li data-section-id="1fl28s" data-start="13508" data-end="13519">
+<p dir="auto" data-start="13510" data-end="13519">branching</p>
+</li>
+<li data-section-id="fw5z2e" data-start="13520" data-end="13529">
+<p dir="auto" data-start="13522" data-end="13529">retries</p>
+</li>
+<li data-section-id="1msersm" data-start="13530" data-end="13545">
+<p dir="auto" data-start="13532" data-end="13545">notifications</p>
+</li>
+<li data-section-id="1xyhjgx" data-start="13546" data-end="13558">
+<p dir="auto" data-start="13548" data-end="13558">publishing</p>
+</li>
+<li data-section-id="mlu7hb" data-start="13559" data-end="13575">
+<p dir="auto" data-start="13561" data-end="13575">error handling</p>
+</li>
+</ul>
+<p dir="auto" data-start="13577" data-end="13602">Your application handles:</p>
+<ul data-start="13604" data-end="13702">
+<li data-section-id="16lsmi2" data-start="13604" data-end="13611">
+<p dir="auto" data-start="13606" data-end="13611">users</p>
+</li>
+<li data-section-id="lbprz3" data-start="13612" data-end="13622">
+<p dir="auto" data-start="13614" data-end="13622">articles</p>
+</li>
+<li data-section-id="1l4tkml" data-start="13623" data-end="13632">
+<p dir="auto" data-start="13625" data-end="13632">stories</p>
+</li>
+<li data-section-id="xol39a" data-start="13633" data-end="13653">
+<p dir="auto" data-start="13635" data-end="13653">editorial workflow</p>
+</li>
+<li data-section-id="11fwgwg" data-start="13654" data-end="13667">
+<p dir="auto" data-start="13656" data-end="13667">permissions</p>
+</li>
+<li data-section-id="1osij1" data-start="13668" data-end="13678">
+<p dir="auto" data-start="13670" data-end="13678">database</p>
+</li>
+<li data-section-id="1861moc" data-start="13679" data-end="13690">
+<p dir="auto" data-start="13681" data-end="13690">dashboard</p>
+</li>
+<li data-section-id="vi9ike" data-start="13691" data-end="13702">
+<p dir="auto" data-start="13693" data-end="13702">analytics</p>
+</li>
+</ul>
+<hr data-start="13704" data-end="13707">
+<h1 data-section-id="9tysh2" dir="auto" data-start="13709" data-end="13750">20. My recommended architecture for you</h1>
+<p dir="auto" data-start="13752" data-end="13809">Given the technologies you already work with, I'd choose:</p>
+<pre class="overflow-visible! px-0!" data-start="13811" data-end="14717"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>                    ┌───────────────┐
+                    │ News Sources  │
+                    └───────┬───────┘
+                            │
+                            ▼
+                     ┌─────────────┐
+                     │     n8n     │
+                     └──────┬──────┘
+                            │
+             ┌──────────────┼───────────────┐
+             ▼              ▼               ▼
+        PostgreSQL       AI API       Extractor API
+        + pgvector
+             │
+             ▼
+      ┌───────────────┐
+      │ Spring Boot   │
+      │ News AI API   │
+      └───────┬───────┘
+              │
+              ▼
+       ┌──────────────┐
+       │ React + MUI  │
+       │ AI News Desk │
+       └───────┬──────┘
+               │
+               ▼
+       ┌──────────────┐
+       │ CI4 News API │
+       └───────┬──────┘
+               │
+               ▼
+          News Website</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<h3 data-section-id="1uxrzjs" dir="auto" data-start="14719" data-end="14741">Technology choices</h3>
+<p dir="auto" data-start="14743" data-end="14757"><strong data-start="14743" data-end="14757">Automation</strong></p>
+<blockquote data-start="14758" data-end="14763">
+<p dir="auto" data-start="14760" data-end="14763">n8n</p>
+</blockquote>
+<p dir="auto" data-start="14765" data-end="14771"><strong data-start="14765" data-end="14771">AI</strong></p>
+<blockquote data-start="14772" data-end="14794">
+<p dir="auto" data-start="14774" data-end="14794">OpenAI API initially</p>
+</blockquote>
+<p dir="auto" data-start="14796" data-end="14807"><strong data-start="14796" data-end="14807">Backend</strong></p>
+<blockquote data-start="14808" data-end="14833">
+<p dir="auto" data-start="14810" data-end="14833">Java 25 + Spring Boot 4</p>
+</blockquote>
+<p dir="auto" data-start="14835" data-end="14847"><strong data-start="14835" data-end="14847">Database</strong></p>
+<blockquote data-start="14848" data-end="14863">
+<p dir="auto" data-start="14850" data-end="14863">PostgreSQL 17</p>
+</blockquote>
+<p dir="auto" data-start="14865" data-end="14882"><strong data-start="14865" data-end="14882">Vector search</strong></p>
+<blockquote data-start="14883" data-end="14893">
+<p dir="auto" data-start="14885" data-end="14893">pgvector</p>
+</blockquote>
+<p dir="auto" data-start="14895" data-end="14907"><strong data-start="14895" data-end="14907">Frontend</strong></p>
+<blockquote data-start="14908" data-end="14924">
+<p dir="auto" data-start="14910" data-end="14924">React 19 + MUI</p>
+</blockquote>
+<p dir="auto" data-start="14926" data-end="14940"><strong data-start="14926" data-end="14940">Extraction</strong></p>
+<blockquote data-start="14941" data-end="14977">
+<p dir="auto" data-start="14943" data-end="14977">Python + Trafilatura/BeautifulSoup</p>
+</blockquote>
+<p dir="auto" data-start="14979" data-end="14988"><strong data-start="14979" data-end="14988">Cache</strong></p>
+<blockquote data-start="14989" data-end="14996">
+<p dir="auto" data-start="14991" data-end="14996">Redis</p>
+</blockquote>
+<p dir="auto" data-start="14998" data-end="15009"><strong data-start="14998" data-end="15009">Storage</strong></p>
+<blockquote data-start="15010" data-end="15040">
+<p dir="auto" data-start="15012" data-end="15040">S3-compatible object storage</p>
+</blockquote>
+<p dir="auto" data-start="15042" data-end="15060"><strong data-start="15042" data-end="15060">Infrastructure</strong></p>
+<blockquote data-start="15061" data-end="15077">
+<p dir="auto" data-start="15063" data-end="15077">Docker + Nginx</p>
+</blockquote>
+<p dir="auto" data-start="15079" data-end="15093"><strong data-start="15079" data-end="15093">Monitoring</strong></p>
+<blockquote data-start="15094" data-end="15103">
+<p dir="auto" data-start="15096" data-end="15103">Datadog</p>
+</blockquote>
+<hr data-start="15105" data-end="15108">
+<h1 data-section-id="1h954x3" dir="auto" data-start="15110" data-end="15148">21. But I would build it in 3 phases</h1>
+<h3 data-section-id="169fv53" dir="auto" data-start="15150" data-end="15167">Phase 1 — MVP</h3>
+<p dir="auto" data-start="15169" data-end="15206">Don't build Spring Boot or React yet.</p>
+<pre class="overflow-visible! px-0!" data-start="15208" data-end="15255"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>n8n
++
+PostgreSQL
++
+AI API
++
+CI4 API</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="15257" data-end="15266">Features:</p>
+<ul data-start="15268" data-end="15433">
+<li data-section-id="2znmge" data-start="15268" data-end="15287">
+<p dir="auto" data-start="15270" data-end="15287">5–10 news sources</p>
+</li>
+<li data-section-id="v0xsg" data-start="15288" data-end="15303">
+<p dir="auto" data-start="15290" data-end="15303">RSS ingestion</p>
+</li>
+<li data-section-id="d3f5m1" data-start="15304" data-end="15324">
+<p dir="auto" data-start="15306" data-end="15324">article extraction</p>
+</li>
+<li data-section-id="m8ve57" data-start="15325" data-end="15350">
+<p dir="auto" data-start="15327" data-end="15350">duplicate URL detection</p>
+</li>
+<li data-section-id="qnltwq" data-start="15351" data-end="15363">
+<p dir="auto" data-start="15353" data-end="15363">AI rewrite</p>
+</li>
+<li data-section-id="1qx5561" data-start="15364" data-end="15381">
+<p dir="auto" data-start="15366" data-end="15381">Bangla headline</p>
+</li>
+<li data-section-id="1ltdnb8" data-start="15382" data-end="15391">
+<p dir="auto" data-start="15384" data-end="15391">summary</p>
+</li>
+<li data-section-id="1j3prbd" data-start="15392" data-end="15398">
+<p dir="auto" data-start="15394" data-end="15398">tags</p>
+</li>
+<li data-section-id="14r4gts" data-start="15399" data-end="15415">
+<p dir="auto" data-start="15401" data-end="15415">human approval</p>
+</li>
+<li data-section-id="1g9q341" data-start="15416" data-end="15433">
+<p dir="auto" data-start="15418" data-end="15433">publish to site</p>
+</li>
+</ul>
+<p dir="auto" data-start="15435" data-end="15481">This can validate the whole idea very quickly.</p>
+<hr data-start="15483" data-end="15486">
+<h3 data-section-id="1upgb0x" dir="auto" data-start="15488" data-end="15514">Phase 2 — AI News Desk</h3>
+<p dir="auto" data-start="15516" data-end="15520">Add:</p>
+<pre class="overflow-visible! px-0!" data-start="15522" data-end="15566"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>React
+Spring Boot
+pgvector
+Redis</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="15568" data-end="15577">Features:</p>
+<ul data-start="15579" data-end="15783">
+<li data-section-id="irqcxt" data-start="15579" data-end="15597">
+<p dir="auto" data-start="15581" data-end="15597">story clustering</p>
+</li>
+<li data-section-id="1r4g6o" data-start="15598" data-end="15619">
+<p dir="auto" data-start="15600" data-end="15619">duplicate detection</p>
+</li>
+<li data-section-id="yw98tl" data-start="15620" data-end="15641">
+<p dir="auto" data-start="15622" data-end="15641">editorial dashboard</p>
+</li>
+<li data-section-id="bo161w" data-start="15642" data-end="15657">
+<p dir="auto" data-start="15644" data-end="15657">AI confidence</p>
+</li>
+<li data-section-id="1s5dhem" data-start="15658" data-end="15673">
+<p dir="auto" data-start="15660" data-end="15673">fact checking</p>
+</li>
+<li data-section-id="1ltcuov" data-start="15674" data-end="15693">
+<p dir="auto" data-start="15676" data-end="15693">prompt management</p>
+</li>
+<li data-section-id="g3dcpy" data-start="15694" data-end="15713">
+<p dir="auto" data-start="15696" data-end="15713">source management</p>
+</li>
+<li data-section-id="1nnv1kl" data-start="15714" data-end="15734">
+<p dir="auto" data-start="15716" data-end="15734">article comparison</p>
+</li>
+<li data-section-id="1bfliv6" data-start="15735" data-end="15756">
+<p dir="auto" data-start="15737" data-end="15756">publishing workflow</p>
+</li>
+<li data-section-id="1wung19" data-start="15757" data-end="15783">
+<p dir="auto" data-start="15759" data-end="15783">AI usage/cost monitoring</p>
+</li>
+</ul>
+<hr data-start="15785" data-end="15788">
+<h3 data-section-id="454zix" dir="auto" data-start="15790" data-end="15829">Phase 3 — Intelligent News Platform</h3>
+<p dir="auto" data-start="15831" data-end="15840">Then add:</p>
+<pre class="overflow-visible! px-0!" data-start="15842" data-end="16060"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>Breaking news detection
+Story tracking
+Trend detection
+Automatic updates
+Cross-source verification
+SEO optimization
+Social distribution
+Image generation
+YouTube monitoring
+Facebook monitoring
+News analytics</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="16062" data-end="16102">The really interesting feature would be:</p>
+<blockquote data-start="16104" data-end="16128">
+<p dir="auto" data-start="16106" data-end="16128"><strong data-start="16106" data-end="16128">Story Intelligence</strong></p>
+</blockquote>
+<p dir="auto" data-start="16130" data-end="16175">Instead of treating every article separately:</p>
+<pre class="overflow-visible! px-0!" data-start="16177" data-end="16520"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" style="width: 100%; transform: none;"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button type="button" class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2" aria-label="Copy" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-ba6869f7.svg#7fccfb" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" style="transform: none;"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>                 STORY
+                   │
+       ┌───────────┼───────────┐
+       ▼           ▼           ▼
+ Newspaper A   Newspaper B   Agency C
+       │           │           │
+       └───────────┼───────────┘
+                   ▼
+             FACT DATABASE
+                   │
+                   ▼
+           ORIGINAL ARTICLE</span></code></pre></div></div></div></div></div></div></div></div></div><div class=""><div class="" style="width: 100%; transform: none;"></div></div></div></div></div></div></pre>
+<p dir="auto" data-start="16522" data-end="16675">So when 10 newspapers report the same event, your system understands that they're <strong data-start="16604" data-end="16637">10 sources covering one story</strong>, rather than 10 independent articles.</p>
+<p dir="auto" data-start="16677" data-end="16793">That would make your project substantially more sophisticated than a simple <strong data-start="16753" data-end="16785">"scrape → ChatGPT → publish"</strong> system.</p>
+<h3 data-section-id="1vjf4h9" dir="auto" data-start="16795" data-end="16827">One important recommendation</h3>
+<p dir="auto" data-start="16829" data-end="17193" data-is-last-node="" data-is-only-node="">I would also avoid calling the output a <strong data-start="16869" data-end="16903">"rewritten newspaper article."</strong> Architecturally, make it an <strong data-start="16932" data-end="16966">original news synthesis system</strong>: collect source material, extract/verify facts, combine multiple sources where possible, and generate a new article with source attribution. That is both technically better and much safer from a copyright/editorial standpoint.</p></div></div></div></div><div class="z-0 flex min-h-[46px] justify-start"><div aria-label="Response actions" class="touch:-me-2 touch:-ms-3.5 -ms-2.5 -me-1 flex flex-wrap items-center gap-y-4 p-1 select-none -mt-1 touch:w-[calc(100%+--spacing(3.5))] w-[calc(100%+--spacing(2.5))] duration-[1.5s] focus-within:transition-none hover:transition-none touch:pointer-events-auto cant-hover:pointer-events-auto pointer-events-none [mask-image:linear-gradient(to_right,black_33%,transparent_66%)] [mask-size:300%_100%] [mask-position:100%_0%] motion-safe:transition-[mask-position] group-hover/turn-messages:pointer-events-auto group-hover/turn-messages:[mask-position:0_0] group-focus-within/turn-messages:pointer-events-auto group-focus-within/turn-messages:[mask-position:0_0] has-data-[state=open]:pointer-events-auto has-data-[state=open]:[mask-position:0_0]" role="group" tabindex="-1" style="mask-position: 0% 0%;"><button type="button" class="text-token-text-secondary hover:bg-token-surface-hover rounded-lg" aria-label="Copy response" data-testid="copy-turn-action-button" data-state="closed"><span class="flex items-center justify-center touch:w-10 h-8 w-8"><div class="[&amp;_svg]:h-full [&amp;_svg]:w-full icon icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" focusable="false" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M15.1006 1.78516C16.793 1.78556 18.165 3.15808 18.165 4.85059V10.8838C18.1649 12.5762 16.7929 13.9478 15.1006 13.9482H13.998V15.0508C13.9976 16.7431 12.626 18.1151 10.9336 18.1152H4.90039C3.20789 18.1152 1.83537 16.7432 1.83496 15.0508V9.01758C1.83496 7.32482 3.20764 5.95215 4.90039 5.95215H6.00195V4.85059C6.00195 3.15783 7.37463 1.78516 9.06738 1.78516H15.1006ZM4.90039 7.28223C3.94218 7.28223 3.16504 8.05936 3.16504 9.01758V15.0508C3.16544 16.0087 3.94243 16.7852 4.90039 16.7852H10.9336C11.8914 16.785 12.6676 16.0086 12.668 15.0508V9.01758C12.668 8.05945 11.8917 7.28237 10.9336 7.28223H4.90039ZM9.06738 3.11523C8.10917 3.11523 7.33203 3.89237 7.33203 4.85059V5.95215H10.9336C12.6262 5.95229 13.998 7.32491 13.998 9.01758V12.6182H15.1006C16.0584 12.6178 16.8348 11.8416 16.835 10.8838V4.85059C16.835 3.89262 16.0585 3.11564 15.1006 3.11523H9.06738Z" fill="currentColor"></path></svg></div></span></button><button type="button" class="text-token-text-secondary hover:bg-token-surface-hover rounded-lg" aria-label="Rate response" data-testid="feedback-turn-action-button" id="radix-_r_6h_" aria-haspopup="menu" aria-expanded="false" data-state="closed"><span class="touch:w-10 flex h-8 w-8 items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon"><use href="/cdn/assets/sprites-core-ba6869f7.svg#c1e6c4" fill="currentColor"></use></svg></span></button><button type="button" class="text-token-text-secondary hover:bg-token-surface-hover rounded-lg" aria-label="Share" data-state="closed"><span class="flex items-center justify-center touch:w-10 h-8 w-8"><div class="[&amp;_svg]:h-full [&amp;_svg]:w-full icon icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" focusable="false" aria-hidden="true"><path d="M16.6663 10.1681C17.0335 10.1681 17.3313 10.4659 17.3313 10.8332V14.1994C17.3313 15.929 15.929 17.3312 14.1995 17.3312H5.80005C4.07048 17.3312 2.66821 15.929 2.66821 14.1994V10.8332C2.66821 10.4659 2.96598 10.1681 3.33325 10.1681C3.70052 10.1681 3.99829 10.4659 3.99829 10.8332V14.1994C3.99829 15.1944 4.80502 16.0011 5.80005 16.0011H14.1995C15.1945 16.0011 16.0012 15.1944 16.0012 14.1994V10.8332C16.0012 10.466 16.2991 10.1683 16.6663 10.1681Z" fill="currentColor"></path> <path d="M9.31763 3.08317C9.71412 2.76014 10.2865 2.75993 10.6829 3.08317L10.7649 3.15739L14.012 6.40446C14.2716 6.66406 14.2714 7.08517 14.012 7.34489C13.7523 7.60459 13.3312 7.60459 13.0715 7.34489L10.6653 4.93864V11.8752C10.6653 12.2423 10.3674 12.54 10.0002 12.5402C9.63297 12.5402 9.33521 12.2424 9.33521 11.8752V4.93669L6.92896 7.34489C6.66926 7.60459 6.24725 7.60459 5.98755 7.34489C5.72836 7.08521 5.72817 6.66402 5.98755 6.40446L9.23462 3.15739L9.31763 3.08317Z" fill="currentColor"></path></svg></div></span></button><span class="" data-state="closed"><button type="button" id="radix-_r_6m_" aria-haspopup="menu" aria-expanded="false" data-state="closed" class="cursor-pointer touch:px-2.5 text-token-text-secondary hover:bg-token-surface-hover h-[30px] rounded-lg px-1.5" aria-label="Switch model"><div class="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon"><use href="/cdn/assets/sprites-core-ba6869f7.svg#ec66f0" fill="currentColor"></use></svg></div></button></span><button type="button" class="text-token-text-secondary hover:bg-token-surface-hover touch:w-10 flex h-8 w-8 items-center justify-center rounded-lg" aria-label="More actions" id="radix-_r_6p_" aria-haspopup="menu" aria-expanded="false" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon"><use href="/cdn/assets/sprites-core-ba6869f7.svg#623957" fill="currentColor"></use></svg></button></div></div></div><div data-conversation-screenshot-content="" class="[--thread-content-max-width:40rem] @w-lg/main:[--thread-content-max-width:48rem] mx-auto max-w-(--thread-content-max-width) flex-1"><div></div></div></div>

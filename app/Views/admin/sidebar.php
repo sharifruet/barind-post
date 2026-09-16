@@ -19,11 +19,19 @@ $isReporter = $userRole === 'reporter';
                 <a class="nav-link<?= (url_is('admin/tags*')) ? ' active' : '' ?>" href="/admin/tags"><i class="fas fa-tags me-2"></i>Manage Tags</a>
             </li>
             <li class="nav-item mb-2">
+                <a class="nav-link<?= (url_is('admin/kickers*')) ? ' active' : '' ?>" href="/admin/kickers"><i class="fas fa-hashtag me-2"></i>Manage Kickers</a>
+            </li>
+            <li class="nav-item mb-2">
                 <a class="nav-link<?= (url_is('admin/contacts*')) ? ' active' : '' ?>" href="/admin/contacts"><i class="fas fa-envelope me-2"></i>Contact Messages</a>
             </li>
             <li class="nav-item mb-2">
                 <a class="nav-link<?= (url_is('admin/prayer-times*')) ? ' active' : '' ?>" href="/admin/prayer-times"><i class="fas fa-mosque me-2"></i>Prayer Times</a>
             </li>
+            <?php if (!$isReporter): ?>
+            <li class="nav-item mb-2">
+                <a class="nav-link<?= (url_is('admin/sports-events*')) ? ' active' : '' ?>" href="/admin/sports-events"><i class="fas fa-trophy me-2"></i>Sports Events</a>
+            </li>
+            <?php endif; ?>
             <li class="nav-item mb-2">
                 <a class="nav-link<?= (url_is('admin/logs*')) ? ' active' : '' ?>" href="/admin/logs"><i class="fas fa-file-alt me-2"></i>View Logs</a>
             </li>
