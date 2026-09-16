@@ -177,6 +177,7 @@ $routes->get('/sports/(:segment)/news', 'SportsEvent::news/$1');
 // Automation API (n8n) — see N8N_NEWS_AUTOMATION_PLAN.md. Guarded by the 'apikey' filter.
 $routes->group('api/v1', ['filter' => 'apikey'], static function ($routes) {
     $routes->get('news/exists', 'Api\NewsController::exists');
+    $routes->get('news/(:num)', 'Api\NewsController::show/$1');
     $routes->post('news', 'Api\NewsController::create');
     $routes->get('categories', 'Api\NewsController::categories');
     $routes->get('tags', 'Api\NewsController::tags');

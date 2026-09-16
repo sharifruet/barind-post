@@ -15,7 +15,15 @@ class ApiKeyFilter implements FilterInterface
 {
     public function before(RequestInterface $request, $arguments = null)
     {
-        $configuredKey = (string) config('Automation')->apiKey;
+        $automation = config('Automation');
+
+        if (! empty($automation->allowedIps) && ! in_array($request->getIPAddress(), $automation->allowedIps, true)) {
+            return service('response')
+                ->setStatusCode(403)
+                ->setJSON(['status' => 403, 'error' => 'IP address not allowed']);
+        }
+
+        $configuredKey = (string) $automation->apiKey;
 
         $providedKey = '';
         if (preg_match('/^Bearer\s+(.+)$/i', (string) $request->getHeaderLine('Authorization'), $matches)) {

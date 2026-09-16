@@ -39,6 +39,19 @@ class NewsController extends BaseController
         ]);
     }
 
+    public function show($id)
+    {
+        $news = (new NewsModel())
+            ->select('id, title, slug, status, category_id, source, source_url, created_at, published_at')
+            ->find((int) $id);
+
+        if (! $news) {
+            return $this->json(['error' => 'Not found'], 404);
+        }
+
+        return $this->json($news);
+    }
+
     public function categories()
     {
         $categories = (new CategoryModel())

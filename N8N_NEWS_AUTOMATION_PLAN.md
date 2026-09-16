@@ -1,35 +1,84 @@
 # n8n News Automation — Implementation Plan
 
-## Status (2026-09-16)
+## Status (2026-09-16) — Phase 1 fully implemented, running and verified in Docker
 
-**Phase 1 API is implemented and smoke-tested locally** (build order items 1, 3, 4 in
-§10). What exists now:
+**API (CI4 side), all implemented and tested:**
+- Migration + `source_url`/`content_hash` columns and indexes on `news`
+  (`app/Database/Migrations/2026-09-16-000000_add_source_dedup_to_news.php`,
+  mirrored in `dbscript.sql`).
+- `App\Config\Automation`, `App\Filters\ApiKeyFilter` (API key + optional
+  defense-in-depth IP allowlist via `automation.allowedIps`, empty = unrestricted),
+  `App\Controllers\Api\NewsController`, `api/v1` route group.
+- Endpoints: `GET exists`, `GET categories`, `GET tags`, `GET news/{id}`,
+  `POST news`. `GET news/{id}` (previously skipped as optional) is now implemented.
+- `docker/app/Dockerfile` had two pre-existing, unrelated build bugs, both fixed
+  since they blocked running the app in Docker at all: missing `libicu-dev` (the
+  `intl` PHP extension needs it) and a font-download step pointing at a dead Google
+  Fonts CDN URL that also saved a `.woff2` as `.ttf` under both "Bold" and "Regular"
+  filenames from the same source. Fixed by removing the manual download —
+  `fonts-noto-extra`, already installed a few lines above, provides a real
+  `NotoSansBengali-SemiBold.ttf`, which `Admin.php`'s existing font-fallback chain
+  for the photo-card generator already tries as its third option.
 
-- Migration `app/Database/Migrations/2026-09-16-000000_add_source_dedup_to_news.php`
-  and matching `source_url`/`content_hash` columns + indexes added directly to the
-  `news` table in `dbscript.sql`.
-- `App\Config\Automation` (reads `automation.apiKey` / `automation.authorId` from
-  `.env`), `App\Filters\ApiKeyFilter`, `App\Controllers\Api\NewsController`, and the
-  `api/v1` route group in `app/Config/Routes.php`.
-- Verified end-to-end against a local Dockerized MySQL + `php spark serve`: auth
-  rejection (no/wrong key → 401), `GET /api/v1/categories`, `GET /api/v1/tags`,
-  `GET /api/v1/news/exists`, `POST /api/v1/news` (create → 201, correct `author_id`/
-  `slug`/`content_hash`/`word_count`, invalid tag IDs silently skipped and reported),
-  duplicate `source_url` → 409, missing required fields → 422, `status: published` →
-  422 (Phase 1 never auto-publishes).
-- `docker-compose.n8n.yml` + `n8n.env.example` scaffolded for running n8n locally
-  (not started — see open decisions below).
+**Running in Docker right now, verified together:** `docker-compose.yml` (app + db)
+and `docker-compose.n8n.yml` (n8n) as two compose stacks sharing one Docker network
+(`barind-post_barindpost`, joined via `external: true` in the n8n compose file), so
+n8n calls the app as `http://app` by container/service name — no host networking
+tricks needed. All three containers (`barindpost_app`, `barindpost_db`,
+`barindpost_n8n`) confirmed up together and re-tested end-to-end in this configuration
+(auth 401, validation 422, dedup 409, `news/{id}`, IP allowlist both blocking and
+passing correctly).
 
-**Not implemented / still open:**
-- `GET /api/v1/news/{id}` — listed as optional in §4.2, skipped for now.
-- The actual n8n workflows (Source Fetcher, AI Draft) — blocked on the open decisions
-  below, particularly AI provider and the RSS source list (the latter can't be guessed
-  on your behalf).
-- Which **production** `users.id` to set as `automation.authorId` on the real server —
-  local testing used the seeded sample user id `3` ("Eve Editor"), which has no
-  bearing on production.
-- Rotating the exposed `env`/`env.production` credentials (§2) before this API is
-  reachable in production.
+**n8n workflow — redesigned to remove the earlier simplifications, and fully
+verified including the AI-dependent nodes:** now 15 nodes, adding two things the
+first version skipped:
+
+`Schedule Trigger → [Get Categories / Get Tags (once, parallel)] + Source List (4
+feeds) → RSS Feed Read → Tag With Source → Check Exists → Filter New → Build Facts
+Prompt → Stage 1: Extract Facts (OpenAI) → Parse Facts → Build Article Prompt →
+Stage 2: Generate Article (OpenAI) → Parse Draft + Map Category/Tags → Create Draft`
+
+- **Two-stage AI** (fact extraction, then generation from only those facts) instead
+  of one combined prompt, matching the original plan's safety design.
+- **Real category/tag mapping**: `Get Categories`/`Get Tags` fetch the actual lists
+  once per run; `Parse Draft + Map Category/Tags` fuzzy-matches the AI's guessed
+  category/tag names against them (exact match first, substring fallback), falling
+  back to the feed's default category if nothing matches, and silently omitting
+  unmatched tags rather than guessing IDs.
+
+Verified with a real run (all 4 feeds → 120 articles → dedup → prompts, failing only
+at the real OpenAI call on the placeholder key, same well-formed-request proof as
+before) **and then a second run using n8n's pinned-data feature** to simulate
+realistic Stage 1/Stage 2 OpenAI responses on a disposable copy of the workflow —
+this exercised every remaining node for real: `Parse Facts`, `Build Article Prompt`,
+`Parse Draft + Map Category/Tags` (confirmed a fake category guess of "অর্থনীতি"
+correctly resolved to the real category id 3, and a fake tag guess of "পরীক্ষা"
+correctly resolved to the real tag id 52, while a non-matching guess was correctly
+left unmatched rather than force-attached), and `Create Draft`, which produced a
+real draft article (id 37) in the Dockerized database, confirmed by reading it back
+via `GET /api/v1/news/37`. The disposable pinned-data copy was deleted afterward; the
+real workflow (id `oToBoNqcfsll7e49`) has no pinning and calls the real OpenAI API.
+
+**What's simplified vs. the full plan, and why (unchanged from before):**
+- Workflows 1+2 (source fetch, AI draft) combined into one — fewer moving parts for
+  a first working version; split later if useful.
+- 4 of the 8 feeds you supplied aren't in the workflow (2 blocked by Cloudflare, 1
+  looked like a dead path, 1 was a typo now fixed) — see §6 below.
+
+**Genuinely still open — outside what this session can do, not a matter of more
+implementation work:**
+- A real OpenAI API key. The "OpenAI (Barind Post Automation)" n8n credential still
+  holds a placeholder; I have no key to put there.
+- Creating the `reporter@barindpost.com` production user and setting its id as
+  `automation.authorId` in the **production** `.env` (§8) — needs your hosting
+  account access.
+- Actually rotating the live production MySQL password and updating the real
+  production `.env` — same reason. Tracked-file secrets in this repo were already
+  sanitized.
+- Pointing the workflow at production instead of the local `http://app` target, and
+  swapping the "Barind Post Automation API" credential to the real production
+  `automation.apiKey` — deliberately not done until the above are resolved, so
+  nothing here can accidentally write to the live site.
 
 ## 1. Purpose
 
@@ -52,8 +101,8 @@ This is a planning document, not an implementation. Nothing here is built yet.
   `source_url` (as described in `n8n.html` §3–6) don't exist. The `news` table has a
   free-text `source` VARCHAR column only (used for attribution text, not dedup).
 - **`author_id` is a required FK.** Every `news` row needs a real `users.id`. Per
-  decision in §8, automated posts will use an existing production user's ID rather
-  than a new dedicated bot account — no new `users` row needed.
+  decision in §8, a new dedicated production user (`reporter@barindpost.com`) will be
+  created for this (superseding an earlier plan to reuse an existing account).
 - **Image handling is by value, not by reference.** `newsStore`/`newsUpdate` write
   `image_url`, `image_caption`, `image_alt_text` directly onto the `news` row as plain
   strings — there's no requirement to go through the `images` gallery table for a news
@@ -144,9 +193,9 @@ Mirrors the fields `Admin::newsStore` already accepts, minus session-derived val
 ```
 
 Server-side behavior:
-- `author_id` is forced server-side to a fixed, pre-configured existing user ID (an
-  existing production account — see §8 — set via `.env` as `AUTOMATION_AUTHOR_ID`) —
-  never accepted from the request, and never a newly created bot account.
+- `author_id` is forced server-side to a fixed, pre-configured user ID (the dedicated
+  `reporter@barindpost.com` account — see §8 — set via `.env` as
+  `automation.authorId`) — never accepted from the request.
 - `status` accepted values: `draft` only, unless a follow-up decision (§8) explicitly
   allows AI-approved auto-publish for specific categories later. Reject `published` in
   Phase 1 regardless of what's sent, matching the "no automatic publishing" principle
@@ -207,9 +256,18 @@ to end.
     `encryption.key`) so credentials in n8n's SQLite store are encrypted at rest.
 - Workflows for Phase 1 (scoped down from `n8n.html` §11's 7-workflow design — only
   what's needed to prove the pipeline):
-  1. **Source Fetcher**: Cron → fixed list of RSS feeds (hardcoded in the workflow for
-     Phase 1; a `news_sources` table/UI is Phase 2 per §9) → for each item, `GET
-     /api/v1/news/exists?source_url=...` → skip if it exists.
+  1. **Source Fetcher**: Cron → fixed list of RSS feeds (hardcoded in the "Source
+     List" node for Phase 1; a `news_sources` table/UI is Phase 2 per §9) → for each
+     item, `GET /api/v1/news/exists?source_url=...` → skip if it exists. Of the 8
+     feeds supplied, 4 are wired in and confirmed reachable:
+     amarbanglabd.com/feeds, thedailystar.net/frontpage/rss.xml,
+     bd24live.com/feed, jagonews24.com/rss/rss.xml (note: the last one had a typo
+     missing the leading `h` in `https` — corrected). The other 4 failed validation
+     and were left out: jugantor.com/feed/rss.xml (200 but "Access denied" body —
+     likely wrong path), kalerkantho.com/rss.xml (403), banglanews24.com/rss/rss.xml
+     and bdnews24.com's widget feed (both 403, Cloudflare bot-challenge pages — not
+     attempted to bypass, since that's the publisher's explicit anti-automation
+     control). Send corrected URLs if you have them.
   2. **AI Draft**: for each new URL → fetch/extract article text → AI call(s) to
      produce Bangla headline, summary/lead, body, category guess, tags → `GET
      /api/v1/categories` and `/api/v1/tags` to map names to IDs → `POST
@@ -233,22 +291,22 @@ to end.
 
 ## 8. Open decisions (need your input before implementation starts)
 
-1. **AI provider** — OpenAI, or something else (cost/latency/Bangla quality
-   trade-offs differ)?
-2. ~~Automation user~~ — **Decided:** reuse an existing production user's `id` as
-   `author_id` for API-created articles, rather than creating a dedicated bot account.
-   Still need: *which* existing user (their role determines nothing server-side here,
-   since the API always forces `status: draft` regardless of role — but pick one whose
-   name/byline makes sense to appear on automated drafts, e.g. an editor account
-   rather than an individual reporter's).
-3. **Initial source list** — which 3–5 RSS feeds to start with (needed to build/test
-   workflow 1 concretely)?
+1. ~~AI provider~~ — **Decided: OpenAI.**
+2. ~~Automation user~~ — **Decided:** create a new dedicated production user,
+   `reporter@barindpost.com`, role `reporter`, via the existing `/admin/users` "Add
+   User" form (reuses the app's own password hashing/validation instead of raw SQL).
+   After creating it, look up its `id` (visible on `/admin/users`, or
+   `SELECT id FROM users WHERE email = 'reporter@barindpost.com';`) and set that as
+   `automation.authorId` in the **production** server's `.env` (not the tracked repo
+   file). This reverses the earlier "reuse an existing user" plan.
+3. ~~Initial source list~~ — **Decided**, 8 feeds supplied by the user (see §6).
 4. **API exposure** — is the production host's firewall able to restrict the new
    `/api/v1/*` group to the developer's home/office IP, or does it need to be reachable
    from anywhere (e.g. if n8n later moves off a home machine)?
-5. **`env`/`env.production` credential exposure** (§2) — rotate now, before adding a
-   new authenticated surface to the same server, or accept the existing risk and
-   proceed?
+5. ~~`env`/`env.production` credential exposure~~ — **Decided: rotate now.** Tracked
+   files sanitized (this session); rotating the live MySQL password and updating the
+   real production `.env` is still pending and requires hosting-account access this
+   session doesn't have.
 
 ## 9. Explicitly deferred (Phase 2 / Phase 3, not built now)
 
@@ -269,57 +327,65 @@ excludes, until Phase 1 proves the pipeline works end-to-end:
 ## 10. Suggested build order (once decisions in §8 are made)
 
 1. ~~Migration: `source_url` + `content_hash` columns (§5).~~ **Done.**
-2. Confirm the existing **production** `users.id` to use as `automation.authorId` and
-   set it in the production `.env` (no schema change needed since no new user row is
-   created). *Local `.env` already uses the seeded sample id `3` for dev only.*
+2. Create the dedicated `reporter@barindpost.com` production user via `/admin/users`,
+   then set its `id` as `automation.authorId` in the production `.env` (§8). *Local
+   `.env` already uses the seeded sample id `3` for dev only — unaffected by this.*
 3. ~~`ApiKeyFilter` + `/api/v1` route group + `NewsApiController` with
    `exists`/`categories`/`tags`/`POST news` (§4).~~ **Done.**
 4. ~~Manual smoke test with `curl`/Postman against a local copy of the DB — not
    production — before pointing n8n at it.~~ **Done** — see §11 for the commands.
-5. ~~n8n Docker Compose + credentials setup (§6).~~ **Scaffolded** (`docker-compose.n8n.yml`,
-   `n8n.env.example`) — not yet started; needs `N8N_ENCRYPTION_KEY` generated first.
-6. Workflow 1 (Source Fetcher) against one RSS feed, verify dedup works. *Blocked on
-   AI provider + source list decisions in §8.*
-7. Workflow 2 (AI Draft) end to end for one article, verify it lands correctly in
-   `/admin/news` as a draft with correct category/tags/slug. *Same blocker.*
+5. ~~n8n Docker Compose + credentials setup (§6).~~ **Done and running.**
+6. ~~Workflow 1 (Source Fetcher) against one RSS feed, verify dedup works.~~ **Done**
+   — verified against all 4 wired-in feeds (120 articles), running in Docker.
+7. ~~Workflow 2 (AI Draft) end to end for one article, verify it lands correctly in
+   `/admin/news` as a draft with correct category/tags/slug.~~ **Done** — verified via
+   pinned-data simulation (see Status section above); only the real OpenAI key is
+   missing to make this a genuinely live (non-simulated) run.
 8. Point at production only after: the credential rotation in §2/§8 is resolved, the
-   production `automation.authorId` (step 2 above) is set, and a full dry run against
-   a local/staging copy of the app and DB has passed.
+   production `automation.authorId` (step 2 above) is set, and a real OpenAI key is
+   in place — this local Docker run already stands in for "a full dry run against a
+   local copy of the app and DB."
 
-## 11. Testing the API locally (verified 2026-09-16)
+## 11. Running and testing everything in Docker (verified 2026-09-16)
+
+Both stacks now run together, on a shared Docker network, with no host-networking
+workarounds:
 
 ```bash
-# 1. Bring up just the DB (the app's docker/app/Dockerfile currently fails to build —
-#    pre-existing issue, unrelated to this feature: it installs the `intl` PHP
-#    extension without the required libicu-dev system package. Not fixed as part of
-#    this plan; flagging in case it blocks `docker compose up -d` for the app service).
-docker compose up -d db
+# 1. App + MySQL (docker/app/Dockerfile fixed this session — see Status above)
+docker compose up -d
 
-# 2. Run the app with host PHP against the container's published DB port, since
-#    the `db` hostname in .env only resolves inside the compose network.
-#    (Temporarily override .env's database.default.hostname/port back to
-#    127.0.0.1/3307 for this, then revert to db/3306 afterward — or keep a separate
-#    .env.local for this workflow if you do it often.)
-php spark serve --port 8123
+# 2. n8n, joined to the same network as a second compose file
+cp n8n.env.example .env.n8n   # fill in a real N8N_ENCRYPTION_KEY (openssl rand -hex 32)
+docker compose -f docker-compose.n8n.yml up -d
 
-# 3. Exercise the API (key must match automation.apiKey in .env)
-KEY="<your automation.apiKey>"
+# App: http://localhost/            n8n editor: http://localhost:5678
+# From inside the n8n container, the app is reachable as http://app (not localhost).
+```
 
-curl -H "Authorization: Bearer $KEY" http://localhost:8123/api/v1/categories
-curl -H "Authorization: Bearer $KEY" "http://localhost:8123/api/v1/news/exists?source_url=https://example.com/a"
+Exercising the API directly (same as before, just against port 80 instead of a
+host-run `php spark serve`):
 
-curl -X POST http://localhost:8123/api/v1/news \
+```bash
+KEY="<your automation.apiKey from .env>"
+curl -H "Authorization: Bearer $KEY" http://localhost/api/v1/categories
+curl -H "Authorization: Bearer $KEY" http://localhost/api/v1/news/37
+curl -X POST http://localhost/api/v1/news \
   -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
-  -d '{
-        "title": "শিরোনাম",
-        "content": "যথেষ্ট দীর্ঘ একটি কন্টেন্ট অনুচ্ছেদ এখানে বসবে।",
-        "category_id": 3,
-        "tags": [1],
-        "source": "Wire",
-        "source_url": "https://example.com/a"
-      }'
+  -d '{"title":"শিরোনাম","content":"যথেষ্ট দীর্ঘ একটি কন্টেন্ট অনুচ্ছেদ এখানে বসবে।","category_id":3,"source_url":"https://example.com/a"}'
 ```
 
 A second POST with the same `source_url` (or identical `title`+`content`) correctly
 returns `409` with the existing article's `id`/`slug`/`status` instead of creating a
-duplicate.
+duplicate; missing required fields return `422`; requests without a matching
+`Authorization` header return `401`.
+
+Optional IP allowlist, on top of the API key (empty/unset = unrestricted, the
+default):
+```
+automation.allowedIps = 203.0.113.10, 203.0.113.11
+```
+Verified both directions: a non-matching caller gets `403` (confirmed this also
+correctly blocks n8n's own container IP if it's not in the list — the allowlist
+applies to every caller equally, so n8n needs to be included once this is turned on
+for real).

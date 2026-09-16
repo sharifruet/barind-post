@@ -23,6 +23,18 @@ class Automation extends BaseConfig
      */
     public ?int $authorId = null;
 
+    /**
+     * Optional defense-in-depth IP allowlist for /api/v1/*, checked in addition to
+     * the API key (not instead of it). Empty = unrestricted (default), since whether
+     * this is needed depends on what the production host's firewall can already do
+     * (see N8N_NEWS_AUTOMATION_PLAN.md §8, item 4 — still an open question). Set via
+     * `automation.allowedIps` in .env as a comma-separated list, e.g.
+     * "203.0.113.10, 203.0.113.11".
+     *
+     * @var list<string>
+     */
+    public array $allowedIps = [];
+
     public function __construct()
     {
         parent::__construct();
@@ -31,5 +43,8 @@ class Automation extends BaseConfig
 
         $authorId = env('automation.authorId');
         $this->authorId = ($authorId !== null && $authorId !== '') ? (int) $authorId : null;
+
+        $allowedIps = (string) env('automation.allowedIps', '');
+        $this->allowedIps = array_values(array_filter(array_map('trim', explode(',', $allowedIps))));
     }
 }

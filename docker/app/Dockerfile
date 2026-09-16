@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     libonig-dev \
     libxml2-dev \
+    libicu-dev \
     zip \
     unzip \
     locales \
@@ -19,7 +20,12 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install mysqli \
     && docker-php-ext-enable mysqli
 
-# Install fonts
+# Install fonts. fonts-noto (below) already ships real NotoSansBengali-*.ttf files
+# under /usr/share/fonts/truetype/noto/ (no "-Regular"/"-Bold" weights in this
+# packaging, but Admin.php's photo-card font lookup already falls back through
+# NotoSansBengali-SemiBold.ttf, then DejaVu/Liberation, so no extra download is
+# needed here — a prior version of this step wget'd a stale/dead Google Fonts CDN
+# URL and, on top of that, saved a .woff2 as .ttf under both filenames.
 RUN apt-get update && apt-get install -y \
     fonts-dejavu \
     fonts-liberation \
@@ -27,9 +33,6 @@ RUN apt-get update && apt-get install -y \
     fonts-noto-cjk \
     fontconfig \
     wget \
-    && mkdir -p /usr/share/fonts/truetype/noto \
-    && wget -O /usr/share/fonts/truetype/noto/NotoSansBengali-Bold.ttf "https://fonts.gstatic.com/s/notosansbengali/v1/ieVc2YdFI3GCY6SyQy1KfStzYKZgzN1z0w.woff2" \
-    && wget -O /usr/share/fonts/truetype/noto/NotoSansBengali-Regular.ttf "https://fonts.gstatic.com/s/notosansbengali/v1/ieVc2YdFI3GCY6SyQy1KfStzYKZgzN1z0w.woff2" \
     && fc-cache -fv
 
 # Set UTF-8 locale
