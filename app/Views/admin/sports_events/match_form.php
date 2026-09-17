@@ -20,7 +20,7 @@ $innings = $sd['innings'] ?? sports_default_cricket_data()['innings'];
 </div>
 <?php if (session()->getFlashdata('success')): ?><div class="alert alert-success"><?= esc(session()->getFlashdata('success')) ?></div><?php endif; ?>
 
-<form method="post" action="<?= $action ?>">
+<form method="post" action="<?= $action ?>"><?= csrf_field() ?>
     <div class="row">
         <div class="col-lg-8">
             <div class="card shadow-sm mb-4">

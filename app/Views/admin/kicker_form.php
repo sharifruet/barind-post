@@ -41,7 +41,7 @@
                 <h5 class="mb-0">Kicker Details</h5>
             </div>
             <div class="card-body">
-                <form method="post" action="<?= isset($kicker) ? '/admin/kickers/edit/' . $kicker['id'] : '/admin/kickers/create' ?>">
+                <form method="post" action="<?= isset($kicker) ? '/admin/kickers/edit/' . $kicker['id'] : '/admin/kickers/create' ?>"><?= csrf_field() ?>
                     <div class="mb-3">
                         <label for="text" class="form-label">Kicker Text <span class="text-danger">*</span></label>
                         <input type="text" 

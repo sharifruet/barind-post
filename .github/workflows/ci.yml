@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Lint + PHPUnit (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.1']   # production and Docker run 8.1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: intl, mbstring, gd, curl, sqlite3, mysqli
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Syntax check (app/)
+        run: find app -name '*.php' -print0 | xargs -0 -n1 -P4 php -l > /dev/null
+
+      - name: PHPUnit (database-free suites)
+        env:
+          CI_ENVIRONMENT: testing
+        run: vendor/bin/phpunit --no-coverage --exclude-group needs-db

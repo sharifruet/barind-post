@@ -7,7 +7,7 @@
 <div class="card shadow-sm mb-4">
     <div class="card-header">Add Team to Event</div>
     <div class="card-body">
-        <form method="post" action="/admin/sports-events/<?= $event['id'] ?>/teams/add" class="row g-3">
+        <form method="post" action="/admin/sports-events/<?= $event['id'] ?>/teams/add" class="row g-3"><?= csrf_field() ?>
             <div class="col-md-5">
                 <select name="participant_id" class="form-select" required>
                     <option value="">Select team...</option>
@@ -42,7 +42,7 @@
                         </td>
                         <td><?= esc($t['short_code']) ?></td>
                         <td>
-                            <form method="post" action="/admin/sports-events/<?= $event['id'] ?>/teams/update/<?= $t['entry_id'] ?>" class="d-flex gap-1">
+                            <form method="post" action="/admin/sports-events/<?= $event['id'] ?>/teams/update/<?= $t['entry_id'] ?>" class="d-flex gap-1"><?= csrf_field() ?>
                                 <input type="text" name="group_name" class="form-control form-control-sm" value="<?= esc($t['group_name'] ?? '') ?>" style="width:80px">
                                 <input type="number" name="seed" class="form-control form-control-sm" value="<?= esc($t['seed'] ?? '') ?>" style="width:60px">
                                 <button class="btn btn-sm btn-outline-primary">Save</button>
@@ -50,7 +50,7 @@
                         </td>
                         <td><?= esc($t['seed'] ?? '') ?></td>
                         <td>
-                            <form method="post" action="/admin/sports-events/<?= $event['id'] ?>/teams/remove/<?= $t['entry_id'] ?>" class="d-inline" onsubmit="return confirm('Remove?')">
+                            <form method="post" action="/admin/sports-events/<?= $event['id'] ?>/teams/remove/<?= $t['entry_id'] ?>" class="d-inline" onsubmit="return confirm('Remove?')"><?= csrf_field() ?>
                                 <button class="btn btn-sm btn-danger">Remove</button>
                             </form>
                         </td>

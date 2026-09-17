@@ -3,7 +3,7 @@
 <div class="row mb-4">
     <div class="col-md-6 mx-auto">
         <h2 class="mb-4">Edit Tag</h2>
-        <form method="post" action="/admin/tags/edit/<?= esc($tag['id']) ?>">
+        <form method="post" action="/admin/tags/edit/<?= esc($tag['id']) ?>"><?= csrf_field() ?>
             <div class="mb-3">
                 <label class="form-label">Tag Name</label>
                 <input type="text" name="name" class="form-control" value="<?= esc($tag['name']) ?>" required>

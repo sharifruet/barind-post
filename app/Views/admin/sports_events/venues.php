@@ -11,7 +11,7 @@
 <div class="card shadow-sm mb-4">
     <div class="card-header">Add Stadium</div>
     <div class="card-body">
-        <form method="post" action="/admin/sports-events/venues/add" class="row g-3">
+        <form method="post" action="/admin/sports-events/venues/add" class="row g-3"><?= csrf_field() ?>
             <div class="col-md-3"><input type="text" name="name_bn" class="form-control bengali-text" placeholder="Name (Bengali) *" required></div>
             <div class="col-md-2"><input type="text" name="name_en" class="form-control" placeholder="Name (English)"></div>
             <div class="col-md-2"><input type="text" name="city" class="form-control" placeholder="City"></div>
@@ -35,7 +35,7 @@
                         <td><?= $v['capacity'] ? number_format($v['capacity']) : '—' ?></td>
                         <td>
                             <a href="/admin/sports-events/venues/edit/<?= $v['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
-                            <form method="post" action="/admin/sports-events/venues/delete/<?= $v['id'] ?>" class="d-inline" onsubmit="return confirm('Delete?')">
+                            <form method="post" action="/admin/sports-events/venues/delete/<?= $v['id'] ?>" class="d-inline" onsubmit="return confirm('Delete?')"><?= csrf_field() ?>
                                 <button class="btn btn-sm btn-danger">Delete</button>
                             </form>
                         </td>

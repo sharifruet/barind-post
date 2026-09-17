@@ -77,7 +77,7 @@ $title = 'যোগাযোগ - বারিন্দ পোস্ট';
 
                     <div class="mb-4">
                         <h3 class="h5 text-danger mb-3">যোগাযোগ ফর্ম</h3>
-                        <form id="contactForm" action="/contact" method="POST">
+                        <form id="contactForm" action="/contact" method="POST"><?= csrf_field() ?>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="name" class="form-label">নাম *</label>

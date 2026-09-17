@@ -79,16 +79,29 @@ class NewsController extends BaseController
             $payload = [];
         }
 
+        // `subtitle` is the one-sentence standfirst; `lead_text` holds the key
+        // points, one per line. Callers may send the points as an array (or under
+        // the friendlier name `key_points`); store them newline-joined.
+        if (! isset($payload['lead_text']) && isset($payload['key_points'])) {
+            $payload['lead_text'] = $payload['key_points'];
+        }
+        if (isset($payload['lead_text']) && is_array($payload['lead_text'])) {
+            $points = array_filter(array_map(static fn ($p) => trim((string) $p), $payload['lead_text']), static fn ($p) => $p !== '');
+            $payload['lead_text'] = $points === [] ? null : implode("\n", $points);
+        }
+
         $rules = [
             'title'          => 'required|string|min_length[3]|max_length[255]',
             'content'        => 'required|string|min_length[20]',
             'category_id'    => 'required|integer',
             'subtitle'       => 'permit_empty|string|max_length[255]',
-            'lead_text'      => 'permit_empty|string',
+            'lead_text'      => 'permit_empty|string',   // key points, one per line
             'language'       => 'permit_empty|in_list[bn,en]',
             'image_url'      => 'permit_empty|string|max_length[500]',
             'image_caption'  => 'permit_empty|string',
             'image_alt_text' => 'permit_empty|string|max_length[255]',
+            // A source-page image the editor may adopt from the Incoming queue; never published as-is.
+            'suggested_image_url' => 'permit_empty|string|max_length[500]',
             'source'         => 'permit_empty|string|max_length[255]',
             'source_url'     => 'permit_empty|string|max_length[500]',
             'dateline'       => 'permit_empty|string|max_length[255]',
@@ -157,6 +170,7 @@ class NewsController extends BaseController
             'image_url'      => $payload['image_url'] ?? null,
             'image_caption'  => $payload['image_caption'] ?? null,
             'image_alt_text' => $payload['image_alt_text'] ?? null,
+            'suggested_image_url' => (isset($payload['suggested_image_url']) && preg_match('~^https?://~i', $payload['suggested_image_url'])) ? $payload['suggested_image_url'] : null,
             'source'         => $payload['source'] ?? null,
             'source_url'     => $sourceUrl,
             'content_hash'   => $contentHash,

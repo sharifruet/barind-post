@@ -21,7 +21,7 @@ $defaults = $profilesConfig->get($defaultProfile)['default_config'] ?? [];
     <div class="alert alert-danger"><?= esc(session()->getFlashdata('error')) ?></div>
 <?php endif; ?>
 
-<form method="post" action="<?= $action ?>">
+<form method="post" action="<?= $action ?>"><?= csrf_field() ?>
     <div class="row">
         <div class="col-lg-8">
             <div class="card shadow-sm mb-4">

@@ -72,7 +72,10 @@ class Filters extends BaseFilters
     public array $globals = [
         'before' => [
             // 'honeypot',
-            // 'csrf',
+            // CSRF on every state-changing request. Excluded: the automation API
+            // (Bearer-token auth, called by n8n, no browser session) and the
+            // article view-count beacon (navigator.sendBeacon cannot send headers).
+            'csrf' => ['except' => ['api/v1/*', 'news/view/*']],
             // 'invalidchars',
         ],
         'after' => [

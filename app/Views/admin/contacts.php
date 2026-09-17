@@ -124,7 +124,7 @@ $title = 'যোগাযোগ বার্তা - অ্যাডমিন';
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="replyForm">
+                <form id="replyForm"><?= csrf_field() ?>
                     <input type="hidden" id="replyContactId">
                     <div class="mb-3">
                         <label for="replySubject" class="form-label">বিষয়</label>

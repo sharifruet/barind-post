@@ -1,7 +1,7 @@
 <?= $this->extend('admin/layout') ?>
 <?= $this->section('content') ?>
 <h2 class="mb-4">Edit Participant</h2>
-<form method="post" action="/admin/sports-events/participants/edit/<?= $participant['id'] ?>">
+<form method="post" action="/admin/sports-events/participants/edit/<?= $participant['id'] ?>"><?= csrf_field() ?>
     <div class="card shadow-sm">
         <div class="card-body">
             <div class="mb-3">

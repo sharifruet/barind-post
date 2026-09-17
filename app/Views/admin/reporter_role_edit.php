@@ -26,7 +26,7 @@
         <h5 class="mb-0">Edit Reporter Role: <?= esc($role['name']) ?></h5>
     </div>
     <div class="card-body">
-        <form method="POST" action="/admin/reporter-roles/edit/<?= $role['id'] ?>">
+        <form method="POST" action="/admin/reporter-roles/edit/<?= $role['id'] ?>"><?= csrf_field() ?>
             <div class="row">
                 <div class="col-md-4">
                     <div class="mb-3">

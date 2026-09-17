@@ -1,77 +1,35 @@
 <?php
-$title = 'Tag: ' . esc($tag['name']) . ' - বারিন্দ পোস্ট';
-$customStyles = '
-        .tag-pill {
-            margin-right: 0.5rem;
-            margin-bottom: 0.5rem;
-            background: #0d6efd;
-            color: #fff;
-            border-color: #0d6efd;
-        }
-';
+$title = 'ট্যাগ: ' . $tag['name'] . ' - বারিন্দ পোস্ট';
 ?>
 
 <?= $this->extend('public/layout') ?>
 
 <?= $this->section('content') ?>
+<div class="container py-4">
+    <div class="page-head">
+        <div class="page-head__eyebrow">ট্যাগ</div>
+        <h1 class="page-head__title">#<?= esc($tag['name'], 'raw') ?></h1>
+        <p class="page-head__note"><?= esc(bn_number(count($news))) ?>টি সংবাদ</p>
+    </div>
 
-<?php
-// Function to limit text to first 15 words
-function limitTo15Words($text) {
-    if (empty($text)) return '';
-    
-    $words = preg_split('/\s+/', trim($text));
-    if (count($words) <= 15) {
-        return $text;
-    }
-    
-    $limitedWords = array_slice($words, 0, 15);
-    return implode(' ', $limitedWords) . '...';
-}
-?>
-<div class="container">
-    <!-- Top Banner Ad -->
-    <?php 
-    $adType = 'banner';
-    $adSize = 'small';
-    $adText = 'বিজ্ঞাপন দিন';
-    include __DIR__.'/ad_placeholder.php'; 
-    ?>
-    <div class="mb-4">
-        <span class="btn tag-pill rounded-pill px-3 py-1 disabled">
-            #<?= esc($tag['name']) ?>
-        </span>
-    </div>
-    <h2 class="mb-4">Tag: <?= esc($tag['name']) ?></h2>
-    <div class="row g-4">
-        <?php foreach ($news as $item): ?>
-            <div class="col-md-4">
-                <div class="card news-card h-100 border-0 shadow-sm">
-                    <?php if (!empty($item['image_url'])): ?>
-                        <img src="<?= esc(get_image_url($item['image_url'])) ?>" class="card-img-top news-img" style="aspect-ratio: 16/9; object-fit: cover;" alt="<?= esc($item['image_alt_text'] ?? '') ?>">
-                    <?php endif; ?>
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            <a href="/news/<?= esc($item['slug']) ?>" class="text-decoration-none text-dark fw-semibold"><?= esc($item['title']) ?></a>
-                        </h5>
-                        <p class="card-text small text-muted mb-1">
-                            <?= date('M d, Y', strtotime($item['published_at'])) ?>
-                        </p>
-                        <p class="card-text">
-                            <?= esc(limitTo15Words($item['lead_text'])) ?>
-                        </p>
-                    </div>
+    <?php if (empty($news)): ?>
+        <div class="empty-state">
+            <i class="fas fa-tag d-block"></i>
+            <p class="mb-0">এই ট্যাগে কোনো সংবাদ নেই।</p>
+        </div>
+    <?php else: ?>
+        <div class="row g-4">
+            <?php foreach ($news as $item): ?>
+                <div class="col-lg-4 col-md-6">
+                    <?= view('public/widgets/news_card_widget', [
+                        'news'     => $item,
+                        'size'     => 'medium',
+                        'showDate' => true,
+                        'showLead' => true,
+                    ]) ?>
                 </div>
-            </div>
-        <?php endforeach; ?>
-    </div>
-    
-    <!-- Bottom Banner Ad -->
-    <?php 
-    $adType = 'banner';
-    $adSize = 'small';
-    $adText = 'বিজ্ঞাপন দিন';
-    include __DIR__.'/ad_placeholder.php'; 
-    ?>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
 </div>
-<?= $this->endSection() ?> 
+<?= $this->endSection() ?>

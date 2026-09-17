@@ -43,6 +43,9 @@
     </source>
     <php>
         <server name="app.baseURL" value="http://example.com/"/>
+        <!-- Automation API credentials for tests/feature/AutomationApiTest.php (not a real key). -->
+        <env name="automation.apiKey" value="phpunit-test-key"/>
+        <env name="automation.authorId" value="1"/>
         <server name="CODEIGNITER_SCREAM_DEPRECATIONS" value="0"/>
         <!-- Directory containing phpunit.xml -->
         <const name="HOMEPATH" value="./"/>

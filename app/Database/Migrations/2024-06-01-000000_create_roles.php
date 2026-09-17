@@ -2,7 +2,7 @@
 namespace App\Database\Migrations;
 use CodeIgniter\Database\Migration;
 
-class 2024_06_01_000000_create_roles extends Migration
+class CreateRoles extends Migration
 {
     public function up()
     {

@@ -26,7 +26,7 @@
         <h5 class="mb-0">Assign Reporter Roles to: <?= esc($user['name']) ?> (<?= esc($user['email']) ?>)</h5>
     </div>
     <div class="card-body">
-        <form method="POST" action="/admin/reporter-roles/assign/<?= $user['id'] ?>">
+        <form method="POST" action="/admin/reporter-roles/assign/<?= $user['id'] ?>"><?= csrf_field() ?>
             <div class="row">
                 <div class="col-12">
                     <p class="text-muted mb-3">Select the reporter roles you want to assign to this user:</p>

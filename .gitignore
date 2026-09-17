@@ -52,6 +52,9 @@ Vagrantfile
 writable/cache/*
 !writable/cache/index.html
 
+# login-attempt throttle buckets (created at runtime by Auth::loginThrottler)
+writable/throttle/
+
 writable/logs/*
 !writable/logs/index.html
 

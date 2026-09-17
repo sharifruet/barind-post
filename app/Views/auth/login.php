@@ -21,7 +21,7 @@
                     <?= session()->getFlashdata('error') ?>
                 </div>
             <?php endif; ?>
-            <form method="post" action="/login">
+            <form method="post" action="/login"><?= csrf_field() ?>
                 <div class="mb-3">
                     <label for="email" class="form-label">Email</label>
                     <input type="email" id="email" name="email" class="form-control" required>

@@ -234,11 +234,15 @@ class Admin extends BaseAdminController
         $data['kicker'] = $this->request->getPost('kicker') ?: null;
         $data['kicker_color'] = $this->request->getPost('kicker_color') ?: null;
         
-        // Handle kicker usage tracking for new articles
+        // The news row only stores kicker_id; the text/colour live in `kickers`.
+        // Upsert the kicker, then link the article to it — without this the
+        // kicker was saved to the kickers table but never attached to the story.
+        $data['kicker_id'] = null;
         if (!empty($data['kicker'])) {
             $kickerModel = new KickerModel();
             $kickerModel->createOrUpdate($data['kicker'], $data['kicker_color']);
             $kickerModel->incrementUsage($data['kicker']);
+            $data['kicker_id'] = $kickerModel->getByText($data['kicker'])['id'] ?? null;
         }
         
         // Role-based status handling
@@ -337,7 +341,7 @@ class Admin extends BaseAdminController
         $userId = session('user_id');
         
         // Get the news article to check ownership
-        $news = $newsModel->find($id);
+        $news = $newsModel->findWithKicker($id);
         
         // Check if news exists
         if (!$news) {
@@ -367,21 +371,33 @@ class Admin extends BaseAdminController
         // Breaking news is now handled through kicker selection
         
         // Handle kicker and kicker color
-        $oldKicker = $news['kicker'];
+        $oldKicker = $news['kicker'] ?? null;
         $data['kicker'] = $this->request->getPost('kicker') ?: null;
         $data['kicker_color'] = $this->request->getPost('kicker_color') ?: null;
         
-        // Handle kicker usage tracking for updates
+        // The news row only stores kicker_id; the text/colour live in `kickers`.
+        // Keep usage counts honest: only move a count when the kicker actually
+        // changes (a re-save with the same kicker used to bump it every time),
+        // and always resolve kicker_id — clearing the field must clear the link.
         $kickerModel = new KickerModel();
-        if (!empty($oldKicker) && $oldKicker !== $data['kicker']) {
-            // Decrement usage for old kicker
-            $kickerModel->decrementUsage($oldKicker);
+        $newKicker   = $data['kicker'];
+
+        if ($oldKicker !== $newKicker) {
+            if (!empty($oldKicker)) {
+                $kickerModel->decrementUsage($oldKicker);
+            }
+            if (!empty($newKicker)) {
+                $kickerModel->createOrUpdate($newKicker, $data['kicker_color']);
+                $kickerModel->incrementUsage($newKicker);
+            }
+        } elseif (!empty($newKicker)) {
+            // Same kicker — still honour a colour change.
+            $kickerModel->createOrUpdate($newKicker, $data['kicker_color']);
         }
-        if (!empty($data['kicker'])) {
-            // Create or update new kicker and increment usage
-            $kickerModel->createOrUpdate($data['kicker'], $data['kicker_color']);
-            $kickerModel->incrementUsage($data['kicker']);
-        }
+
+        $data['kicker_id'] = !empty($newKicker)
+            ? ($kickerModel->getByText($newKicker)['id'] ?? null)
+            : null;
         
         // Role-based status handling for updates
         if ($userRole === 'reporter') {
@@ -1735,6 +1751,34 @@ class Admin extends BaseAdminController
         } else {
             return redirect()->to('/admin/kickers')->with('error', 'Failed to delete kicker');
         }
+    }
+
+    /**
+     * JSON search over published stories, for the editor's "link a story" picker.
+     * Published only: a link to a draft would 404 on the public site.
+     */
+    public function newsSearch()
+    {
+        $q       = trim((string) $this->request->getGet('q'));
+        $exclude = (int) $this->request->getGet('exclude');
+
+        $newsModel = new NewsModel();
+        $rows      = $q === '' ? $newsModel->getLatestWithKicker(20) : $newsModel->searchNews($q, 20);
+
+        $out = [];
+        foreach ($rows as $row) {
+            if ((int) $row['id'] === $exclude) {
+                continue;
+            }
+            $out[] = [
+                'id'           => (int) $row['id'],
+                'title'        => $row['title'],
+                'slug'         => $row['slug'],
+                'published_at' => ! empty($row['published_at']) ? format_bangla_date($row['published_at']) : '',
+            ];
+        }
+
+        return $this->response->setJSON($out);
     }
 
     public function getKickers()

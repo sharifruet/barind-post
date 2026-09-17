@@ -71,7 +71,10 @@ class Security extends BaseConfig
      *
      * Regenerate CSRF Token on every submission.
      */
-    public bool $regenerate = true;
+    // One token per session, not per request: the admin pages fire many AJAX
+    // POSTs (image upload, kickers, incoming queue) from a token read once into a
+    // <meta> tag at page load; per-request regeneration would fail the second call.
+    public bool $regenerate = false;
 
     /**
      * --------------------------------------------------------------------------

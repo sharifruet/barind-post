@@ -92,5 +92,5 @@ class Autoload extends AutoloadConfig
      *
      * @var list<string>
      */
-    public $helpers = ['slug_helper', 'date_helper'];
+    public $helpers = ['slug_helper', 'date_helper', 'text_helper', 'kicker_helper', 'cache_helper'];
 }

@@ -1,335 +1,283 @@
+<?php
+$isEdit     = isset($news) && $news;
+$userRole   = session('user_role');
+$isReporter = $userRole === 'reporter';
+$title      = $isEdit ? 'Edit article' : 'New article';
+
+// Reporter-role options: the author's own name plus any roles assigned to them.
+$reporterRoleModel = new \App\Models\ReporterRoleModel();
+$userModel         = new \App\Models\UserModel();
+$userReporterRoles = $reporterRoleModel->getUserRoles(session('user_id'));
+
+if ($isEdit) {
+    $creator      = $userModel->find($news['author_id']);
+    $ownNameLabel = $creator ? $creator['name'] : 'Unknown User';
+} else {
+    $currentUser  = $userModel->find(session('user_id'));
+    $ownNameLabel = $currentUser ? $currentUser['name'] : 'Unknown User';
+}
+$selectedReporterRole = $isEdit ? ($news['reporterRole'] ?? '') : $ownNameLabel;
+
+$v = static fn (string $key, $default = '') => $isEdit ? esc($news[$key] ?? $default) : esc($default);
+?>
 <?= $this->extend('admin/layout') ?>
 <?= $this->section('content') ?>
-<style>
-/* Ensure content textarea is always visible and focusable */
-#content {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    position: relative !important;
-    z-index: 1 !important;
-}
 
-#content:focus {
-    outline: 2px solid #007bff !important;
-    outline-offset: 2px !important;
-}
-
-#content.is-invalid {
-    border-color: #dc3545 !important;
-    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
-}
-
-/* Ensure CKEditor doesn't hide the original textarea completely */
-.ck-editor__editable {
-    min-height: 200px !important;
-}
-
-/* Image selection modal styles */
-.image-select-card {
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.image-select-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-.image-select-card .card-img-top {
-    transition: opacity 0.2s;
-}
-
-.image-select-card:hover .card-img-top {
-    opacity: 0.8;
-}
-
-#existingImagesModal .modal-dialog {
-    max-width: 90%;
-}
-
-#existingImagesGrid {
-    max-height: 60vh;
-    overflow-y: auto;
-}
-
-/* Button active states */
-.btn.active {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
-    color: white;
-}
-
-.btn-outline-secondary.active {
-    background-color: #6c757d;
-    border-color: #6c757d;
-    color: white;
-}
-
-.btn-outline-info.active {
-    background-color: #0dcaf0;
-    border-color: #0dcaf0;
-    color: white;
-}
-
-/* CKEditor container */
-#ckeditor-container {
-    border: 1px solid #ced4da;
-    border-radius: 0.375rem;
-    min-height: 400px;
-}
-
-/* Hidden textarea for form submission */
-#content {
-    display: none !important;
-}
-
-
-</style>
-<?php 
-$isEdit = isset($news) && $news; 
-$userRole = session('user_role');
-$isReporter = $userRole === 'reporter';
-?>
-<h2 class="mb-4"><?= $isEdit ? 'Edit News' : 'Create News' ?></h2>
+<div class="page-header">
+    <div>
+        <div class="page-header__eyebrow"><?= $isEdit ? 'Editing' : 'Compose' ?></div>
+        <h1 class="page-header__title"><?= $isEdit ? 'Edit article' : 'New article' ?></h1>
+        <?php if ($isEdit): ?>
+            <p class="page-header__sub">#<?= esc($news['id']) ?> &middot; <span class="status status--<?= esc($news['status'], 'attr') ?>"><?= esc(ucfirst($news['status'])) ?></span></p>
+        <?php endif; ?>
+    </div>
+    <div class="page-header__actions">
+        <?php if ($isEdit && ! empty($news['slug']) && $news['status'] === 'published'): ?>
+            <a href="/news/<?= esc(rawurlencode($news['slug']), 'attr') ?>" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-up-right-from-square me-1"></i> View on site
+            </a>
+        <?php endif; ?>
+        <a href="/admin/news" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> All news</a>
+    </div>
+</div>
 
 <?php if ($isReporter): ?>
-    <div class="alert alert-info mb-4">
-        <i class="fas fa-info-circle"></i>
-        <strong>Reporter Notice:</strong> As a reporter, you can only create and edit news articles as drafts. 
-        An editor will review and publish your articles.
+    <div class="alert alert-info mb-3">
+        <i class="fas fa-circle-info me-1"></i>
+        As a reporter you save drafts only — an editor reviews and publishes them.
     </div>
 <?php endif; ?>
-<form method="post" enctype="multipart/form-data" action="<?= $isEdit ? '/admin/news/edit/' . esc($news['id']) : '/admin/news/create' ?>">
-    <div class="row g-3 mb-3">
-        <div class="col-md-12">
-            <label class="form-label">Kicker/Shoulder Note</label>
-            <div class="row g-2">
-                <div class="col-md-8">
-                    <select id="kicker-select" class="form-select" onchange="handleKickerSelection()">
-                        <option value="">-- Choose from existing or create new --</option>
-                        <!-- Existing kickers will be loaded here -->
+
+<form method="post" enctype="multipart/form-data" action="<?= $isEdit ? '/admin/news/edit/' . esc($news['id']) : '/admin/news/create' ?>"><?= csrf_field() ?>
+<div class="row g-3">
+
+    <!-- ============================ Main column ============================ -->
+    <div class="col-lg-8">
+
+        <div class="panel">
+            <div class="panel__head">
+                <div class="panel__title">Headline</div>
+            </div>
+            <div class="panel__body">
+
+                <div class="field-group">
+                    <label class="form-label">Kicker <span class="panel__hint">— short label shown above the headline</span></label>
+                    <div class="row g-2">
+                        <div class="col-md-8">
+                            <select id="kicker-select" class="form-select" onchange="handleKickerSelection()">
+                                <option value="">— Choose an existing kicker or create new —</option>
+                                <!-- Existing kickers are loaded here -->
+                            </select>
+                            <input type="text" id="kicker-input" name="kicker" class="form-control bengali-input mt-2"
+                                   value="<?= $v('kicker') ?>" placeholder="New kicker text" style="display: none;">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="color" id="kicker-color" name="kicker_color" class="form-control form-control-color"
+                                   value="<?= $isEdit && ! empty($news['kicker_color']) ? esc($news['kicker_color']) : '#c8102e' ?>" title="Kicker colour">
+                            <div class="form-text">Kicker colour</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label class="form-label">Title <span class="req">*</span></label>
+                    <input type="text" name="title" class="form-control form-control-lg bengali-input" value="<?= $v('title') ?>" required autofocus>
+                </div>
+
+                <div class="field-group">
+                    <label class="form-label">Subtitle <span class="panel__hint">— the standfirst under the headline, one sentence; also the summary in lists, search results and social previews</span></label>
+                    <input type="text" name="subtitle" class="form-control bengali-input" value="<?= $v('subtitle') ?>" maxlength="255">
+                </div>
+
+                <div class="field-group">
+                    <label class="form-label">Key points <span class="panel__hint">— one per line, 3–5 short facts; shown as an “এক নজরে” box above the body (a single line is shown as an intro paragraph instead)</span></label>
+                    <textarea name="lead_text" class="form-control bengali-input" rows="5" placeholder="প্রতি লাইনে একটি মূল তথ্য"><?= $v('lead_text') ?></textarea>
+                </div>
+
+                <div class="field-group">
+                    <label class="form-label">Byline</label>
+                    <select name="reporterRole" class="form-select bengali-input">
+                        <option value="">— Select —</option>
+                        <option value="<?= esc($ownNameLabel) ?>" <?= $selectedReporterRole === $ownNameLabel ? 'selected' : '' ?>><?= esc($ownNameLabel) ?></option>
+                        <?php foreach ($userReporterRoles as $role): ?>
+                            <option value="<?= esc($role['name']) ?>" <?= $selectedReporterRole === $role['name'] ? 'selected' : '' ?>><?= esc($role['name']) ?></option>
+                        <?php endforeach; ?>
                     </select>
-                    <input type="text" id="kicker-input" name="kicker" class="form-control mt-2" value="<?= $isEdit ? esc($news['kicker']) : '' ?>" placeholder="Or enter new kicker text" style="display: none;">
-                </div>
-                <div class="col-md-4">
-                    <input type="color" id="kicker-color" name="kicker_color" class="form-control form-control-color" value="<?= $isEdit && $news['kicker_color'] ? esc($news['kicker_color']) : '#dc3545' ?>" title="Choose kicker color">
-                    <small class="form-text text-muted">Kicker color</small>
-                </div>
-            </div>
-            <small class="form-text text-muted">Short phrase that appears above the headline. Choose from existing kickers or create a new one.</small>
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Title</label>
-            <input type="text" name="title" class="form-control" value="<?= $isEdit ? esc($news['title']) : '' ?>" required>
-        </div>
-        <div class="col-md-12">
-            <label class="form-label">Subtitle</label>
-            <input type="text" name="subtitle" class="form-control" value="<?= $isEdit ? esc($news['subtitle']) : '' ?>">
-        </div>
-        <div class="col-md-12">
-            <label class="form-label">Lead Text</label>
-            <textarea name="lead_text" class="form-control" rows="2"><?= $isEdit ? esc($news['lead_text']) : '' ?></textarea>
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Reporter Role</label>
-            <select name="reporterRole" class="form-select">
-                <option value="">Select Reporter Role</option>
-                <?php 
-                // Get user's assigned reporter roles only
-                $reporterRoleModel = new \App\Models\ReporterRoleModel();
-                $userReporterRoles = $reporterRoleModel->getUserRoles(session('user_id'));
-                
-                // Get user model for names
-                $userModel = new \App\Models\UserModel();
-                
-                if ($isEdit) {
-                    // In edit mode, show the creator's name
-                    $creator = $userModel->find($news['author_id']);
-                    $creatorName = $creator ? $creator['name'] : 'Unknown User';
-                    
-                    // Add creator's name as an option
-                    echo '<option value="' . esc($creatorName) . '"' . ($news['reporterRole'] == $creatorName ? ' selected' : '') . '>' . esc($creatorName) . '</option>';
-                } else {
-                    // In add mode, show current user's name
-                    $currentUser = $userModel->find(session('user_id'));
-                    $userName = $currentUser ? $currentUser['name'] : 'Unknown User';
-                    
-                    // Add current user's name as an option
-                    echo '<option value="' . esc($userName) . '" selected>' . esc($userName) . '</option>';
-                }
-                
-                // Show only assigned reporter roles
-                foreach ($userReporterRoles as $role): ?>
-                    <option value="<?= esc($role['name']) ?>" <?= $isEdit && $news['reporterRole'] == $role['name'] ? 'selected' : '' ?>><?= esc($role['name']) ?></option>
-                <?php endforeach; ?>
-            </select>
-            <?php if (empty($userReporterRoles)): ?>
-                <small class="form-text text-warning">No reporter roles assigned. Contact admin to assign roles.</small>
-            <?php endif; ?>
-        </div>
-        <div class="col-md-12">
-            <div class="alert alert-info small mb-2">
-                <strong>New Image Upload System:</strong> Upload images with captions using the form below. Images will be stored separately and can be managed individually.
-            </div>
-        </div>
-        
-        <!-- Main Image Section -->
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Main Image</h5>
-                </div>
-                <div class="card-body">
-                    <!-- Image Selection Options -->
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-4">
-                            <button type="button" id="uploadNewBtn" class="btn btn-primary w-100">
-                                <i class="fas fa-upload"></i> Upload New Image
-                            </button>
-                        </div>
-                        <div class="col-md-4">
-                            <button type="button" id="selectExistingBtn" class="btn btn-outline-secondary w-100">
-                                <i class="fas fa-images"></i> Select from Existing
-                            </button>
-                        </div>
-                        <div class="col-md-4">
-                            <button type="button" id="externalUrlBtn" class="btn btn-outline-info w-100">
-                                <i class="fas fa-link"></i> Use External URL
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- External URL Section (initially hidden) -->
-                    <div id="externalUrlSection" class="row g-3" style="display: none;">
-                        <div class="col-md-12">
-                            <label class="form-label">External Image URL</label>
-                            <input type="text" name="image_url" class="form-control" value="<?= $isEdit ? esc($news['image_url']) : '' ?>" placeholder="Enter external image URL">
-                            <small class="form-text text-muted">Provide a direct link to an external image</small>
-                        </div>
-                    </div>
-                    
-                    <!-- Image Caption and Alt Text Fields -->
-                    <div class="row g-3 mt-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Image Caption</label>
-                            <input type="text" name="image_caption" class="form-control" value="<?= $isEdit ? esc($news['image_caption']) : '' ?>" placeholder="Enter image caption">
-                            <small class="form-text text-muted">Caption will be displayed with the image</small>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Image Alt Text</label>
-                            <input type="text" name="image_alt_text" class="form-control" value="<?= $isEdit ? esc($news['image_alt_text']) : '' ?>" placeholder="Enter alt text for accessibility">
-                            <small class="form-text text-muted">Important for accessibility and SEO</small>
-                        </div>
-                    </div>
+                    <?php if (empty($userReporterRoles)): ?>
+                        <div class="form-text">No reporter roles are assigned to you yet — ask an admin if you need one.</div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
-        
-        <!-- Content Section - Full Width -->
-        <div class="row g-3 mb-3">
-            <div class="col-md-12">
-                <label class="form-label">Content</label>
-                <div class="mb-2">
-                    <button type="button" id="addHtmlBtn" class="btn btn-sm btn-outline-success">
-                        <i class="fas fa-code"></i> Add HTML Embed
+
+        <div class="panel">
+            <div class="panel__head">
+                <div class="panel__title">Lead image</div>
+                <span class="panel__hint">Upload, reuse an existing image, or link an external one</span>
+            </div>
+            <!-- The upload scripts inject the preview into this element by id. -->
+            <div class="panel__body card-body" id="imagePanelBody">
+                <div class="image-source mb-3">
+                    <button type="button" id="uploadNewBtn" class="btn btn-primary">
+                        <i class="fas fa-upload me-1"></i> Upload new
+                    </button>
+                    <button type="button" id="selectExistingBtn" class="btn btn-outline-secondary">
+                        <i class="fas fa-images me-1"></i> Choose existing
+                    </button>
+                    <button type="button" id="externalUrlBtn" class="btn btn-outline-info">
+                        <i class="fas fa-link me-1"></i> External URL
                     </button>
                 </div>
+
+                <div id="externalUrlSection" class="row g-3 mb-3" style="display: none;">
+                    <div class="col-12">
+                        <label class="form-label">Image URL</label>
+                        <input type="text" name="image_url" class="form-control" value="<?= $v('image_url') ?>" placeholder="https://…">
+                        <div class="form-text">A direct link to an image hosted elsewhere.</div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Caption</label>
+                        <input type="text" name="image_caption" class="form-control bengali-input" value="<?= $v('image_caption') ?>" placeholder="Shown under the image">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Alt text</label>
+                        <input type="text" name="image_alt_text" class="form-control bengali-input" value="<?= $v('image_alt_text') ?>" placeholder="Describe the image for accessibility and SEO">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel__head">
+                <div class="panel__title">Story <span class="req">*</span></div>
+                <div class="d-flex gap-2">
+                    <button type="button" id="addRelatedBtn" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-link me-1"></i> Link a story
+                    </button>
+                    <button type="button" id="addHtmlBtn" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-code me-1"></i> Embed HTML
+                    </button>
+                </div>
+            </div>
+            <div class="panel__body">
                 <div id="ckeditor-container">
-                    <textarea name="content" id="content" class="form-control" rows="15" required tabindex="0" style="display: none;"><?= $isEdit ? esc($news['content']) : '' ?></textarea>
+                    <textarea name="content" id="content" class="form-control" rows="15" required tabindex="0" style="display: none;"><?= $v('content') ?></textarea>
                 </div>
-                <div class="invalid-feedback">
-                    Please provide content for the news article.
-                </div>
+                <div class="invalid-feedback">Please write the story before saving.</div>
             </div>
         </div>
-        <div class="col-md-4">
-            <label class="form-label">Category</label>
-            <select name="category_id" class="form-select" required>
-                <option value="">Select Category</option>
-                <?php foreach ($categories as $cat): ?>
-                    <option value="<?= esc($cat['id']) ?>" <?= $isEdit && $news['category_id'] == $cat['id'] ? 'selected' : '' ?>><?= esc($cat['name']) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div class="col-md-4">
-            <label class="form-label">Tags</label>
-            <select name="tags[]" class="form-select" multiple>
-                <?php foreach ($tags as $tag): ?>
-                    <option value="<?= esc($tag['id']) ?>" <?= isset($selectedTagIds) && in_array($tag['id'], $selectedTagIds ?? []) ? 'selected' : '' ?>><?= esc($tag['name']) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <?php 
-        $userRole = session('user_role');
-        $isReporter = $userRole === 'reporter';
-        ?>
-        
-        <?php if ($isReporter): ?>
-            <!-- Hidden input for reporters - always draft -->
-            <input type="hidden" name="status" value="draft">
-            <div class="col-md-4">
-                <label class="form-label">Status</label>
-                <div class="form-control-plaintext text-muted">
-                    <i class="fas fa-info-circle"></i> Draft (Reporters can only create drafts)
-                </div>
-            </div>
-        <?php else: ?>
-            <div class="col-md-4">
-                <label class="form-label">Status</label>
-                <select name="status" class="form-select" required>
-                    <option value="draft" <?= $isEdit && $news['status'] == 'draft' ? 'selected' : '' ?>>Draft</option>
-                    <option value="published" <?= $isEdit && $news['status'] == 'published' ? 'selected' : '' ?>>Published</option>
-                    <option value="archived" <?= $isEdit && $news['status'] == 'archived' ? 'selected' : '' ?>>Archived</option>
-                </select>
-            </div>
-        <?php endif; ?>
-        <?php if ($isEdit): ?>
-        <div class="col-md-6">
-            <label class="form-label">Slug</label>
-            <input type="text" name="slug" id="slug" class="form-control" value="<?= esc($news['slug']) ?>">
-            <small class="form-text text-muted">Unique code for the article. You can edit it if needed.</small>
-        </div>
-        <?php else: ?>
-        <input type="hidden" name="slug" id="slug" value="">
-        <?php endif; ?>
-        <div class="col-md-4">
-            <label class="form-label">Source</label>
-            <input type="text" name="source" class="form-control" value="<?= $isEdit ? esc($news['source']) : '' ?>">
-        </div>
-        <div class="col-md-4">
-            <label class="form-label">Dateline</label>
-            <input type="text" name="dateline" class="form-control" value="<?= $isEdit ? esc($news['dateline']) : '' ?>">
-        </div>
-        <div class="col-md-2">
-            <label class="form-label">Word Count</label>
-            <input type="number" name="word_count" class="form-control" value="<?= $isEdit ? esc($news['word_count']) : '' ?>">
-        </div>
-        <div class="col-md-2">
-            <label class="form-label">Language</label>
-            <select name="language" class="form-select" required>
-                <option value="bn" <?= ($isEdit && $news['language'] == 'bn') || !$isEdit ? 'selected' : '' ?>>Bangla</option>
-                <option value="en" <?= $isEdit && $news['language'] == 'en' ? 'selected' : '' ?>>English</option>
-            </select>
-        </div>
-        <?php if (!$isReporter): ?>
-            <div class="col-md-4">
-                <label class="form-label">Published At</label>
-                <input type="datetime-local" name="published_at" class="form-control" value="<?= $isEdit && $news['published_at'] ? date('Y-m-d\TH:i', strtotime($news['published_at'])) : '' ?>">
-            </div>
-        <?php endif; ?>
-        <div class="col-md-4">
-            <div class="form-check mt-4">
-                <input class="form-check-input" type="checkbox" name="featured" value="1" id="featured" <?= $isEdit && $news['featured'] ? 'checked' : '' ?>>
-                <label class="form-check-label" for="featured">
-                    Featured Article
-                </label>
-            </div>
-        </div>
-        <!-- Breaking news is now handled through kicker selection -->
     </div>
-    <button type="submit" class="btn btn-success">Save</button>
-    <a href="/admin/news" class="btn btn-secondary">Cancel</a>
+
+    <!-- ============================ Rail ============================ -->
+    <div class="col-lg-4">
+        <div class="editor-rail">
+
+            <div class="panel">
+                <div class="panel__head"><div class="panel__title">Publish</div></div>
+                <div class="panel__body">
+                    <?php if ($isReporter): ?>
+                        <input type="hidden" name="status" value="draft">
+                        <div class="field-group">
+                            <label class="form-label">Status</label>
+                            <div class="panel__note"><i class="fas fa-circle-info me-1"></i> Saved as a draft for editorial review.</div>
+                        </div>
+                    <?php else: ?>
+                        <div class="field-group">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select" required>
+                                <option value="draft" <?= $isEdit && $news['status'] === 'draft' ? 'selected' : '' ?>>Draft</option>
+                                <option value="published" <?= $isEdit && $news['status'] === 'published' ? 'selected' : '' ?>>Published</option>
+                                <option value="archived" <?= $isEdit && $news['status'] === 'archived' ? 'selected' : '' ?>>Archived</option>
+                            </select>
+                        </div>
+                        <div class="field-group">
+                            <label class="form-label">Publish date</label>
+                            <input type="datetime-local" name="published_at" class="form-control"
+                                   value="<?= $isEdit && ! empty($news['published_at']) ? date('Y-m-d\TH:i', strtotime($news['published_at'])) : '' ?>">
+                            <div class="form-text">Leave empty to use the moment it's published.</div>
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="field-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="featured" value="1" id="featured" <?= $isEdit && $news['featured'] ? 'checked' : '' ?>>
+                            <label class="form-check-label" for="featured">Featured on the front page</label>
+                        </div>
+                    </div>
+
+                    <hr class="hr-rule">
+                    <div class="editor-actions">
+                        <button type="submit" class="btn btn-accent"><i class="fas fa-check me-1"></i> <?= $isEdit ? 'Save changes' : 'Save article' ?></button>
+                        <a href="/admin/news" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel__head"><div class="panel__title">Classification</div></div>
+                <div class="panel__body">
+                    <div class="field-group">
+                        <label class="form-label">Category <span class="req">*</span></label>
+                        <select name="category_id" class="form-select bengali-input" required>
+                            <option value="">— Select —</option>
+                            <?php foreach ($categories as $cat): ?>
+                                <option value="<?= esc($cat['id']) ?>" <?= $isEdit && $news['category_id'] == $cat['id'] ? 'selected' : '' ?>><?= esc($cat['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label class="form-label">Tags <span class="panel__hint">— hold Ctrl/Cmd to pick several</span></label>
+                        <select name="tags[]" class="form-select bengali-input" multiple size="7">
+                            <?php foreach ($tags as $tag): ?>
+                                <option value="<?= esc($tag['id']) ?>" <?= isset($selectedTagIds) && in_array($tag['id'], $selectedTagIds ?? []) ? 'selected' : '' ?>><?= esc($tag['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel__head"><div class="panel__title">Details</div></div>
+                <div class="panel__body">
+                    <?php if ($isEdit): ?>
+                        <div class="field-group">
+                            <label class="form-label">Slug</label>
+                            <input type="text" name="slug" id="slug" class="form-control" value="<?= esc($news['slug']) ?>">
+                            <div class="form-text">Part of the public URL. Change with care — old links will break.</div>
+                        </div>
+                    <?php else: ?>
+                        <input type="hidden" name="slug" id="slug" value="">
+                    <?php endif; ?>
+                    <div class="field-group">
+                        <label class="form-label">Source</label>
+                        <input type="text" name="source" class="form-control bengali-input" value="<?= $v('source') ?>" placeholder="e.g. নিজস্ব প্রতিবেদক, BSS">
+                    </div>
+                    <div class="field-group">
+                        <label class="form-label">Dateline</label>
+                        <input type="text" name="dateline" class="form-control bengali-input" value="<?= $v('dateline') ?>" placeholder="e.g. রাজশাহী">
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6 field-group">
+                            <label class="form-label">Word count</label>
+                            <input type="number" name="word_count" class="form-control" value="<?= $v('word_count') ?>">
+                        </div>
+                        <div class="col-6 field-group">
+                            <label class="form-label">Language</label>
+                            <select name="language" class="form-select" required>
+                                <option value="bn" <?= ($isEdit && $news['language'] === 'bn') || ! $isEdit ? 'selected' : '' ?>>Bangla</option>
+                                <option value="en" <?= $isEdit && $news['language'] === 'en' ? 'selected' : '' ?>>English</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
 </form>
 
 <!-- Existing Images Modal -->
@@ -337,20 +285,19 @@ $isReporter = $userRole === 'reporter';
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="existingImagesModalLabel">Select Existing Image</h5>
+                <h5 class="modal-title" id="existingImagesModalLabel">Choose an existing image</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="row" id="existingImagesGrid">
-                    <!-- Images will be loaded here -->
+                <div class="row g-3" id="existingImagesGrid">
+                    <!-- Images are loaded here -->
                 </div>
                 <div id="existingImagesLoading" class="text-center py-4">
-                    <div class="spinner-border" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
+                    <div class="spinner-border" role="status"><span class="visually-hidden">Loading…</span></div>
                 </div>
-                <div id="existingImagesEmpty" class="text-center py-4" style="display: none;">
-                    <p class="text-muted">No images found. Upload some images first.</p>
+                <div id="existingImagesEmpty" class="empty" style="display: none;">
+                    <i class="fas fa-images"></i>
+                    No images yet — upload one first.
                 </div>
             </div>
             <div class="modal-footer">
@@ -365,41 +312,138 @@ $isReporter = $userRole === 'reporter';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="uploadImageModalLabel">Upload New Image</h5>
+                <h5 class="modal-title" id="uploadImageModalLabel">Upload an image</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="row g-3">
-                    <div class="col-md-12">
-                        <label class="form-label">Select Image File</label>
+                    <div class="col-12">
+                        <label class="form-label">Image file</label>
                         <input type="file" id="imageUpload" class="form-control" accept="image/*">
-                        <small class="form-text text-muted">Max size: 5MB. Supported: JPG, PNG, GIF, WebP</small>
+                        <div class="form-text">Up to 5 MB — JPG, PNG, GIF or WebP.</div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Image Caption</label>
-                        <input type="text" id="imageCaption" class="form-control" placeholder="Enter image caption">
+                        <label class="form-label">Caption</label>
+                        <input type="text" id="imageCaption" class="form-control bengali-input" placeholder="Shown under the image">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Image Alt Text</label>
-                        <input type="text" id="imageAltText" class="form-control" placeholder="Enter alt text for accessibility">
+                        <label class="form-label">Alt text</label>
+                        <input type="text" id="imageAltText" class="form-control bengali-input" placeholder="Describe the image">
                     </div>
                 </div>
                 <div id="uploadProgress" class="progress mt-3" style="display: none;">
                     <div class="progress-bar" role="progressbar" style="width: 0%"></div>
                 </div>
                 <div id="uploadPreview" class="mt-3" style="display: none;">
-                    <!-- Upload preview will be shown here -->
+                    <!-- Upload preview is shown here -->
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" id="uploadImageBtn" class="btn btn-primary">
-                    <i class="fas fa-upload"></i> Upload Image
+                    <i class="fas fa-upload me-1"></i> Upload
                 </button>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Link a story: insert another article's title + link into the body -->
+<div class="modal fade" id="relatedStoryModal" tabindex="-1" aria-labelledby="relatedStoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="relatedStoryModalLabel">Link a story</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="search" id="relatedSearch" class="form-control bengali-input mb-3" placeholder="Search published stories by title…" autocomplete="off">
+                <div class="form-text mb-2">Inserts an “আরও পড়ুন” block with the story's title and link at the cursor.</div>
+                <div class="related-list" id="relatedResults"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var btn     = document.getElementById('addRelatedBtn');
+    var modalEl = document.getElementById('relatedStoryModal');
+    var input   = document.getElementById('relatedSearch');
+    var list    = document.getElementById('relatedResults');
+    if (!btn || !modalEl || !input || !list) return;
+
+    var excludeId = <?= $isEdit ? (int) $news['id'] : 0 ?>;
+    var modal = null;   // created lazily: Bootstrap's bundle loads after this script
+    var timer;
+
+    function escHtml(s) {
+        return String(s).replace(/[&<>"']/g, function (c) {
+            return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c];
+        });
+    }
+
+    function load(q) {
+        list.innerHTML = '<div class="empty">Searching…</div>';
+        fetch('/admin/news/search?q=' + encodeURIComponent(q || '') + '&exclude=' + excludeId, {credentials: 'same-origin'})
+            .then(function (r) { return r.json(); })
+            .then(function (rows) {
+                if (!rows.length) { list.innerHTML = '<div class="empty">No published stories match.</div>'; return; }
+                list.innerHTML = rows.map(function (r) {
+                    return '<button type="button" class="related-pick" data-slug="' + escHtml(r.slug) + '" data-title="' + escHtml(r.title) + '">'
+                        + '<span class="related-pick__title bengali-text">' + escHtml(r.title) + '</span>'
+                        + '<span class="related-pick__meta">' + escHtml(r.published_at || '') + '</span>'
+                        + '</button>';
+                }).join('');
+            })
+            .catch(function () { list.innerHTML = '<div class="empty">Could not load stories.</div>'; });
+    }
+
+    /**
+     * Only elements the classic CKEditor build keeps (blockquote, p, strong,
+     * a[href]) — anything custom is stripped on the next save. The public page
+     * turns this exact shape into a styled callout (render_article_body()).
+     */
+    function insertRelatedStory(slug, title) {
+        var href = '/news/' + encodeURIComponent(slug);
+        var html = '<blockquote><p><strong>আরও পড়ুন:</strong> <a href="' + href + '">' + escHtml(title) + '</a></p></blockquote>';
+
+        if (window.ckEditorInstance) {
+            var ed = window.ckEditorInstance;
+            var view  = ed.data.processor.toView(html);
+            var model = ed.data.toModel(view);
+            ed.model.insertContent(model);
+            ed.editing.view.focus();
+        } else {
+            var ta = document.querySelector('#content');
+            if (ta) {
+                var p = ta.selectionStart || ta.value.length;
+                ta.value = ta.value.slice(0, p) + html + ta.value.slice(p);
+            }
+        }
+    }
+
+    btn.addEventListener('click', function () {
+        if (!modal) modal = new bootstrap.Modal(modalEl);
+        input.value = '';
+        load('');
+        modal.show();
+        setTimeout(function () { input.focus(); }, 200);
+    });
+
+    input.addEventListener('input', function () {
+        clearTimeout(timer);
+        timer = setTimeout(function () { load(input.value.trim()); }, 250);
+    });
+
+    list.addEventListener('click', function (e) {
+        var pick = e.target.closest('.related-pick');
+        if (!pick) return;
+        insertRelatedStory(pick.getAttribute('data-slug'), pick.getAttribute('data-title'));
+        if (modal) modal.hide();
+    });
+});
+</script>
 
 <!-- AJAX Image Upload Script -->
 <script>
@@ -545,7 +589,7 @@ document.addEventListener('DOMContentLoaded', function() {
             previewSection = document.createElement('div');
             previewSection.id = 'imagePreview';
             previewSection.className = 'col-md-12 mt-3';
-            document.querySelector('.card-body').appendChild(previewSection);
+            document.getElementById('imagePanelBody').appendChild(previewSection);
         }
         
         // Add base URL if the image URL is relative
@@ -584,7 +628,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 previewSection = document.createElement('div');
                 previewSection.id = 'imagePreview';
                 previewSection.className = 'col-md-12 mt-3';
-                document.querySelector('.card-body').appendChild(previewSection);
+                document.getElementById('imagePanelBody').appendChild(previewSection);
             }
             
             // Add base URL if the image URL is relative

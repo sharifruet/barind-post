@@ -18,6 +18,7 @@ class PublicSite extends Controller
 
     public function home()
     {
+        $this->cachePage(60); // purged on every news change — see purge_public_cache()
         $newsModel = new NewsModel();
         $categoryModel = new CategoryModel();
         
@@ -78,6 +79,7 @@ class PublicSite extends Controller
 
     public function section($slug)
     {
+        $this->cachePage(60);
         $categoryModel = new CategoryModel();
         $newsModel = new NewsModel();
         $categories = $categoryModel->findAll();
@@ -107,6 +109,7 @@ class PublicSite extends Controller
 
     public function news($slug)
     {
+        $this->cachePage(60);
         $newsModel = new NewsModel();
         $categoryModel = new CategoryModel();
         $categories = $categoryModel->findAll();
@@ -142,7 +145,9 @@ class PublicSite extends Controller
         }
         
         // Track the view
-        $this->trackNewsView($news['id']);
+        // View counting happens via the POST /news/view/{id} beacon (trackViewBeacon):
+        // this page is served from the page cache, so a server-side count here
+        // would only fire once per cache TTL.
         
         // Get latest news for the read more section
         $latestNews = $newsModel->getLatestNewsExcluding($news['id'], 8);
@@ -342,19 +347,29 @@ class PublicSite extends Controller
             'latestNews' => $latestNews,
             'customStyles' => $customStyles,
             'title' => $news['title'] . ' - বারিন্দ পোস্ট',
-            'meta_description' => !empty($news['lead_text']) ? $news['lead_text'] : $news['title'] . ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।',
+            'meta_description' => seo_description($news, ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।'),
             'meta_keywords' => 'বারিন্দ পোস্ট, ' . $news['title'] . ', রাজশাহী সংবাদ, বাংলাদেশ সংবাদ',
             'og_title' => $news['title'],
-            'og_description' => !empty($news['lead_text']) ? $news['lead_text'] : $news['title'] . ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।',
+            'og_description' => seo_description($news, ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।'),
             'og_type' => 'article',
             'og_image' => !empty($news['image_url']) ? get_image_url($news['image_url']) : base_url('public/logo.png'),
             'twitter_card' => 'summary_large_image',
             'twitter_title' => $news['title'],
-            'twitter_description' => !empty($news['lead_text']) ? $news['lead_text'] : $news['title'] . ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।',
+            'twitter_description' => seo_description($news, ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।'),
             'twitter_image' => !empty($news['image_url']) ? get_image_url($news['image_url']) : base_url('public/logo.png')
         ];
         
         return view('public/news', $data);
+    }
+
+    /**
+     * Uncached view-count beacon, pinged by the article page's JS on every load.
+     */
+    public function trackViewBeacon($id)
+    {
+        $this->trackNewsView((int) $id);
+
+        return $this->response->setStatusCode(204);
     }
 
     public function newsByTitle($title)
@@ -374,7 +389,9 @@ class PublicSite extends Controller
         }
         
         // Track the view
-        $this->trackNewsView($news['id']);
+        // View counting happens via the POST /news/view/{id} beacon (trackViewBeacon):
+        // this page is served from the page cache, so a server-side count here
+        // would only fire once per cache TTL.
         
         // Custom styles for news page (same as main news method)
         $customStyles = '
@@ -535,15 +552,15 @@ class PublicSite extends Controller
             'categories' => $categories,
             'customStyles' => $customStyles,
             'title' => $news['title'] . ' - বারিন্দ পোস্ট',
-            'meta_description' => !empty($news['lead_text']) ? $news['lead_text'] : $news['title'] . ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।',
+            'meta_description' => seo_description($news, ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।'),
             'meta_keywords' => 'বারিন্দ পোস্ট, ' . $news['title'] . ', রাজশাহী সংবাদ, বাংলাদেশ সংবাদ',
             'og_title' => $news['title'],
-            'og_description' => !empty($news['lead_text']) ? $news['lead_text'] : $news['title'] . ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।',
+            'og_description' => seo_description($news, ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।'),
             'og_type' => 'article',
             'og_image' => !empty($news['image_url']) ? get_image_url($news['image_url']) : base_url('public/logo.png'),
             'twitter_card' => 'summary_large_image',
             'twitter_title' => $news['title'],
-            'twitter_description' => !empty($news['lead_text']) ? $news['lead_text'] : $news['title'] . ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।',
+            'twitter_description' => seo_description($news, ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।'),
             'twitter_image' => !empty($news['image_url']) ? get_image_url($news['image_url']) : base_url('public/logo.png')
         ];
         
@@ -552,6 +569,7 @@ class PublicSite extends Controller
 
     public function tag($slug)
     {
+        $this->cachePage(60);
         $tagModel = new TagModel();
         $newsModel = new NewsModel();
         $categoryModel = new CategoryModel();

@@ -1,7 +1,7 @@
 <?= $this->extend('admin/layout') ?>
 <?= $this->section('content') ?>
 <h2 class="mb-4">Edit Stadium</h2>
-<form method="post" action="/admin/sports-events/venues/edit/<?= $venue['id'] ?>">
+<form method="post" action="/admin/sports-events/venues/edit/<?= $venue['id'] ?>"><?= csrf_field() ?>
     <div class="card shadow-sm"><div class="card-body">
         <div class="mb-3"><label class="form-label">Name (Bengali)</label><input type="text" name="name_bn" class="form-control bengali-text" required value="<?= esc($venue['name_bn']) ?>"></div>
         <div class="mb-3"><label class="form-label">Name (English)</label><input type="text" name="name_en" class="form-control" value="<?= esc($venue['name_en'] ?? '') ?>"></div>

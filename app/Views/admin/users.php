@@ -6,7 +6,7 @@
             <h2>Manage Users</h2>
             <a href="/admin" class="btn btn-secondary">Back to Dashboard</a>
         </div>
-        <form method="post" action="/admin/users/add" class="row g-3 mb-4">
+        <form method="post" action="/admin/users/add" class="row g-3 mb-4"><?= csrf_field() ?>
             <div class="col-md-3">
                 <input type="text" name="name" class="form-control" placeholder="Name" required>
             </div>
@@ -59,7 +59,7 @@
                                     <a href="/admin/reporter-roles/assign/<?= $user['id'] ?>" class="btn btn-sm btn-outline-primary">
                                         <i class="fas fa-user-tie"></i> Assign Roles
                                     </a>
-                                    <form method="post" action="/admin/users/delete" style="display:inline;">
+                                    <form method="post" action="/admin/users/delete" style="display:inline;"><?= csrf_field() ?>
                                         <input type="hidden" name="id" value="<?= esc($user['id']) ?>">
                                         <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this user?')">Delete</button>
                                     </form>

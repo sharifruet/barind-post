@@ -6,7 +6,7 @@
             <h2>Manage Roles</h2>
             <a href="/admin" class="btn btn-secondary">Back to Dashboard</a>
         </div>
-        <form method="post" action="/admin/roles/add" class="row g-3 mb-4">
+        <form method="post" action="/admin/roles/add" class="row g-3 mb-4"><?= csrf_field() ?>
             <div class="col-auto">
                 <input type="text" name="name" class="form-control" placeholder="New Role Name" required>
             </div>
@@ -31,7 +31,7 @@
                                 <td><?= esc($role['id']) ?></td>
                                 <td><?= esc($role['name']) ?></td>
                                 <td>
-                                    <form method="post" action="/admin/roles/delete" style="display:inline;">
+                                    <form method="post" action="/admin/roles/delete" style="display:inline;"><?= csrf_field() ?>
                                         <input type="hidden" name="id" value="<?= esc($role['id']) ?>">
                                         <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this role?')">Delete</button>
                                     </form>

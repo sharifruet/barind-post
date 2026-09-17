@@ -43,7 +43,7 @@
                             <td><strong><?= esc($scoreDisplay) ?></strong></td>
                             <td>
                                 <a href="/admin/sports-events/<?= $event['id'] ?>/matches/edit/<?= $m['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
-                                <form method="post" action="/admin/sports-events/<?= $event['id'] ?>/matches/delete/<?= $m['id'] ?>" class="d-inline" onsubmit="return confirm('Delete match?')">
+                                <form method="post" action="/admin/sports-events/<?= $event['id'] ?>/matches/delete/<?= $m['id'] ?>" class="d-inline" onsubmit="return confirm('Delete match?')"><?= csrf_field() ?>
                                     <button class="btn btn-sm btn-danger">Delete</button>
                                 </form>
                             </td>

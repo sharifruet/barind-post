@@ -6,7 +6,7 @@
             <h2>Manage Categories</h2>
             <a href="/admin" class="btn btn-secondary">Back to Dashboard</a>
         </div>
-        <form method="post" action="/admin/categories/add" class="row g-3 mb-4">
+        <form method="post" action="/admin/categories/add" class="row g-3 mb-4"><?= csrf_field() ?>
             <div class="col-md-4">
                 <input type="text" name="name" class="form-control" placeholder="Category Name" required>
             </div>
@@ -53,7 +53,7 @@
                                 </td>
                                 <td>
                                     <a href="/admin/categories/edit/<?= esc($cat['id']) ?>" class="btn btn-sm btn-warning">Edit</a>
-                                    <form method="post" action="/admin/categories/delete" style="display:inline;">
+                                    <form method="post" action="/admin/categories/delete" style="display:inline;"><?= csrf_field() ?>
                                         <input type="hidden" name="id" value="<?= esc($cat['id']) ?>">
                                         <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this category?')">Delete</button>
                                     </form>

@@ -10,9 +10,22 @@ class NewsModel extends Model
         'title', 'subtitle', 'lead_text', 'reporterRole', 'content', 'author_id', 'category_id', 'status',
         'featured', 'kicker_id', 'event_id', 'match_id', 'created_at', 'updated_at', 'published_at',
         'image_url', 'image_caption', 'image_alt_text', 'slug', 'source', 'dateline', 'word_count', 'language',
-        'source_url', 'content_hash'
+        'source_url', 'content_hash', 'suggested_image_url'
     ];
     protected $returnType = 'array';
+
+    // Every write through this model invalidates the public page cache
+    // (see app/Helpers/cache_helper.php). Query-builder writes must purge themselves.
+    protected $afterInsert = ['purgePublicCache'];
+    protected $afterUpdate = ['purgePublicCache'];
+    protected $afterDelete = ['purgePublicCache'];
+
+    protected function purgePublicCache(array $eventData): array
+    {
+        purge_public_cache();
+
+        return $eventData;
+    }
     protected $useTimestamps = true;
     protected $createdField = 'created_at';
     protected $updatedField = 'updated_at';

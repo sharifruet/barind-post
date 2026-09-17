@@ -11,7 +11,7 @@
 <div class="card shadow-sm mb-4">
     <div class="card-header">Add Participant</div>
     <div class="card-body">
-        <form method="post" action="/admin/sports-events/participants/add" class="row g-3">
+        <form method="post" action="/admin/sports-events/participants/add" class="row g-3"><?= csrf_field() ?>
             <div class="col-md-3">
                 <input type="text" name="name_bn" class="form-control bengali-text" placeholder="Name (Bengali) *" required>
             </div>
@@ -52,7 +52,7 @@
                         <td><?= esc($p['type']) ?></td>
                         <td>
                             <a href="/admin/sports-events/participants/edit/<?= $p['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
-                            <form method="post" action="/admin/sports-events/participants/delete/<?= $p['id'] ?>" class="d-inline" onsubmit="return confirm('Delete?')">
+                            <form method="post" action="/admin/sports-events/participants/delete/<?= $p['id'] ?>" class="d-inline" onsubmit="return confirm('Delete?')"><?= csrf_field() ?>
                                 <button class="btn btn-sm btn-danger">Delete</button>
                             </form>
                         </td>

@@ -12,7 +12,8 @@
                     <h5 class="card-title bengali-text">
                         <a href="/news/<?= esc($n['slug']) ?>" class="text-decoration-none text-dark"><?= esc($n['title']) ?></a>
                     </h5>
-                    <?php if ($n['lead_text']): ?><p class="card-text text-muted small bengali-text"><?= esc(mb_substr($n['lead_text'], 0, 120)) ?>...</p><?php endif; ?>
+                    <?php $summary = story_excerpt($n, 18); ?>
+                    <?php if ($summary): ?><p class="card-text text-muted small bengali-text"><?= esc($summary) ?></p><?php endif; ?>
                     <small class="text-muted"><?= $n['published_at'] ? date('M d, Y', strtotime($n['published_at'])) : '' ?></small>
                 </div>
             </div>

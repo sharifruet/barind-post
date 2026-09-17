@@ -1,271 +1,166 @@
-
 <style>
-/* Compact Prayer Times Widget */
+/* Prayer times — quiet rail module matching the editorial theme */
 .prayer-times-widget {
-    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-    color: white;
-    border-radius: 12px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 4px 12px rgba(44, 62, 80, 0.3);
-    position: relative;
-    overflow: hidden;
-}
-
-.prayer-times-widget::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #e74c3c, #f39c12, #27ae60, #3498db, #9b59b6);
+    border: 1px solid var(--rule);
+    background: var(--paper);
+    padding: 0;
 }
 
 .prayer-times-widget .widget-header {
-    text-align: center;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--rule);
+    background: var(--paper-2);
 }
 
 .prayer-times-widget .widget-title {
-    font-size: 1.5rem;
+    font-family: var(--sans);
+    font-size: 0.74rem;
     font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
     margin: 0;
-    color: #ecf0f1;
+    color: var(--ink);
 }
 
 .prayer-times-widget .current-time {
-    font-size: 1.1rem;
-    color: #bdc3c7;
-    margin-top: 0.2rem;
+    font-family: var(--sans);
+    font-size: 0.82rem;
     font-weight: 600;
-}
-
-.prayer-times-widget .city-info {
-    font-size: 0.9rem;
-    color: #95a5a6;
-    margin-top: 0.1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.3rem;
-    cursor: pointer;
-    padding: 0.3rem;
-    border-radius: 6px;
-    transition: all 0.3s ease;
-}
-
-.prayer-times-widget .city-info:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #ecf0f1;
-    transform: scale(1.05);
-}
-
-/* City Popup Modal Styles */
-.city-popup-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 9999;
-    display: none;
-    align-items: center;
-    justify-content: center;
-}
-
-.city-popup {
-    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-    border-radius: 12px;
-    width: 90%;
-    max-width: 400px;
-    max-height: 80vh;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    animation: popupSlideIn 0.3s ease-out;
-}
-
-@keyframes popupSlideIn {
-    from {
-        opacity: 0;
-        transform: scale(0.8) translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-    }
-}
-
-.city-popup-header {
-    background: rgba(255, 255, 255, 0.1);
-    padding: 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.city-popup-header h4 {
-    margin: 0;
-    color: #ecf0f1;
-    font-size: 1.1rem;
-    font-weight: 600;
-}
-
-.city-popup-close {
-    background: none;
-    border: none;
-    color: #ecf0f1;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: background-color 0.3s ease;
-}
-
-.city-popup-close:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.city-popup-content {
-    padding: 1rem;
-    max-height: 60vh;
-    overflow-y: auto;
-}
-
-.city-popup-item {
-    padding: 0.8rem 1rem;
-    margin-bottom: 0.5rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    cursor: pointer;
-    color: #ecf0f1;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    border: 1px solid transparent;
-}
-
-.city-popup-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateX(5px);
-    border-color: rgba(52, 152, 219, 0.3);
-}
-
-.city-popup-item.selected {
-    background: rgba(52, 152, 219, 0.2);
-    border-color: #3498db;
-    color: #3498db;
-    font-weight: 600;
-}
-
-.city-popup-item:last-child {
-    margin-bottom: 0;
-}
-
-.prayer-times-widget .city-selector {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 6px;
-    color: #ecf0f1;
-    font-size: 0.9rem;
-    padding: 0.2rem 0.4rem;
-    margin-top: 0.3rem;
-    width: 100%;
-    outline: none;
-}
-
-.prayer-times-widget .city-selector:focus {
-    border-color: #3498db;
-    background: rgba(255, 255, 255, 0.15);
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
 }
 
 .prayer-times-widget .prayer-times-list {
     list-style: none;
-    padding: 0;
     margin: 0;
+    padding: 0.35rem 1rem;
 }
 
 .prayer-times-widget .prayer-time {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 0.4rem 0.6rem;
-    margin-bottom: 0.3rem;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    border-left: 3px solid transparent;
+    justify-content: space-between;
+    padding: 0.45rem 0;
+    border-bottom: 1px solid var(--rule);
 }
 
-.prayer-times-widget .prayer-time:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: translateX(2px);
-}
-
-.prayer-times-widget .prayer-time.current {
-    background: rgba(231, 76, 60, 0.2);
-    border-left-color: #e74c3c;
-    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
-}
+.prayer-times-widget .prayer-time:last-child { border-bottom: 0; }
 
 .prayer-times-widget .prayer-name {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #ecf0f1;
+    font-family: var(--sans);
+    font-size: 0.88rem;
+    color: var(--ink-2);
     display: flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: 0.45rem;
 }
+
+.prayer-times-widget .prayer-name i { color: var(--ink-4); font-size: 0.78rem; }
 
 .prayer-times-widget .prayer-time-value {
-    font-size: 1.0rem;
-    font-weight: 700;
-    color: #fff;
-    font-family: 'Courier New', monospace;
-}
-
-.prayer-times-widget .prayer-time.current .prayer-time-value {
-    color: #e74c3c;
-    font-weight: 700;
-}
-
-.prayer-times-widget .prayer-time.current .prayer-name {
-    color: #e74c3c;
+    font-family: var(--sans);
+    font-size: 0.9rem;
     font-weight: 600;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .prayer-times-widget {
-        padding: 0.8rem;
-    }
-    
-    .prayer-times-widget .prayer-time {
-        padding: 0.3rem 0.5rem;
-        margin-bottom: 0.2rem;
-    }
-    
+.prayer-times-widget .prayer-time.current .prayer-name,
+.prayer-times-widget .prayer-time.current .prayer-name i,
+.prayer-times-widget .prayer-time.current .prayer-time-value {
+    color: var(--accent);
+    font-weight: 700;
 }
 
-/* Compact version for 2-column layout */
-.col-md-2 .prayer-times-widget {
-    padding: 0.6rem;
-    margin-bottom: 0.8rem;
+.prayer-times-widget .city-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 0.8rem;
+    color: var(--ink-3);
+    padding: 0.6rem 1rem;
+    border-top: 1px solid var(--rule);
+    background: var(--paper-2);
 }
 
+.prayer-times-widget .city-info:hover { color: var(--accent); }
 
-.col-md-2 .prayer-times-widget .prayer-time {
-    padding: 0.25rem 0.4rem;
-    margin-bottom: 0.2rem;
+.prayer-times-widget .city-selector { display: none !important; }
+
+/* City picker modal */
+.city-popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 20, 15, 0.45);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
 }
 
+.city-popup {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    width: 100%;
+    max-width: 380px;
+    max-height: 80vh;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.22);
+}
+
+.city-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--rule);
+    background: var(--paper-2);
+}
+
+.city-popup-header h4 {
+    margin: 0;
+    font-family: var(--sans);
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink);
+}
+
+.city-popup-close {
+    background: none;
+    border: 0;
+    font-size: 1.4rem;
+    line-height: 1;
+    color: var(--ink-3);
+    cursor: pointer;
+    padding: 0 0.25rem;
+}
+
+.city-popup-close:hover { color: var(--accent); }
+
+.city-popup-content { padding: 0.5rem 1rem 1rem; max-height: 60vh; overflow-y: auto; }
+
+.city-popup-item {
+    padding: 0.6rem 0.25rem;
+    border-bottom: 1px solid var(--rule);
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 0.92rem;
+    color: var(--ink-2);
+}
+
+.city-popup-item:last-child { border-bottom: 0; }
+.city-popup-item:hover { color: var(--accent); }
+.city-popup-item.selected { color: var(--accent); font-weight: 700; }
 </style>
 
 <div class="prayer-times-widget">

@@ -23,7 +23,7 @@
         <h5 class="mb-0">Add New Reporter Role</h5>
     </div>
     <div class="card-body">
-        <form method="POST" action="/admin/reporter-roles/add">
+        <form method="POST" action="/admin/reporter-roles/add"><?= csrf_field() ?>
             <div class="row">
                 <div class="col-md-4">
                     <div class="mb-3">
@@ -84,7 +84,7 @@
                             <a href="/admin/reporter-roles/edit/<?= $role['id'] ?>" class="btn btn-sm btn-outline-primary">
                                 <i class="fas fa-edit"></i> Edit
                             </a>
-                            <form method="POST" action="/admin/reporter-roles/delete" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this role?')">
+                            <form method="POST" action="/admin/reporter-roles/delete" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this role?')"><?= csrf_field() ?>
                                 <input type="hidden" name="id" value="<?= $role['id'] ?>">
                                 <button type="submit" class="btn btn-sm btn-outline-danger">
                                     <i class="fas fa-trash"></i> Delete

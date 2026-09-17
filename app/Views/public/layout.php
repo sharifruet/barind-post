@@ -4,7 +4,35 @@
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+    <meta name="csrf-token" content="<?= csrf_hash() ?>">
+    <meta name="csrf-header" content="<?= csrf_header() ?>">
+    <script>
+    // CSRF token header for same-origin non-GET fetch()/XHR (contact form AJAX etc.).
+    // Forms carry csrf_field(); the view-count beacon is excluded server-side.
+    (function () {
+        var t = document.querySelector('meta[name="csrf-token"]'), h = document.querySelector('meta[name="csrf-header"]');
+        if (!t || !h) return;
+        var token = t.content, header = h.content;
+        var sameOrigin = function (u) { u = String(u || ''); return !/^[a-z][a-z0-9+.-]*:\/\//i.test(u) || u.indexOf(location.origin) === 0; };
+        var mutating = function (m) { m = String(m || 'GET').toUpperCase(); return m !== 'GET' && m !== 'HEAD' && m !== 'OPTIONS'; };
+        var origFetch = window.fetch;
+        window.fetch = function (input, init) {
+            init = init || {};
+            var url = typeof input === 'string' ? input : (input && input.url) || '';
+            var method = init.method || (input && input.method) || 'GET';
+            if (mutating(method) && sameOrigin(url)) {
+                var headers = new Headers(init.headers || (typeof Request !== 'undefined' && input instanceof Request ? input.headers : undefined));
+                if (!headers.has(header)) headers.set(header, token);
+                init.headers = headers;
+            }
+            return origFetch.call(this, input, init);
+        };
+        var open = XMLHttpRequest.prototype.open, send = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.open = function (m, u) { this.__csrf = mutating(m) && sameOrigin(u); return open.apply(this, arguments); };
+        XMLHttpRequest.prototype.send = function () { if (this.__csrf) { try { this.setRequestHeader(header, token); } catch (e) {} } return send.apply(this, arguments); };
+    })();
+    </script>
+
     <!-- SEO Meta Tags -->
     <title><?= isset($title) ? esc($title) : 'বারিন্দ পোস্ট - গোদাগাড়ী, রাজশাহীর থেকে পরিচালিত শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল' ?></title>
     <meta name="description" content="<?= isset($meta_description) ? esc($meta_description) : 'বারিন্দ পোস্ট গোদাগাড়ী, রাজশাহীর থেকে পরিচালিত একটি শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল। সর্বশেষ সংবাদ, রাজনীতি, আন্তর্জাতিক, খেলাধুলা, শিক্ষা, স্বাস্থ্য ও বিজ্ঞান-প্রযুক্তি সংবাদ জানুন।' ?>">
@@ -89,20 +117,12 @@
     <!-- Font Awesome Icons (CSP compatible) -->
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <!-- Bengali Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
-    <!-- Lazy Loading CSS -->
-    <style>
-        img[loading="lazy"] {
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        img[loading="lazy"].loaded {
-            opacity: 1;
-        }
-    </style>
-    
+    <!-- Bengali Fonts: serif for headlines, sans for UI and body -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=Noto+Serif+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Editorial theme -->
+    <link href="<?= base_url('assets/css/theme.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/theme.css') ?: '1' ?>" rel="stylesheet">
+
     <!-- Structured Data -->
     <script type="application/ld+json">
     {
@@ -132,123 +152,8 @@
     </script>
     
     <style>
-        /* Bengali font support */
-        body {
-            font-family: 'Noto Sans Bengali', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-        
-        .bengali-text {
-            font-family: 'Noto Sans Bengali', 'Noto Sans', sans-serif;
-        }
-        
-        /* Common styles */
-        .navbar-brand {
-            font-size: 2rem;
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
-        
-        .news-card {
-            transition: box-shadow 0.2s, transform 0.2s;
-            border-radius: 1rem;
-        }
-        
-        .news-card:hover {
-            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-            transform: translateY(-4px) scale(1.01);
-        }
-        
-        .news-img {
-            border-top-left-radius: 1rem;
-            border-top-right-radius: 1rem;
-            object-fit: cover;
-            height: 220px;
-        }
-        
-        .footer {
-            background: #f8f9fa;
-            color: #333;
-            padding: 2rem 0 1rem 0;
-            margin-top: 3rem;
-            border-top: 1px solid #dee2e6;
-        }
-        
-        .footer-link {
-            color: #333 !important;
-            transition: color 0.3s ease;
-        }
-        
-        .footer-link:hover {
-            color: #dc3545 !important;
-            text-decoration: underline !important;
-        }
-        
-        /* Ad placeholder styles */
-        .ad-placeholder {
-            background: linear-gradient(45deg, #f8f9fa 25%, transparent 25%), 
-                        linear-gradient(-45deg, #f8f9fa 25%, transparent 25%), 
-                        linear-gradient(45deg, transparent 75%, #f8f9fa 75%), 
-                        linear-gradient(-45deg, transparent 75%, #f8f9fa 75%);
-            background-size: 20px 20px;
-            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-            border: 2px dashed #dee2e6;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #6c757d;
-            font-weight: 500;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-        
-        .ad-placeholder:hover {
-            border-color: #007bff;
-            color: #007bff;
-            background: linear-gradient(45deg, #e3f2fd 25%, transparent 25%), 
-                        linear-gradient(-45deg, #e3f2fd 25%, transparent 25%), 
-                        linear-gradient(45deg, transparent 75%, #e3f2fd 75%), 
-                        linear-gradient(-45deg, transparent 75%, #e3f2fd 75%);
-        }
-        
-        .ad-banner {
-            height: 90px;
-            margin: 1rem 0;
-        }
-        
-        .ad-sidebar {
-            height: 250px;
-            margin-bottom: 1rem;
-        }
-        
-        .ad-inline {
-            height: 120px;
-            margin: 2rem 0;
-        }
-        
-        .ad-sticky {
-            position: sticky;
-            top: 100px;
-        }
-        
-        /* Category color indicators */
-        .category-indicator {
-            display: inline-block;
-            width: 40px;
-            height: 1.2em;
-            border-radius: 2px;
-            margin-right: 8px;
-            vertical-align: middle;
-        }
-        
-        .category-pill .category-indicator {
-            width: 40px;
-            height: 1.2em;
-            margin-right: 6px;
-        }
-        
-        /* Additional custom styles can be added here */
-        <?= isset($customStyles) ? $customStyles : '' ?>
+        /* Page-specific overrides supplied by individual views */
+        <?= $customStyles ?? '' ?>
     </style>
 </head>
 <body>
@@ -266,31 +171,32 @@
     <!-- Twitter Widget Script -->
     <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
     
-    <!-- Lazy Loading JavaScript -->
     <script>
-        // Enhanced lazy loading for images
-        document.addEventListener('DOMContentLoaded', function() {
-            const images = document.querySelectorAll('img[loading="lazy"]');
-            
-            if ('IntersectionObserver' in window) {
-                const imageObserver = new IntersectionObserver((entries, observer) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            const img = entry.target;
-                            img.classList.add('loaded');
-                            observer.unobserve(img);
-                        }
-                    });
-                });
-                
-                images.forEach(img => imageObserver.observe(img));
+        /*
+         * Image loading is handled by the browser's native loading="lazy" on the
+         * img tags themselves. A previous custom IntersectionObserver hid every
+         * lazy image with opacity:0 until it fired, which meant any JS failure
+         * left the page with no images at all — removed in favour of the native
+         * behaviour.
+         */
+
+        /**
+         * Collapse image slots whose source fails to load. Articles can carry
+         * external image URLs (including ones ingested automatically), so dead
+         * images are expected rather than exceptional — a card without a photo
+         * reads far better than a broken-image box.
+         * Uses capture, since `error` on <img> does not bubble.
+         */
+        document.addEventListener('error', function (e) {
+            var el = e.target;
+            if (!el || el.tagName !== 'IMG') return;
+            var slot = el.closest('.story__media, .article__figure');
+            if (slot) {
+                slot.classList.add('is-broken-media');
             } else {
-                // Fallback for older browsers
-                images.forEach(img => {
-                    img.classList.add('loaded');
-                });
+                el.classList.add('is-broken-media');
             }
-        });
+        }, true);
     </script>
     
     <?= isset($customScripts) ? $customScripts : '' ?>

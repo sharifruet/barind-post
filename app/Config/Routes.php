@@ -38,6 +38,19 @@ $routes->post('/admin/photo-card-generator/generate', 'Admin::generatePhotoCard'
 
 // Add route for listing news images
 $routes->get('/admin/news/images-list', 'Admin::newsImagesList');
+$routes->get('/admin/news/search', 'Admin::newsSearch');
+
+// Admin incoming queue — review/publish/discard automation drafts (AdminIncoming)
+$routes->get('/admin/incoming', 'AdminIncoming::index');
+$routes->post('/admin/incoming/publish/(:num)', 'AdminIncoming::publish/$1');
+$routes->post('/admin/incoming/discard/(:num)', 'AdminIncoming::discard/$1');
+$routes->post('/admin/incoming/restore/(:num)', 'AdminIncoming::restore/$1');
+$routes->post('/admin/incoming/discard-bulk', 'AdminIncoming::discardBulk');
+$routes->post('/admin/incoming/category/(:num)', 'AdminIncoming::category/$1');
+$routes->post('/admin/incoming/adopt-image/(:num)', 'AdminIncoming::adoptImage/$1');
+
+// View-count beacon: pinged by the article page's JS so counting survives page caching
+$routes->post('/news/view/(:num)', 'PublicSite::trackViewBeacon/$1');
 
 // Image Upload Routes
 $routes->post('/image-upload/upload', 'ImageUpload::upload');

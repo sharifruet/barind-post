@@ -2,7 +2,7 @@
 namespace App\Database\Migrations;
 use CodeIgniter\Database\Migration;
 
-class 2024_06_01_000001_create_users extends Migration
+class CreateUsers extends Migration
 {
     public function up()
     {

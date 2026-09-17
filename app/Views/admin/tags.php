@@ -6,7 +6,7 @@
             <h2>Manage Tags</h2>
             <a href="/admin" class="btn btn-secondary">Back to Dashboard</a>
         </div>
-        <form method="post" action="/admin/tags/add" class="row g-3 mb-4">
+        <form method="post" action="/admin/tags/add" class="row g-3 mb-4"><?= csrf_field() ?>
             <div class="col-auto">
                 <input type="text" name="name" class="form-control" placeholder="New Tag Name" required>
             </div>
@@ -32,7 +32,7 @@
                                 <td><?= esc($tag['name']) ?></td>
                                 <td>
                                     <a href="/admin/tags/edit/<?= esc($tag['id']) ?>" class="btn btn-sm btn-warning">Edit</a>
-                                    <form method="post" action="/admin/tags/delete" style="display:inline;">
+                                    <form method="post" action="/admin/tags/delete" style="display:inline;"><?= csrf_field() ?>
                                         <input type="hidden" name="id" value="<?= esc($tag['id']) ?>">
                                         <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this tag?')">Delete</button>
                                     </form>

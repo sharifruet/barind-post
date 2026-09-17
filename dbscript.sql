@@ -113,6 +113,7 @@ CREATE TABLE IF NOT EXISTS news (
     source VARCHAR(255),
     source_url VARCHAR(500) NULL,
     content_hash CHAR(64) NULL,
+    suggested_image_url VARCHAR(500) NULL,
     dateline VARCHAR(255),
     word_count INT UNSIGNED,
     language VARCHAR(5) NOT NULL DEFAULT 'bn',
@@ -347,9 +348,6 @@ CREATE TABLE IF NOT EXISTS contacts (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- Add reporterRole field to news table if not exists
-ALTER TABLE news ADD COLUMN IF NOT EXISTS reporterRole VARCHAR(100) NULL AFTER lead_text;
 
 -- Create reporter_roles table
 CREATE TABLE IF NOT EXISTS reporter_roles (

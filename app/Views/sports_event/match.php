@@ -85,7 +85,8 @@ $isLive = sports_is_live($match['status']);
         <div class="card-header bg-danger text-white">ম্যাচ রিপোর্ট</div>
         <div class="card-body">
             <h5 class="bengali-text"><a href="/news/<?= esc($linkedNews['slug']) ?>" class="text-decoration-none text-dark"><?= esc($linkedNews['title']) ?></a></h5>
-            <?php if ($linkedNews['lead_text']): ?><p class="text-muted bengali-text"><?= esc($linkedNews['lead_text']) ?></p><?php endif; ?>
+            <?php $summary = story_excerpt($linkedNews, 30); ?>
+            <?php if ($summary): ?><p class="text-muted bengali-text"><?= esc($summary) ?></p><?php endif; ?>
             <a href="/news/<?= esc($linkedNews['slug']) ?>" class="btn btn-danger btn-sm">সম্পূর্ণ পড়ুন</a>
         </div>
     </div>

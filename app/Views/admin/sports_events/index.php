@@ -62,7 +62,7 @@
                             <td>
                                 <a href="/admin/sports-events/manage/<?= $ev['id'] ?>" class="btn btn-sm btn-primary">Manage</a>
                                 <a href="/admin/sports-events/edit/<?= $ev['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
-                                <form method="post" action="/admin/sports-events/delete/<?= $ev['id'] ?>" class="d-inline" onsubmit="return confirm('Delete this event and all matches?')">
+                                <form method="post" action="/admin/sports-events/delete/<?= $ev['id'] ?>" class="d-inline" onsubmit="return confirm('Delete this event and all matches?')"><?= csrf_field() ?>
                                     <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                                 </form>
                             </td>
