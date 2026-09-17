@@ -65,6 +65,7 @@ class AdminIncoming extends BaseAdminController
         ];
 
         return view('admin/incoming', [
+            'lastRun'    => (new \App\Models\AutomationRunModel())->latest(),
             'items'      => $items,
             'sources'    => $sourceRows,
             'counts'     => $counts,

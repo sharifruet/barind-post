@@ -501,6 +501,17 @@ textarea.form-control { line-height: 1.6; }
 .incoming-item__actions .save-note { font-size: 0.72rem; color: var(--ink-4); min-height: 1em; }
 .incoming-item__buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .incoming-item__buttons form { margin: 0; }
+.status--dup { background: #fff3cd; color: #7a5b00; text-decoration: none; }
+.status--dup:hover { background: #ffe69c; color: #5c4400; }
+.run-banner {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 0.5rem;
+    margin: 0 0 1rem; padding: 0.7rem 1rem; border-radius: var(--radius);
+    background: var(--paper); border: 1px solid var(--rule); border-left: 4px solid #198754; font-size: 0.9rem;
+}
+.run-banner--error { border-left-color: var(--accent); background: #fff5f5; }
+.run-banner__label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-4); margin-right: 0.3rem; }
+.run-banner__wf, .run-banner__sources { color: var(--ink-3); }
+.run-banner__msg { flex-basis: 100%; font-family: var(--mono, monospace); font-size: 0.8rem; color: #842029; white-space: pre-wrap; }
 @media (max-width: 991.98px) {
     .incoming-item { grid-template-columns: 2rem minmax(0, 1fr); }
     .incoming-item__media, .incoming-item__actions { grid-column: 2; }

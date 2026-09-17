@@ -163,6 +163,16 @@ class App extends BaseConfig
      */
     public bool $forceGlobalSecureRequests = false;
 
+    public function __construct()
+    {
+        parent::__construct(); // applies .env overrides (app.baseURL, …) first
+
+        // Redirect HTTP → HTTPS (Filters: 'forcehttps') only where it cannot lock
+        // anyone out: production, and a base URL that is itself https://.
+        $this->forceGlobalSecureRequests = ENVIRONMENT === 'production'
+            && str_starts_with($this->baseURL, 'https://');
+    }
+
     /**
      * --------------------------------------------------------------------------
      * Session Driver

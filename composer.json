@@ -35,7 +35,17 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
-        "sort-packages": true
+        "sort-packages": true,
+        "audit": {
+            "ignore": {
+                "CVE-2026-63223": "critical: CodeIgniter: Uploaded file extension validation bypass in `is_image` and `mime_i — accepted until codeigniter4/framework >= 4.7.4 (needs PHP >= 8.2; see DEPLOYMENT.md). Exposure: not used by this app (no deleteBatch, no mime_in/ext_in/is_image rules, GD not ImageMagick, server-generated upload filenames).",
+                "CVE-2026-63222": "high: CodeIgniter: Path traversal in UploadedFile::move() when using client-provided f — accepted until codeigniter4/framework >= 4.7.4 (needs PHP >= 8.2; see DEPLOYMENT.md). Exposure: not used by this app (no deleteBatch, no mime_in/ext_in/is_image rules, GD not ImageMagick, server-generated upload filenames).",
+                "CVE-2026-63221": "critical: CodeIgniter: SQL injection in Query Builder deleteBatch() when used with where() — accepted until codeigniter4/framework >= 4.7.4 (needs PHP >= 8.2; see DEPLOYMENT.md). Exposure: not used by this app (no deleteBatch, no mime_in/ext_in/is_image rules, GD not ImageMagick, server-generated upload filenames).",
+                "CVE-2026-63220": "medium: CodeIgniter: Spoofable forwarded HTTPS headers in IncomingRequest::isSecure() — accepted until codeigniter4/framework >= 4.7.4 (needs PHP >= 8.2; see DEPLOYMENT.md). Exposure: not used by this app (no deleteBatch, no mime_in/ext_in/is_image rules, GD not ImageMagick, server-generated upload filenames).",
+                "CVE-2026-48062": "critical: CodeIgniter4 has a validation bypass when uploading file extensions via `ext_in` — accepted until codeigniter4/framework >= 4.7.4 (needs PHP >= 8.2; see DEPLOYMENT.md). Exposure: not used by this app (no deleteBatch, no mime_in/ext_in/is_image rules, GD not ImageMagick, server-generated upload filenames).",
+                "CVE-2025-54418": "critical: CodeIgniter4's ImageMagick Handler has Command Injection Vulnerability — accepted until codeigniter4/framework >= 4.7.4 (needs PHP >= 8.2; see DEPLOYMENT.md). Exposure: not used by this app (no deleteBatch, no mime_in/ext_in/is_image rules, GD not ImageMagick, server-generated upload filenames)."
+            }
+        }
     },
     "scripts": {
         "test": "phpunit"

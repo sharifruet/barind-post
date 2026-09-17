@@ -29,6 +29,25 @@ $withSource = static function (string $src) use ($baseQuery): string {
     </div>
 </div>
 
+<?php if (! empty($lastRun)): ?>
+    <div class="run-banner run-banner--<?= esc($lastRun['status'], 'attr') ?>">
+        <span class="run-banner__label"><i class="fas fa-robot me-1"></i>Last collection run</span>
+        <strong><?= esc(date('d M, H:i', strtotime($lastRun['created_at']))) ?></strong>
+        <span class="run-banner__wf">· <?= esc($lastRun['workflow']) ?></span> —
+        <strong><?= (int) $lastRun['created_count'] ?></strong> new,
+        <?= (int) $lastRun['duplicate_count'] ?> already seen,
+        <span class="<?= $lastRun['error_count'] ? 'text-danger fw-bold' : '' ?>"><?= (int) $lastRun['error_count'] ?> errors</span>
+        <?php if (! empty($lastRun['summary'])): ?>
+            <span class="run-banner__sources">
+                (<?= esc(implode(', ', array_map(static fn ($r) => $r['source'] . ' ' . (int) $r['created'] . ((int) ($r['error'] ?? 0) ? ' ⚠' . (int) $r['error'] : ''), $lastRun['summary']))) ?>)
+            </span>
+        <?php endif; ?>
+        <?php if (! empty($lastRun['message'])): ?>
+            <div class="run-banner__msg"><?= esc($lastRun['message']) ?></div>
+        <?php endif; ?>
+    </div>
+<?php endif; ?>
+
 <?php if (session()->getFlashdata('success')): ?>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         <?= session()->getFlashdata('success') ?>
@@ -127,6 +146,11 @@ $withSource = static function (string $src) use ($baseQuery): string {
                         <span><i class="far fa-clock me-1"></i><?= esc(date('d M Y, H:i', strtotime($item['created_at']))) ?></span>
                         <?php if (! empty($item['word_count'])): ?><span><?= (int) $item['word_count'] ?> words</span><?php endif; ?>
                         <span><i class="fas fa-folder me-1"></i><span data-category-label="<?= (int) $item['id'] ?>"><?= esc($item['category_name'] ?? '—') ?></span></span>
+                        <?php if (! empty($item['possible_duplicate_of'])): ?>
+                            <a class="status status--dup" href="/admin/news/edit/<?= (int) $item['possible_duplicate_of'] ?>" title="A recent article has a very similar headline — compare before publishing">
+                                <i class="fas fa-clone me-1"></i>possible duplicate of #<?= (int) $item['possible_duplicate_of'] ?><?= ! empty($item['duplicate_score']) ? ' (' . (int) $item['duplicate_score'] . '%)' : '' ?>
+                            </a>
+                        <?php endif; ?>
                         <?php if (! $isPending): ?><span class="status status--archived">Discarded</span><?php endif; ?>
                     </div>
                 </div>

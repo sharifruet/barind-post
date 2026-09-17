@@ -3,6 +3,10 @@ services:
   app:
     build: ./docker/app
     container_name: barindpost_app
+    environment:
+      # Local = development: detailed errors, debug toolbar, CSRF failures as 403 instead of
+      # silent redirects. Production servers set CI_ENVIRONMENT = production in .env.
+      CI_ENVIRONMENT: development
     volumes:
       - ./:/var/www/html
     ports:

@@ -111,3 +111,50 @@ Also in `dbscript.sql` and as migration `2026-09-17-000000_add_suggested_image_t
 ```sql
 ALTER TABLE news ADD COLUMN suggested_image_url VARCHAR(500) NULL AFTER content_hash;
 ```
+
+---
+
+# Schema changes from 2026-09-18 on: migrations first
+
+The schema now has one source of truth: `app/Database/Schema/baseline.sql` (applied by the
+`2026-09-18-000000_baseline_schema` migration) plus every later migration in
+`app/Database/Migrations/`. `dbscript.sql` is **generated** by `php spark schema:dump` and must not
+be edited by hand. Sample content is `app/Database/Schema/sample_data.sql` (`php spark db:seed SampleDataSeeder`).
+
+For a new change: write a migration → `php spark migrate` locally → `php spark schema:dump` → commit
+migration + `dbscript.sql` → add the production SQL to this file (or run `php spark migrate` on the
+server over SSH, which records it in the `migrations` table).
+
+## One-time on production (safe, no-op DDL)
+Running the baseline against a database created from the old `dbscript.sql` creates nothing (all
+statements are `CREATE TABLE IF NOT EXISTS`) and only records the baseline so future migrations
+apply incrementally:
+```bash
+php spark migrate        # over SSH; or skip — hand-applied SQL keeps working without it
+```
+
+## 2026-09-18-000001 — unify collation (`utf8mb4_unicode_ci`)
+`roles`, `users`, `news_tags`, `news_views` and `cities` were created without an explicit
+collation and took the server default (`utf8mb4_0900_ai_ci` on MySQL 8 unless the database was
+created with `utf8mb4_unicode_ci`); every other table declares `utf8mb4_unicode_ci`. The baseline
+now pins it. On production, either `php spark migrate` or:
+```sql
+ALTER TABLE roles      CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE users      CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE news_tags  CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE news_views CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE cities     CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+Harmless if the tables already use `utf8mb4_unicode_ci`.
+
+## 2026-09-18-000002 — indexes for the hottest queries
+Every public listing filters `status = 'published'` and sorts by `published_at`; section pages add
+`category_id`; the dashboard/"most read"/repeat-view checks range over `news_views.viewed_at`.
+`php spark migrate` on the server, or:
+```sql
+ALTER TABLE news       ADD INDEX idx_news_status_published          (status, published_at);
+ALTER TABLE news       ADD INDEX idx_news_category_status_published (category_id, status, published_at);
+ALTER TABLE news_views ADD INDEX idx_news_views_viewed_at           (viewed_at);
+```
+Code note: `DATE(viewed_at) = ?` cannot use an index — compare `viewed_at` against a range instead
+(`Admin::dashboard` was changed accordingly).

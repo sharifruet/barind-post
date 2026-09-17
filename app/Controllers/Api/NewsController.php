@@ -85,6 +85,11 @@ class NewsController extends BaseController
         if (! isset($payload['lead_text']) && isset($payload['key_points'])) {
             $payload['lead_text'] = $payload['key_points'];
         }
+        // Feed parsers sometimes deliver CDATA titles as objects; only a plain string is a source title.
+        if (isset($payload['source_title']) && ! is_string($payload['source_title'])) {
+            $payload['source_title'] = is_array($payload['source_title']) && isset($payload['source_title']['_']) && is_string($payload['source_title']['_'])
+                ? $payload['source_title']['_'] : null;
+        }
         if (isset($payload['lead_text']) && is_array($payload['lead_text'])) {
             $points = array_filter(array_map(static fn ($p) => trim((string) $p), $payload['lead_text']), static fn ($p) => $p !== '');
             $payload['lead_text'] = $points === [] ? null : implode("\n", $points);
@@ -104,6 +109,7 @@ class NewsController extends BaseController
             'suggested_image_url' => 'permit_empty|string|max_length[500]',
             'source'         => 'permit_empty|string|max_length[255]',
             'source_url'     => 'permit_empty|string|max_length[500]',
+            'source_title'   => 'permit_empty|string|max_length[500]',   // headline as the source published it (dedup across outlets)
             'dateline'       => 'permit_empty|string|max_length[255]',
             'tags'           => 'permit_empty|is_array',
             // Phase 1 never auto-publishes: reject anything other than "draft" explicitly
@@ -157,7 +163,14 @@ class NewsController extends BaseController
 
         $wordCount = count(preg_split('/\s+/u', trim(strip_tags($content)), -1, PREG_SPLIT_NO_EMPTY));
 
+        // Same event from another outlet? Flag it for the editor; never auto-merge.
+        $sourceTitle = isset($payload['source_title']) ? trim((string) $payload['source_title']) : null;
+        $similar     = $newsModel->findSimilar($sourceTitle, $title, $sourceUrl);
+
         $data = [
+            'source_title'          => $sourceTitle !== '' ? $sourceTitle : null,
+            'possible_duplicate_of' => $similar['id'] ?? null,
+            'duplicate_score'       => $similar ? (int) round($similar['score'] * 100) : null,
             'title'          => $title,
             'subtitle'       => $payload['subtitle'] ?? null,
             'lead_text'      => $payload['lead_text'] ?? null,
@@ -201,10 +214,11 @@ class NewsController extends BaseController
         }
 
         return $this->json([
-            'id'           => $newsId,
-            'slug'         => $data['slug'],
-            'status'       => $data['status'],
-            'skipped_tags' => $skippedTags,
+            'id'                 => $newsId,
+            'slug'               => $data['slug'],
+            'status'             => $data['status'],
+            'skipped_tags'       => $skippedTags,
+            'possible_duplicate' => $similar ? ['id' => $similar['id'], 'title' => $similar['title'], 'score' => $similar['score']] : null,
         ], 201);
     }
 

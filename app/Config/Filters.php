@@ -28,7 +28,7 @@ class Filters extends BaseFilters
     public array $aliases = [
         'csrf'          => CSRF::class,
         'toolbar'       => DebugToolbar::class,
-        'honeypot'      => Honeypot::class,
+        'honeypot'      => \App\Filters\Honeypot::class, // framework filter + clean 403 instead of an exception page
         'invalidchars'  => InvalidChars::class,
         'secureheaders' => SecureHeaders::class,
         'cors'          => Cors::class,
@@ -36,6 +36,8 @@ class Filters extends BaseFilters
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
         'apikey'        => ApiKeyFilter::class,
+        'adminauth'     => \App\Filters\AdminAuthFilter::class,
+        'role'          => \App\Filters\RoleFilter::class,
     ];
 
     /**
@@ -71,7 +73,12 @@ class Filters extends BaseFilters
      */
     public array $globals = [
         'before' => [
-            // 'honeypot',
+            // Redirects to HTTPS only when Config\App::$forceGlobalSecureRequests is true,
+            // which App.php sets for production with an https:// base URL.
+            'forcehttps',
+            // Spam trap: the `after` half injects a hidden field into every POST form,
+            // this half rejects submissions that filled it (bots do, people can't).
+            'honeypot',
             // CSRF on every state-changing request. Excluded: the automation API
             // (Bearer-token auth, called by n8n, no browser session) and the
             // article view-count beacon (navigator.sendBeacon cannot send headers).
@@ -79,8 +86,9 @@ class Filters extends BaseFilters
             // 'invalidchars',
         ],
         'after' => [
-            // 'honeypot',
-            // 'secureheaders',
+            'honeypot',
+            // X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy…
+            'secureheaders',
         ],
     ];
 
@@ -108,5 +116,9 @@ class Filters extends BaseFilters
      *
      * @var array<string, array<string, list<string>>>
      */
-    public array $filters = [];
+    public array $filters = [
+        // Every admin URI requires a logged-in newsroom session; role-specific
+        // limits are `role:` filters on individual routes in Routes.php.
+        'adminauth' => ['before' => ['admin', 'admin/*']],
+    ];
 }

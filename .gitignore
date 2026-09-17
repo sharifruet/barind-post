@@ -128,3 +128,6 @@ _modules/*
 
 /results/
 /phpunit*.xml
+
+# Open Graph headline cards rendered on demand (PublicSite::ogImage)
+writable/og/

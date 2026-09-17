@@ -4,7 +4,7 @@
 
 1. **cPanel Access**: You need access to your cPanel hosting account
 2. **MySQL Database**: A MySQL database (version 5.7+ or 8.0+ recommended)
-3. **PHP Version**: PHP 8.1 or higher
+3. **PHP Version**: PHP 8.1 or higher (plan for **8.2+**: the next CodeIgniter release with security fixes, 4.7.4, requires it — see `config.audit.ignore` in `composer.json`)
 4. **Required PHP Extensions**:
    - mysqli
    - mbstring
@@ -56,7 +56,7 @@ public_html/ (or your domain folder)
 2. **Import Database Schema**:
    - Go to phpMyAdmin in cPanel
    - Select your database
-   - Import the `dbscript.sql` file
+   - Import the `dbscript.sql` file (generated from the migrations by `php spark schema:dump` — never edit it by hand; see `DATABASE_UPDATES.md`)
 
 ## Step 4: Environment Configuration
 
@@ -191,7 +191,9 @@ If Composer is not available:
 - [ ] `.env` file is not accessible via web
 - [ ] Database credentials are secure
 - [ ] File permissions are correct
-- [ ] HTTPS is enabled
+- [ ] HTTPS is enabled (with `app.baseURL = 'https://…'` and `CI_ENVIRONMENT = production` in `.env`, the app redirects all HTTP requests to HTTPS)
+- [ ] `CI_ENVIRONMENT = production` is set in the server `.env` (uncomment the line). Without it the app still runs in production mode by default, but set it explicitly: `development` shows stack traces and the debug toolbar to visitors.
+- [ ] `https://<site>/news-sitemap.xml` submitted in Google Search Console (Google News sitemap, last 48 h of articles)
 - [ ] Error reporting is disabled in production
 - [ ] Logging is configured appropriately
 

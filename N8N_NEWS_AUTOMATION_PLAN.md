@@ -232,6 +232,65 @@ newline-joined `lead_text`. The API also accepts `lead_text`/`key_points` as an
 array. Because the points come from the already-extracted facts, this adds no new
 hallucination surface beyond what Stage 2 already had.
 
+**Newsroom visibility, duplicates, draft quality, listing sources, OG images (2026-09-18).**
+
+- **Run summaries the newsroom sees.** The orchestrator now ends `Summarize → Build Run
+  Report → Post Run Report → Notify Newsroom (Telegram)`. `Post Run Report` calls
+  `POST /api/v1/automation/runs` (Bearer, `Api\AutomationController`), which stores one
+  row per run in the new `automation_runs` table; `/admin/incoming` shows the latest as a
+  "Last collection run" banner (green/red, per-source counts, error notes). The Telegram
+  node is **disabled** with a sticky note explaining the four steps to enable it (BotFather
+  token → n8n credential → chat id → enable); nothing depends on it.
+- **Feed failures are no longer silent.** In the RSS workflow, `RSS Feed Read`'s error
+  output goes to `Feed Failure`, which is merged with the article `Report` items
+  (`Collect Reports` → `Run Report`, the workflow's last node), so a feed that cannot be
+  parsed shows up in the summary as `Jago News 24 ⚠1 — feed: Invalid character…`.
+- **Crashes go to an error workflow.** "Barind Post - Pipeline Error Alert"
+  (`n8n-nodes-base.errorTrigger` → `Format Error` → `Post Error Report` → Telegram) is set
+  as *Settings → Error workflow* on all four pipelines. **It must be active** — n8n 2.x
+  logs `Workflow "…" is not active and cannot be executed` and silently skips it
+  otherwise (found the hard way: the first two ingest failures produced no alert). Any execution that fails (article
+  API down, extraction refusing a page, OpenAI failing) becomes a red banner with the
+  workflow name, the failing node and the message, plus the execution URL.
+- **Cross-source duplicates.** Both AI workflows now send `source_title` (the outlet's own
+  headline). At intake the API compares it and the rewritten title against the last 7
+  days of articles with `App\Libraries\TitleSimilarity` (content-word overlap after
+  stopwords/punctuation/digit normalisation; ≥ 3 shared words and ≥ 0.6 containment or
+  Jaccard) and sets `news.possible_duplicate_of` / `duplicate_score`. The queue shows a
+  yellow "possible duplicate of #N (score%)" badge linking to the other article; nothing is
+  merged automatically. Unit-tested in `tests/unit/TitleSimilarityTest.php`.
+- **Draft quality.** `Build Article Prompt` now asks for a fixed structure (lead →
+  context → attributed quote(s) → what's next), a target length by section (news 220–320
+  words, sport/entertainment/lifestyle 180–260, editorial/special report 350–500, always
+  bounded by the extracted facts), no headline restatement, and tags picked **from the
+  real tag list** (`tags_bn`, exact names; fuzzy only as fallback). The extraction library
+  strips site chrome glued to the first paragraph ("প্রকাশ: … মিনিটে পড়ুন", photo
+  captions, share labels). The first run with the length target still produced ~100-word
+  drafts from 160–1,000-word sources: Stage 1 was returning only a handful of `key_facts`,
+  and Stage 2's "write fewer if the facts are thin" clause let the model stop there. Stage 1
+  now demands *every* distinct fact (typically 8–15 for a full article, all quotes as
+  "speaker: quote") and Stage 2 is told how many facts/quotes it holds and must use all
+  of them, shorter only below 5 facts.
+- **Feed titles can be objects.** The Daily Star wraps titles in a link, and rss-parser
+  hands that over as `{ a: [ { _: "text", $: { href } } ] }` — which made `source_title`
+  fail API validation (422) and put "[object Object]" into Stage 1's "Source title" line.
+  `Tag With Source` now normalises `title` once with a small `titleText()` helper (first
+  text node found), `Parse Draft` applies the same to `source_title`, and the API discards
+  non-string values.
+- **Listing collector is config-driven.** "Barind Post - Listing Sources (top N per site)"
+  (formerly the Nayadiganta workflow) reads a `Listing Sources` array — `listing`,
+  `link_regex`, `scope_marker`, `top_n` per site — and reports listing-fetch failures
+  through the same `Report` path. **The four requested sites cannot be added:** Jugantor,
+  Kaler Kantho and Banglanews24 answer plain HTTP with Cloudflare's JS challenge (403
+  "Just a moment…", the same reason their feeds failed on day one) and
+  bangla.bdnews24.com renders its listings with JavaScript (4 article links in 400 KB of
+  HTML). They would need a headless browser (e.g. an n8n Browserless/Puppeteer node) —
+  a separate decision, not a config change.
+- **OG image for photo-less articles.** The GD headline-card renderer moved from the admin
+  Photo Card tool into `App\Libraries\PhotoCard`; `GET /og/{id}.png`
+  (`PublicSite::ogImage`, cached in `writable/og/`) serves it, and article pages use it as
+  `og:image` / `twitter:image` when `image_url` is empty (previously the site logo).
+
 **Gotcha found while doing this — editing an *active* webhook workflow via the REST
 API does not refresh what the webhook runs.** After `PATCH /rest/workflows/{id}`
 updated the URL-ingest workflow's prompt (stored version confirmed changed), the next

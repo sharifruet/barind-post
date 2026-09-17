@@ -12,42 +12,38 @@ $routes->post('/login', 'Auth::attemptLogin');
 $routes->get('/logout', 'Auth::logout');
 
 // Admin Routes
-$routes->get('/admin/roles', 'Admin::roles');
-$routes->post('/admin/roles/add', 'Admin::addRole');
-$routes->post('/admin/roles/delete', 'Admin::deleteRole');
-$routes->get('/admin/roles/edit/(:num)', 'Admin::editRole/$1'); // Added for roles edit
-$routes->post('/admin/roles/edit/(:num)', 'Admin::updateRole/$1'); // Added for roles update
+$routes->get('/admin/roles', 'AdminUsers::roles', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/roles/add', 'AdminUsers::addRole', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/roles/delete', 'AdminUsers::deleteRole', ['filter' => 'role:admin,editor,sub-editor']);
 
-$routes->get('/admin/users', 'Admin::users');
-$routes->post('/admin/users/add', 'Admin::addUser');
-$routes->post('/admin/users/delete', 'Admin::deleteUser');
+$routes->get('/admin/users', 'AdminUsers::users', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/users/add', 'AdminUsers::addUser', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/users/delete', 'AdminUsers::deleteUser', ['filter' => 'role:admin,editor,sub-editor']);
 
-$routes->get('/admin/news', 'Admin::newsList');
-$routes->get('/test', 'Admin::test');
-$routes->get('/admin/news/create', 'Admin::newsCreate');
-$routes->post('/admin/news/create', 'Admin::newsStore');
-$routes->get('/admin/news/edit/(:num)', 'Admin::newsEdit/$1');
-$routes->post('/admin/news/edit/(:num)', 'Admin::newsUpdate/$1');
-$routes->post('/admin/news/delete/(:num)', 'Admin::newsDelete/$1');
-$routes->post('/admin/news/toggle-featured/(:num)', 'Admin::toggleFeatured/$1');
-$routes->post('/admin/news/toggle-breaking/(:num)', 'Admin::toggleBreakingNews/$1');
+$routes->get('/admin/news', 'AdminNews::newsList');
+$routes->get('/admin/news/create', 'AdminNews::newsCreate');
+$routes->post('/admin/news/create', 'AdminNews::newsStore');
+$routes->get('/admin/news/edit/(:num)', 'AdminNews::newsEdit/$1');
+$routes->post('/admin/news/edit/(:num)', 'AdminNews::newsUpdate/$1');
+$routes->post('/admin/news/delete/(:num)', 'AdminNews::newsDelete/$1');
+$routes->post('/admin/news/toggle-featured/(:num)', 'AdminNews::toggleFeatured/$1', ['filter' => 'role:admin']);
+$routes->post('/admin/news/toggle-breaking/(:num)', 'AdminNews::toggleBreakingNews/$1', ['filter' => 'role:admin']);
 
 // Photo Card Generation Routes (Admin only) - Front-end JavaScript based
-$routes->get('/admin/photo-card-generator', 'Admin::photoCardGenerator');
-$routes->post('/admin/photo-card-generator/generate', 'Admin::generatePhotoCard');
+$routes->get('/admin/photo-card-generator', 'AdminPhotoCards::photoCardGenerator', ['filter' => 'role:admin']);
+$routes->post('/admin/photo-card-generator/generate', 'AdminPhotoCards::generatePhotoCard', ['filter' => 'role:admin']);
 
 // Add route for listing news images
-$routes->get('/admin/news/images-list', 'Admin::newsImagesList');
-$routes->get('/admin/news/search', 'Admin::newsSearch');
+$routes->get('/admin/news/search', 'AdminNews::newsSearch');
 
 // Admin incoming queue — review/publish/discard automation drafts (AdminIncoming)
-$routes->get('/admin/incoming', 'AdminIncoming::index');
-$routes->post('/admin/incoming/publish/(:num)', 'AdminIncoming::publish/$1');
-$routes->post('/admin/incoming/discard/(:num)', 'AdminIncoming::discard/$1');
-$routes->post('/admin/incoming/restore/(:num)', 'AdminIncoming::restore/$1');
-$routes->post('/admin/incoming/discard-bulk', 'AdminIncoming::discardBulk');
-$routes->post('/admin/incoming/category/(:num)', 'AdminIncoming::category/$1');
-$routes->post('/admin/incoming/adopt-image/(:num)', 'AdminIncoming::adoptImage/$1');
+$routes->get('/admin/incoming', 'AdminIncoming::index', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/incoming/publish/(:num)', 'AdminIncoming::publish/$1', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/incoming/discard/(:num)', 'AdminIncoming::discard/$1', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/incoming/restore/(:num)', 'AdminIncoming::restore/$1', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/incoming/discard-bulk', 'AdminIncoming::discardBulk', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/incoming/category/(:num)', 'AdminIncoming::category/$1', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/incoming/adopt-image/(:num)', 'AdminIncoming::adoptImage/$1', ['filter' => 'role:admin,editor,sub-editor']);
 
 // View-count beacon: pinged by the article page's JS so counting survives page caching
 $routes->post('/news/view/(:num)', 'PublicSite::trackViewBeacon/$1');
@@ -69,34 +65,34 @@ $routes->get('/image-upload/all-images', 'ImageUpload::getAllImages');
 $routes->post('/image-upload/link-image', 'ImageUpload::linkImage');
 $routes->post('/image-upload/remove-from-news', 'ImageUpload::removeFromNews');
 
-$routes->get('/admin/tags', 'Admin::tags');
-$routes->post('/admin/tags/add', 'Admin::addTag');
-$routes->post('/admin/tags/delete', 'Admin::deleteTag');
-$routes->get('/admin/tags/edit/(:num)', 'Admin::editTag/$1');
-$routes->post('/admin/tags/edit/(:num)', 'Admin::updateTag/$1');
+$routes->get('/admin/tags', 'AdminTags::tags');
+$routes->post('/admin/tags/add', 'AdminTags::addTag');
+$routes->post('/admin/tags/delete', 'AdminTags::deleteTag');
+$routes->get('/admin/tags/edit/(:num)', 'AdminTags::editTag/$1');
+$routes->post('/admin/tags/edit/(:num)', 'AdminTags::updateTag/$1');
 
-$routes->get('/admin/categories', 'Admin::categories');
-$routes->post('/admin/categories/add', 'Admin::addCategory');
-$routes->post('/admin/categories/delete', 'Admin::deleteCategory');
-$routes->get('/admin/categories/edit/(:num)', 'Admin::editCategory/$1');
-$routes->post('/admin/categories/edit/(:num)', 'Admin::updateCategory/$1');
+$routes->get('/admin/categories', 'AdminCategories::categories');
+$routes->post('/admin/categories/add', 'AdminCategories::addCategory');
+$routes->post('/admin/categories/delete', 'AdminCategories::deleteCategory');
+$routes->get('/admin/categories/edit/(:num)', 'AdminCategories::editCategory/$1');
+$routes->post('/admin/categories/edit/(:num)', 'AdminCategories::updateCategory/$1');
 
 // Reporter Roles Routes
-$routes->get('/admin/reporter-roles', 'Admin::reporterRoles');
-$routes->post('/admin/reporter-roles/add', 'Admin::addReporterRole');
-$routes->post('/admin/reporter-roles/delete', 'Admin::deleteReporterRole');
-$routes->get('/admin/reporter-roles/edit/(:num)', 'Admin::editReporterRole/$1');
-$routes->post('/admin/reporter-roles/edit/(:num)', 'Admin::updateReporterRole/$1');
-$routes->get('/admin/reporter-roles/assign/(:num)', 'Admin::assignReporterRoles/$1');
-$routes->post('/admin/reporter-roles/assign/(:num)', 'Admin::saveReporterRoleAssignment/$1');
+$routes->get('/admin/reporter-roles', 'AdminReporterRoles::reporterRoles', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/reporter-roles/add', 'AdminReporterRoles::addReporterRole', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/reporter-roles/delete', 'AdminReporterRoles::deleteReporterRole', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->get('/admin/reporter-roles/edit/(:num)', 'AdminReporterRoles::editReporterRole/$1', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/reporter-roles/edit/(:num)', 'AdminReporterRoles::updateReporterRole/$1', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->get('/admin/reporter-roles/assign/(:num)', 'AdminReporterRoles::assignReporterRoles/$1', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/reporter-roles/assign/(:num)', 'AdminReporterRoles::saveReporterRoleAssignment/$1', ['filter' => 'role:admin,editor,sub-editor']);
 
 // Admin Contacts Routes
-$routes->get('/admin/contacts', 'Admin::contacts');
-$routes->get('/admin/contacts/list', 'Admin::getContacts');
-$routes->get('/admin/contacts/(:num)', 'Admin::getContact/$1');
-$routes->post('/admin/contacts/(:num)/reply', 'Admin::replyToContact/$1');
-$routes->delete('/admin/contacts/(:num)', 'Admin::deleteContact/$1');
-$routes->get('/admin/contacts/export', 'Admin::exportContacts');
+$routes->get('/admin/contacts', 'AdminContacts::contacts');
+$routes->get('/admin/contacts/list', 'AdminContacts::getContacts');
+$routes->get('/admin/contacts/(:num)', 'AdminContacts::getContact/$1');
+$routes->post('/admin/contacts/(:num)/reply', 'AdminContacts::replyToContact/$1');
+$routes->delete('/admin/contacts/(:num)', 'AdminContacts::deleteContact/$1');
+$routes->get('/admin/contacts/export', 'AdminContacts::exportContacts');
 
 // Public Site Routes
 $routes->get('/section/(:segment)', 'PublicSite::section/$1');
@@ -111,16 +107,19 @@ $routes->post('/contact', 'PublicSite::submitContact');
 $routes->get('/ads', 'PublicSite::ads');
 $routes->get('/barind-post', 'PublicSite::about');
 
+// Google News sitemap (last 48 h of published articles)
+$routes->get('/news-sitemap.xml', 'PublicSite::newsSitemap');
+
 // RSS Feed Routes
 $routes->get('/rss', 'PublicSite::rss');
 $routes->get('/rss/category/(:segment)', 'PublicSite::rssCategory/$1');
 $routes->get('/rss-info', 'PublicSite::rssInfo');
 
 // Admin Prayer Times Management Routes
-$routes->get('/admin/prayer-times', 'Admin::prayerTimes');
-$routes->get('/admin/prayer-times/(:num)', 'Admin::prayerTimes/$1');
-$routes->get('/admin/prayer-times/fetch/(:num)/(:num)', 'Admin::fetchPrayerTimes/$1/$2');
-$routes->get('/admin/prayer-times/delete/(:num)/(:num)', 'Admin::deletePrayerTimes/$1/$2');
+$routes->get('/admin/prayer-times', 'AdminPrayerTimes::prayerTimes');
+$routes->get('/admin/prayer-times/(:num)', 'AdminPrayerTimes::prayerTimes/$1');
+$routes->get('/admin/prayer-times/fetch/(:num)/(:num)', 'AdminPrayerTimes::fetchPrayerTimes/$1/$2');
+$routes->get('/admin/prayer-times/delete/(:num)/(:num)', 'AdminPrayerTimes::deletePrayerTimes/$1/$2');
 
 // Prayer Times API Routes
 $routes->get('/prayer-time/(:num)', 'PrayerTimes::index/$1');
@@ -134,47 +133,47 @@ $routes->get('/prayer-time/today/(:num)', 'PrayerTimes::getToday/$1');
 $routes->get('/prayer-time/cities', 'PrayerTimes::getCities');
 
 // Admin Logs Route
-$routes->get('/admin/logs', 'Admin::viewLogs');
+$routes->get('/admin/logs', 'Admin::viewLogs', ['filter' => 'role:admin']); // logs can contain internals: admins only
 
 // Kicker Management Routes
-$routes->get('/admin/kickers', 'Admin::kickers');
-$routes->get('/admin/kickers/create', 'Admin::createKicker');
-$routes->post('/admin/kickers/create', 'Admin::createKicker');
-$routes->get('/admin/kickers/edit/(:num)', 'Admin::editKicker/$1');
-$routes->post('/admin/kickers/edit/(:num)', 'Admin::editKicker/$1');
-$routes->post('/admin/kickers/delete/(:num)', 'Admin::deleteKicker/$1');
-$routes->get('/admin/kickers/api', 'Admin::getKickers');
+$routes->get('/admin/kickers', 'AdminKickers::kickers');
+$routes->get('/admin/kickers/create', 'AdminKickers::createKicker');
+$routes->post('/admin/kickers/create', 'AdminKickers::createKicker');
+$routes->get('/admin/kickers/edit/(:num)', 'AdminKickers::editKicker/$1');
+$routes->post('/admin/kickers/edit/(:num)', 'AdminKickers::editKicker/$1');
+$routes->post('/admin/kickers/delete/(:num)', 'AdminKickers::deleteKicker/$1');
+$routes->get('/admin/kickers/api', 'AdminKickers::getKickers');
 
 // Sports Events — Admin
-$routes->get('/admin/sports-events', 'AdminSportsEvents::index');
-$routes->get('/admin/sports-events/create', 'AdminSportsEvents::create');
-$routes->post('/admin/sports-events/create', 'AdminSportsEvents::store');
-$routes->get('/admin/sports-events/edit/(:num)', 'AdminSportsEvents::edit/$1');
-$routes->post('/admin/sports-events/edit/(:num)', 'AdminSportsEvents::update/$1');
-$routes->post('/admin/sports-events/delete/(:num)', 'AdminSportsEvents::delete/$1');
-$routes->get('/admin/sports-events/manage/(:num)', 'AdminSportsEvents::manage/$1');
-$routes->get('/admin/sports-events/participants', 'AdminSportsEvents::participants');
-$routes->post('/admin/sports-events/participants/add', 'AdminSportsEvents::addParticipant');
-$routes->get('/admin/sports-events/participants/edit/(:num)', 'AdminSportsEvents::editParticipant/$1');
-$routes->post('/admin/sports-events/participants/edit/(:num)', 'AdminSportsEvents::updateParticipant/$1');
-$routes->post('/admin/sports-events/participants/delete/(:num)', 'AdminSportsEvents::deleteParticipant/$1');
-$routes->get('/admin/sports-events/venues', 'AdminSportsEvents::venues');
-$routes->post('/admin/sports-events/venues/add', 'AdminSportsEvents::addVenue');
-$routes->get('/admin/sports-events/venues/edit/(:num)', 'AdminSportsEvents::editVenue/$1');
-$routes->post('/admin/sports-events/venues/edit/(:num)', 'AdminSportsEvents::updateVenue/$1');
-$routes->post('/admin/sports-events/venues/delete/(:num)', 'AdminSportsEvents::deleteVenue/$1');
-$routes->get('/admin/sports-events/(:num)/teams', 'AdminSportsEvents::eventTeams/$1');
-$routes->post('/admin/sports-events/(:num)/teams/add', 'AdminSportsEvents::addEventTeam/$1');
-$routes->post('/admin/sports-events/(:num)/teams/update/(:num)', 'AdminSportsEvents::updateEventTeam/$1/$2');
-$routes->post('/admin/sports-events/(:num)/teams/remove/(:num)', 'AdminSportsEvents::removeEventTeam/$1/$2');
-$routes->get('/admin/sports-events/(:num)/matches', 'AdminSportsEvents::matches/$1');
-$routes->get('/admin/sports-events/(:num)/matches/create', 'AdminSportsEvents::createMatch/$1');
-$routes->post('/admin/sports-events/(:num)/matches/create', 'AdminSportsEvents::storeMatch/$1');
-$routes->get('/admin/sports-events/(:num)/matches/edit/(:num)', 'AdminSportsEvents::editMatch/$1/$2');
-$routes->post('/admin/sports-events/(:num)/matches/edit/(:num)', 'AdminSportsEvents::updateMatch/$1/$2');
-$routes->post('/admin/sports-events/(:num)/matches/delete/(:num)', 'AdminSportsEvents::deleteMatch/$1/$2');
-$routes->get('/admin/sports-events/(:num)/standings', 'AdminSportsEvents::standings/$1');
-$routes->get('/admin/sports-events/(:num)/news', 'AdminSportsEvents::eventNews/$1');
+$routes->get('/admin/sports-events', 'AdminSportsEvents::index', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->get('/admin/sports-events/create', 'AdminSportsEvents::create', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/sports-events/create', 'AdminSportsEvents::store', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->get('/admin/sports-events/edit/(:num)', 'AdminSportsEvents::edit/$1', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/sports-events/edit/(:num)', 'AdminSportsEvents::update/$1', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/sports-events/delete/(:num)', 'AdminSportsEvents::delete/$1', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->get('/admin/sports-events/manage/(:num)', 'AdminSportsEvents::manage/$1', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->get('/admin/sports-events/participants', 'AdminSportsEvents::participants', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/sports-events/participants/add', 'AdminSportsEvents::addParticipant', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->get('/admin/sports-events/participants/edit/(:num)', 'AdminSportsEvents::editParticipant/$1', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/sports-events/participants/edit/(:num)', 'AdminSportsEvents::updateParticipant/$1', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/sports-events/participants/delete/(:num)', 'AdminSportsEvents::deleteParticipant/$1', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->get('/admin/sports-events/venues', 'AdminSportsEvents::venues', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/sports-events/venues/add', 'AdminSportsEvents::addVenue', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->get('/admin/sports-events/venues/edit/(:num)', 'AdminSportsEvents::editVenue/$1', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/sports-events/venues/edit/(:num)', 'AdminSportsEvents::updateVenue/$1', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/sports-events/venues/delete/(:num)', 'AdminSportsEvents::deleteVenue/$1', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->get('/admin/sports-events/(:num)/teams', 'AdminSportsEvents::eventTeams/$1', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/sports-events/(:num)/teams/add', 'AdminSportsEvents::addEventTeam/$1', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/sports-events/(:num)/teams/update/(:num)', 'AdminSportsEvents::updateEventTeam/$1/$2', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/sports-events/(:num)/teams/remove/(:num)', 'AdminSportsEvents::removeEventTeam/$1/$2', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->get('/admin/sports-events/(:num)/matches', 'AdminSportsEvents::matches/$1', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->get('/admin/sports-events/(:num)/matches/create', 'AdminSportsEvents::createMatch/$1', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/sports-events/(:num)/matches/create', 'AdminSportsEvents::storeMatch/$1', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->get('/admin/sports-events/(:num)/matches/edit/(:num)', 'AdminSportsEvents::editMatch/$1/$2', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/sports-events/(:num)/matches/edit/(:num)', 'AdminSportsEvents::updateMatch/$1/$2', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->post('/admin/sports-events/(:num)/matches/delete/(:num)', 'AdminSportsEvents::deleteMatch/$1/$2', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->get('/admin/sports-events/(:num)/standings', 'AdminSportsEvents::standings/$1', ['filter' => 'role:admin,editor,sub-editor']);
+$routes->get('/admin/sports-events/(:num)/news', 'AdminSportsEvents::eventNews/$1', ['filter' => 'role:admin,editor,sub-editor']);
 
 // Sports Events — Public
 $routes->get('/sports/(:segment)', 'SportsEvent::hub/$1');
@@ -194,4 +193,8 @@ $routes->group('api/v1', ['filter' => 'apikey'], static function ($routes) {
     $routes->post('news', 'Api\NewsController::create');
     $routes->get('categories', 'Api\NewsController::categories');
     $routes->get('tags', 'Api\NewsController::tags');
+    $routes->post('automation/runs', 'Api\AutomationController::createRun'); // n8n run summaries / error reports
 });
+
+// Open Graph card for articles without a photo (GD-rendered headline card, cached in writable/og)
+$routes->get('/og/(:num)\.png', 'PublicSite::ogImage/$1');

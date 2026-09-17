@@ -10,7 +10,7 @@ class NewsModel extends Model
         'title', 'subtitle', 'lead_text', 'reporterRole', 'content', 'author_id', 'category_id', 'status',
         'featured', 'kicker_id', 'event_id', 'match_id', 'created_at', 'updated_at', 'published_at',
         'image_url', 'image_caption', 'image_alt_text', 'slug', 'source', 'dateline', 'word_count', 'language',
-        'source_url', 'content_hash', 'suggested_image_url'
+        'source_url', 'content_hash', 'suggested_image_url', 'source_title', 'possible_duplicate_of', 'duplicate_score'
     ];
     protected $returnType = 'array';
 
@@ -42,6 +42,44 @@ class NewsModel extends Model
     /**
      * Get most read news from a specific time period
      */
+    /**
+     * Best headline match among recent articles (any status but archived),
+     * for cross-source duplicate flagging at intake. Compares the incoming
+     * source headline and rewritten title against both stored titles.
+     *
+     * @return array{id:int,title:string,score:float}|null
+     */
+    public function findSimilar(?string $sourceTitle, ?string $title, ?string $excludeSourceUrl = null, int $days = 7, int $limit = 500): ?array
+    {
+        $needles = array_values(array_filter([$sourceTitle, $title], static fn ($t) => is_string($t) && trim($t) !== ''));
+        if ($needles === []) {
+            return null;
+        }
+
+        $builder = $this->select('id, title, source_title, source_url')
+            ->where('status !=', 'archived')
+            ->where('created_at >=', date('Y-m-d H:i:s', strtotime("-{$days} days")))
+            ->orderBy('id', 'DESC');
+        if ($excludeSourceUrl !== null && $excludeSourceUrl !== '') {
+            $builder->where('source_url !=', $excludeSourceUrl);
+        }
+
+        $best = null;
+        foreach ($builder->findAll($limit) as $row) {
+            $haystacks = array_filter([$row['source_title'] ?? null, $row['title'] ?? null]);
+            foreach ($needles as $n) {
+                foreach ($haystacks as $h) {
+                    $score = \App\Libraries\TitleSimilarity::score($n, $h);
+                    if ($best === null || $score > $best['score']) {
+                        $best = ['id' => (int) $row['id'], 'title' => $row['title'], 'score' => $score];
+                    }
+                }
+            }
+        }
+
+        return ($best !== null && \App\Libraries\TitleSimilarity::isDuplicate($best['score'])) ? $best : null;
+    }
+
     public function getMostReadNews($days = 3, $limit = 10)
     {
         return $this->getMostReadWithKicker($days, $limit);

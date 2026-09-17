@@ -352,11 +352,11 @@ class PublicSite extends Controller
             'og_title' => $news['title'],
             'og_description' => seo_description($news, ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।'),
             'og_type' => 'article',
-            'og_image' => !empty($news['image_url']) ? get_image_url($news['image_url']) : base_url('public/logo.png'),
+            'og_image' => !empty($news['image_url']) ? get_image_url($news['image_url']) : base_url('og/' . (int) $news['id'] . '.png'),
             'twitter_card' => 'summary_large_image',
             'twitter_title' => $news['title'],
             'twitter_description' => seo_description($news, ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।'),
-            'twitter_image' => !empty($news['image_url']) ? get_image_url($news['image_url']) : base_url('public/logo.png')
+            'twitter_image' => !empty($news['image_url']) ? get_image_url($news['image_url']) : base_url('og/' . (int) $news['id'] . '.png')
         ];
         
         return view('public/news', $data);
@@ -557,11 +557,11 @@ class PublicSite extends Controller
             'og_title' => $news['title'],
             'og_description' => seo_description($news, ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।'),
             'og_type' => 'article',
-            'og_image' => !empty($news['image_url']) ? get_image_url($news['image_url']) : base_url('public/logo.png'),
+            'og_image' => !empty($news['image_url']) ? get_image_url($news['image_url']) : base_url('og/' . (int) $news['id'] . '.png'),
             'twitter_card' => 'summary_large_image',
             'twitter_title' => $news['title'],
             'twitter_description' => seo_description($news, ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।'),
-            'twitter_image' => !empty($news['image_url']) ? get_image_url($news['image_url']) : base_url('public/logo.png')
+            'twitter_image' => !empty($news['image_url']) ? get_image_url($news['image_url']) : base_url('og/' . (int) $news['id'] . '.png')
         ];
         
         return view('public/news', $data);
@@ -796,6 +796,72 @@ class PublicSite extends Controller
         $ipAddress = $this->request->getIPAddress();
         
         return $newsModel->trackView($newsId, $ipAddress);
+    }
+
+    /**
+     * Open Graph image for an article without a photo: a GD-rendered headline
+     * card (the same renderer as the admin Photo Card tool), cached on disk under
+     * writable/og keyed by title + updated_at so edits regenerate it.
+     */
+    public function ogImage($id)
+    {
+        $news = (new \App\Models\NewsModel())->find((int) $id);
+        if (! $news || $news['status'] !== 'published') {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        $dir = WRITEPATH . 'og/';
+        if (! is_dir($dir)) {
+            @mkdir($dir, 0775, true);
+        }
+        $file = $dir . (int) $id . '-' . substr(md5($news['title'] . '|' . ($news['updated_at'] ?? '') . '|' . ($news['image_url'] ?? '')), 0, 10) . '.png';
+        if (! is_file($file)) {
+            file_put_contents($file, (new \App\Libraries\PhotoCard())->render($news, 'default'));
+        }
+
+        return $this->response
+            ->setHeader('Content-Type', 'image/png')
+            ->removeHeader('Cache-Control')                       // drop the framework's default no-store
+            ->setHeader('Cache-Control', 'public, max-age=86400')
+            ->setBody((string) file_get_contents($file));
+    }
+
+    /**
+     * Google News sitemap: published articles from the last 48 hours (Google
+     * ignores older entries), newest first, at most 1000. Cached briefly and
+     * purged on every news change like the other public pages.
+     *
+     * Submit https://<site>/news-sitemap.xml in Search Console.
+     */
+    public function newsSitemap()
+    {
+        $this->cachePage(60);
+
+        $rows = (new \App\Models\NewsModel())
+            ->select('slug, title, published_at')
+            ->where('status', 'published')
+            ->where('published_at >=', date('Y-m-d H:i:s', strtotime('-48 hours')))
+            ->orderBy('published_at', 'DESC')
+            ->findAll(1000);
+
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
+             . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">' . "\n";
+        foreach ($rows as $row) {
+            $xml .= "  <url>\n"
+                  . '    <loc>' . htmlspecialchars(base_url('news/' . rawurlencode($row['slug'])), ENT_XML1 | ENT_QUOTES, 'UTF-8') . "</loc>\n"
+                  . "    <news:news>\n"
+                  . "      <news:publication>\n"
+                  . "        <news:name>বারিন্দ পোস্ট</news:name>\n"
+                  . "        <news:language>bn</news:language>\n"
+                  . "      </news:publication>\n"
+                  . '      <news:publication_date>' . date('c', strtotime($row['published_at'])) . "</news:publication_date>\n"
+                  . '      <news:title>' . htmlspecialchars($row['title'], ENT_XML1 | ENT_QUOTES, 'UTF-8') . "</news:title>\n"
+                  . "    </news:news>\n"
+                  . "  </url>\n";
+        }
+        $xml .= '</urlset>';
+
+        return $this->response->setContentType('application/xml', 'UTF-8')->setBody($xml);
     }
 
     /**
