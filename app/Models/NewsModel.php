@@ -226,11 +226,25 @@ class NewsModel extends Model
     }
     
     /**
-     * Get news by slug
+     * Get news by slug, for the public article page.
+     *
+     * Published only. Drafts held back by the automation publish gate, and
+     * anything discarded to 'archived' from the incoming queue, must not be
+     * readable by guessing or sharing their URL — the gates are worthless if
+     * the article they hold back is still served. Admin code that legitimately
+     * needs unpublished rows loads them by id via findWithKicker().
      */
     public function getNewsBySlug($slug)
     {
-        return $this->findWithKicker($slug, 'slug');
+        $db = \Config\Database::connect();
+
+        return $db->table('news n')
+                 ->select('n.*, k.text as kicker, k.color as kicker_color')
+                 ->join('kickers k', 'n.kicker_id = k.id', 'left')
+                 ->where('n.slug', $slug)
+                 ->where('n.status', 'published')
+                 ->get()
+                 ->getRowArray();
     }
     
     /**
