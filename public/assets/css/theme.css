@@ -435,6 +435,77 @@ input:focus-visible {
 .story--compact .story__title{ font-size: 1rem; }
 .story--compact .story__lead { display: none; }
 
+/* --------------------------------------------------------------------------
+   Text-first card — a story with no photograph
+   --------------------------------------------------------------------------
+   Most automation drafts arrive without an image. Rather than a placeholder
+   repeating down the page, these cards carry their weight in type: an accent
+   rule to anchor the top, a headline one step larger (nothing is competing
+   with it), and up to a few key points, which only ever appear here. The rule
+   and the points are what make the card read as a deliberate text story.
+   -------------------------------------------------------------------------- */
+.story--text-first {
+    padding-top: 0.85rem;
+    border-top: 2px solid var(--ink);
+}
+
+.story--text-first .story__title { font-weight: 700; }
+.story--lead.story--text-first .story__title    { font-size: 2.6rem; }
+.story--feature.story--text-first .story__title { font-size: 1.46rem; }
+.story--medium.story--text-first .story__title  { font-size: 1.2rem; }
+
+.story--text-first .story__lead {
+    font-family: var(--serif);
+    font-size: 1rem;
+    color: var(--ink-2);
+    -webkit-line-clamp: 3;
+}
+
+.story--lead.story--text-first .story__lead { font-size: 1.16rem; -webkit-line-clamp: 4; }
+
+.story__points {
+    list-style: none;
+    margin: 0 0 0.7rem;
+    padding: 0;
+    font-family: var(--sans);
+    font-size: 0.87rem;
+    line-height: 1.5;
+    color: var(--ink-2);
+}
+
+.story__points li {
+    position: relative;
+    padding-left: 0.95rem;
+    margin-bottom: 0.32rem;
+}
+
+.story__points li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.52em;
+    width: 5px;
+    height: 5px;
+    background: var(--accent);
+}
+
+.story__points li:last-child { margin-bottom: 0; }
+
+.story--lead .story__points { font-size: 0.97rem; }
+
+/* The lead slot is wide: two columns of points read better than one long list. */
+@media (min-width: 768px) {
+    .story--lead.story--text-first .story__points {
+        column-count: 2;
+        column-gap: 1.6rem;
+    }
+    .story--lead.story--text-first .story__points li { break-inside: avoid; }
+}
+
+@media (max-width: 575.98px) {
+    .story--lead.story--text-first .story__title { font-size: 1.85rem; }
+}
+
 /* Horizontal list row (used in rails and secondary lists) */
 .story--row {
     flex-direction: row;

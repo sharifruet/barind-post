@@ -142,6 +142,35 @@ if (! function_exists('limitTo15Words')) {
     }
 }
 
+if (! function_exists('paragraphs_to_html')) {
+    /**
+     * Wrap plain-text paragraphs in <p>.
+     *
+     * Articles written in the admin arrive as CKEditor HTML and are left alone. Articles
+     * created by the automation API are plain text with blank lines between paragraphs —
+     * printed raw into the page that collapses into one unbroken wall of text, which is
+     * how the first auto-published articles looked.
+     */
+    function paragraphs_to_html(string $text): string
+    {
+        if (preg_match('~<(p|div|section|article|ul|ol|h[1-6]|blockquote|br)\b~i', $text) === 1) {
+            return $text;   // already HTML
+        }
+
+        $out = [];
+        foreach (preg_split('/\R{2,}/u', trim($text)) ?: [] as $para) {
+            $para = trim($para);
+            if ($para === '') {
+                continue;
+            }
+            // Single newlines inside a paragraph are soft breaks.
+            $out[] = '<p>' . nl2br(esc($para), false) . '</p>';
+        }
+
+        return $out === [] ? '' : implode("\n", $out);
+    }
+}
+
 if (! function_exists('render_article_body')) {
     /**
      * Prepare stored article HTML for the public page.
@@ -157,6 +186,10 @@ if (! function_exists('render_article_body')) {
         if ($html === null || $html === '') {
             return '';
         }
+
+        // Plain-text bodies (everything the automation API creates) become paragraphs first;
+        // CKEditor HTML passes through untouched.
+        $html = paragraphs_to_html($html);
 
         // Colon may sit inside or outside <strong>; CKEditor may emit &nbsp;.
         $pattern = '~<blockquote>\s*<p>\s*<strong>\s*আরও\s*পড়ুন\s*[:：]?\s*</strong>\s*[:：]?(?:\s|&nbsp;)*'

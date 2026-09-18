@@ -59,6 +59,15 @@ database.default.DBCollat = utf8mb4_unicode_ci
 # automation.authorId =
 # Optional defense-in-depth on top of the API key; empty/unset = unrestricted.
 # automation.allowedIps =
+#
+# May the pipeline publish, or only file drafts? Off by default: with this unset, every
+# article the automation creates waits in Admin -> Incoming for a human, whatever the
+# caller asks for. Turning it on still does not publish everything — each article must
+# also clear the gates in Api\NewsController::publishGateFailures() (long enough body,
+# not a suspected cross-source duplicate, has a subtitle or key points, has a source URL);
+# anything that fails is filed as a draft with the reasons in the response.
+# automation.autoPublish = true
+# automation.autoPublishMinWords = 120
 
 #--------------------------------------------------------------------
 # ENCRYPTION

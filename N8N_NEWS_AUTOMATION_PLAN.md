@@ -291,6 +291,101 @@ hallucination surface beyond what Stage 2 already had.
   (`PublicSite::ogImage`, cached in `writable/og/`) serves it, and article pages use it as
   `og:image` / `twitter:image` when `image_url` is empty (previously the site logo).
 
+**Pointing the pipelines at production (2026-09-18).** The target is now a single switch
+instead of ten hardcoded URLs: `docker-compose.n8n.yml` sets `BARIND_API_BASE` (default
+`https://www.barindpost.com`) and every API node builds its URL from
+`{{ $env.BARIND_API_BASE }}/api/v1/...` — `Get Categories`, `Get Tags`, `Check Exists`,
+`Create Draft` in both AI workflows, plus `Post Run Report` / `Post Error Report`. Switch
+back to the local app with `BARIND_API_BASE=http://app docker compose -f
+docker-compose.n8n.yml up -d`. The Listing workflow's `Send to URL Ingest` still points at
+`http://localhost:5678/webhook/ingest-url` — that is n8n calling its own webhook, not the
+site, and must stay.
+
+Two things had to change for that to work: recent n8n **blocks `$env` in expressions by
+default** (the first attempt returned `access to env vars denied`), so the compose file sets
+`N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"` — not a real widening, since anyone who can edit a
+workflow can already use any stored credential; and the active workflows need the
+deactivate/activate bounce described below after the URLs change.
+
+Verified: a throwaway probe workflow hitting `{{ $env.BARIND_API_BASE }}/api/v1/categories`
+with the existing credential reached the live site and got `401 Invalid or missing API key`
+back — i.e. the expression resolves and the request is real, but the credential still holds
+the local key. The probe was deleted afterwards.
+
+**Gated auto-publish + Daily Amar Desh (2026-09-18).**
+
+- **The site decides whether AI copy goes live, not the workflow.** `Parse Draft` now sends
+  `"status": "published"`, but that is a *request*: the API honours it only when
+  `automation.autoPublish` is on **and** the article clears every gate in
+  `Api\NewsController::publishGateFailures()` — body at least
+  `automation.autoPublishMinWords` (120) words, not flagged as a cross-source duplicate,
+  has a subtitle or key points, and has a `source_url` to attribute it to. A failed gate is
+  not an error: the article is still filed as a draft and the reasons come back in
+  `publish_gates`, land in the run summary, and show in the Incoming queue. Every gate
+  exists because that failure actually happened here — headline-only fabrications, one
+  wholly invented article from a failed fetch, cross-source duplicates.
+  `tests/unit/PublishGateTest.php` covers all of it; the shipped default is **off**.
+- **New source: Daily Amar Desh** (`https://www.dailyamardesh.com/latest`). It is a Next.js
+  app with no `<a href>` article links in the markup, but the server-rendered flight data
+  carries the paths (`/sports/football/amd771169suxv`) and the article pages themselves are
+  server-rendered, so a regex over the payload is enough — no headless browser. Its path
+  segments also feed the category mapping (`/sports/…` → খেলাধুলা, `/op-ed/…` → সম্পাদকীয়).
+- **Extraction fixed for it, and for the others.** Amar Desh renders its date bar and whole
+  section menu as an ordinary `<p>` (outside `<nav>`/`<header>`), so it was landing in the
+  article text; The Daily Star did the same with "Main navigation News Politics …". Neither
+  sentence-density nor an `<h1>` anchor separated chrome from prose (Amar Desh's menu scores
+  the same 14 words/sentence as its own copy, and its `<h1>` sits inside the stripped
+  `<header>`). What works is the story-body container the sites mark themselves —
+  `class="… story-details …"` — so extraction now anchors there, then falls back to the
+  `<h1>`, then to the whole page. Inline scripts that survive as paragraphs are dropped too.
+  Verified clean on all four sources.
+- **Verified end to end locally** (`BARIND_API_BASE=http://app`, `automation.autoPublish =
+  true`): four Amar Desh stories collected, extracted, written and **published
+  automatically** (166–237 words, no gate failures) — live on the site, in the latest grid
+  and in `news-sitemap.xml`. n8n was pointed back at production afterwards.
+
+**Three more sources, two of them English (2026-09-18).** Stage 2 already writes in Bangla
+whatever the source language — The Daily Star has been an English feed from the start — so
+English wires need no new machinery, only wiring:
+
+| Source | How | Notes |
+|---|---|---|
+| **Al Jazeera** | RSS `aljazeera.com/xml/rss/all.xml` (25 items) | feed carries a ~100-char teaser only, so the body comes from the article page |
+| **Dawn** | RSS `dawn.com/feeds/home` (28 items) | ships the whole story in `<content:encoded>`, which matters because its article pages answer a plain fetch with **403** — the feed is the only way in, and it is enough |
+| **BSS** | listing scrape of `bssnews.net/` | the national agency has no feed of any kind; every story has a numeric id (`/news/425731`), so highest id = newest. English edition, as asked; `bssnews.net/bangla` is the same agency in Bangla if you would rather skip the translation step |
+
+Both feeds default to আন্তর্জাতিক (9) when neither the feed's `<category>` nor the URL maps to
+one of ours. **Cost note:** the RSS workflow is now 6 feeds × up to 10 articles = 60 articles
+per run, and every article is two OpenAI calls — lower `MAX_PER_SOURCE` in `Limit Per Source`
+if that is more than you want to spend per run.
+
+**Extraction hardened again for them.** Al Jazeera renders its share bar as text and glues it
+to the photo caption ("x whatsapp-stroke copylink google Add Al Jazeera on Google info …"),
+which was landing at the top of the article. The rule added matches only strings that never
+occur in prose — `copylink`, an icon class like `whatsapp-stroke`, "share this", "add … on
+google" — and only at the start of a paragraph, so a story that merely mentions WhatsApp is
+untouched (checked). All six sources now start at the real first sentence.
+
+**Still required before the first production draft** (none of it possible from here):
+
+1. **Production `.env`** — `automation.apiKey = '<key>'` and `automation.authorId = <id of
+   reporter@barindpost.com>`. Generate the key on the server with `openssl rand -base64 32`;
+   never paste it into a chat or commit it. Leave `automation.allowedIps` empty unless n8n
+   has a static public IP — the filter 403s every other address.
+2. **n8n credential** — "Barind Post Automation API" → value `Bearer <that same key>`
+   (header name `Authorization`). Entered in the n8n UI only.
+3. **Production database** — apply `DATABASE_UPDATES.md`: `suggested_image_url`,
+   `source_title`, `possible_duplicate_of`, `duplicate_score`, the `automation_runs` table,
+   the collation fix and the indexes. Without them `Create Draft` fails with a 500.
+4. **Deploy the current code** — `/api/v1/automation/runs` still 404s on the live site, so
+   run summaries have nowhere to go (harmless: those nodes are `continueRegularOutput`).
+5. **First run**: call the ingest webhook with one URL, then check `/admin/incoming` on the
+   live site. Only when that produces a draft should the collectors be activated.
+
+Safety while this is half-configured: the API only ever creates `status: draft` (anything
+else is a 422), all three collectors are inactive, and no Schedule Trigger is running — so
+nothing can reach readers without an editor pressing Publish.
+
 **Gotcha found while doing this — editing an *active* webhook workflow via the REST
 API does not refresh what the webhook runs.** After `PATCH /rest/workflows/{id}`
 updated the URL-ingest workflow's prompt (stored version confirmed changed), the next

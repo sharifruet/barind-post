@@ -80,7 +80,7 @@ $adminPageLabel = $title;
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="<?= base_url('assets/css/admin.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/admin.css') ?: '1' ?>" rel="stylesheet">
+    <link href="<?= asset_url('assets/css/admin.css') ?>" rel="stylesheet">
     <?= $customStyles ?? '' ?>
 </head>
 <body>

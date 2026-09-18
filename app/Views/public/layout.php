@@ -76,10 +76,10 @@
     <meta name="apple-mobile-web-app-title" content="বারিন্দ পোস্ট">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="icon" type="image/x-icon" href="<?= asset_url('favicon.ico') ?>">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?= asset_url('apple-touch-icon.png') ?>">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?= asset_url('favicon-32x32.png') ?>">
+    <link rel="icon" type="image/png" sizes="16x16" href="<?= asset_url('favicon-16x16.png') ?>">
     
     <!-- Google Analytics 4 -->
     <?php if (isset($_ENV['GA4_MEASUREMENT_ID']) && !empty($_ENV['GA4_MEASUREMENT_ID'])): ?>
@@ -121,7 +121,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=Noto+Serif+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Editorial theme -->
-    <link href="<?= base_url('assets/css/theme.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/theme.css') ?: '1' ?>" rel="stylesheet">
+    <link href="<?= asset_url('assets/css/theme.css') ?>" rel="stylesheet">
 
     <!-- Structured Data -->
     <script type="application/ld+json">

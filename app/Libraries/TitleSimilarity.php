@@ -71,6 +71,33 @@ final class TitleSimilarity
         return round(max($containment, $jaccard), 3);
     }
 
+    /**
+     * How much of a headline is actually present in its own article, 0.0–1.0.
+     *
+     * A model can write a correct article and then top it with a headline about something
+     * else entirely. That happened on the live site: an article about a CID fraud arrest was
+     * published as "মহাবিদ্যালয় সভাপতি আদনানের হাত থেকে বান্ধবী উদ্ধার", which shares not one
+     * word with its own body. Across 40 real articles the lowest genuine value was 0.50;
+     * the fabricated headline scored 0.00, so GROUNDED_MIN sits between the two.
+     *
+     * Deliberately not score(): that requires 3 shared words before it reports anything,
+     * and short legitimate headlines share only 2.
+     */
+    public static function groundedness(string $headline, string $body): float
+    {
+        $h = self::tokens($headline);
+        if ($h === []) {
+            return 1.0;   // nothing to check
+        }
+
+        $shared = count(array_intersect($h, self::tokens($body)));
+
+        return round($shared / count($h), 3);
+    }
+
+    /** Below this, a headline is not about the article underneath it. */
+    public const GROUNDED_MIN = 0.34;
+
     public static function isDuplicate(float $score): bool
     {
         return $score >= self::THRESHOLD;

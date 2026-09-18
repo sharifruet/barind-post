@@ -76,6 +76,30 @@ final class TextHelperTest extends CIUnitTestCase
         $this->assertSame('', render_article_body(null));
     }
 
+    public function testPlainTextBodiesBecomeParagraphs(): void
+    {
+        // Automation articles are plain text with blank lines; printed raw they collapsed
+        // into one unbroken block on the page.
+        $html = render_article_body("প্রথম অনুচ্ছেদ।\n\nদ্বিতীয় অনুচ্ছেদ।\n\nতৃতীয় অনুচ্ছেদ।");
+
+        $this->assertSame(3, substr_count($html, '<p>'));
+        $this->assertStringContainsString('<p>প্রথম অনুচ্ছেদ।</p>', $html);
+    }
+
+    public function testEditorHtmlIsLeftAlone(): void
+    {
+        $html = '<p>একটি অনুচ্ছেদ</p><p>আরেকটি</p>';
+
+        $this->assertSame($html, render_article_body($html));
+    }
+
+    public function testRelatedStoryBlockStillWorksInsideEditorHtml(): void
+    {
+        $stored = '<p>Intro</p><blockquote><p><strong>আরও পড়ুন:</strong> <a href="/news/abc">শিরোনাম</a></p></blockquote>';
+
+        $this->assertStringContainsString('related-inline__link', render_article_body($stored));
+    }
+
     public function testBnNumber(): void
     {
         $this->assertSame('২০২৬-০৯-১৭', bn_number('2026-09-17'));

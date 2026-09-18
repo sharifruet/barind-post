@@ -112,9 +112,10 @@ class NewsController extends BaseController
             'source_title'   => 'permit_empty|string|max_length[500]',   // headline as the source published it (dedup across outlets)
             'dateline'       => 'permit_empty|string|max_length[255]',
             'tags'           => 'permit_empty|is_array',
-            // Phase 1 never auto-publishes: reject anything other than "draft" explicitly
-            // rather than silently downgrading it, so a caller notices the mistake.
-            'status'         => 'permit_empty|in_list[draft]',
+            // "published" is a *request*, not a command: it is honoured only when the server
+            // has automation.autoPublish on and the article clears every publish gate below.
+            // Anything else is still rejected outright rather than silently downgraded.
+            'status'         => 'permit_empty|in_list[draft,published]',
         ];
 
         $validation = \Config\Services::validation();
@@ -132,6 +133,14 @@ class NewsController extends BaseController
         $categoryModel = new CategoryModel();
         if (! $categoryModel->find((int) $payload['category_id'])) {
             return $this->json(['error' => 'Validation failed', 'fields' => ['category_id' => 'Category does not exist.']], 422);
+        }
+
+        // The model sometimes emits a literal backslash-n instead of a newline; that reaches
+        // the page as visible "\n" and glues words together. Repair before storing or hashing.
+        foreach (['title', 'subtitle', 'lead_text', 'content'] as $field) {
+            if (isset($payload[$field]) && is_string($payload[$field])) {
+                $payload[$field] = \App\Libraries\BanglaText::fixEscapedNewlines($payload[$field]);
+            }
         }
 
         $title   = trim($payload['title']);
@@ -192,6 +201,19 @@ class NewsController extends BaseController
             'language'       => $payload['language'] ?? 'bn',
         ];
 
+        // Publishing is a request that has to earn itself: the server switch must be on and
+        // the article must clear every gate. A failure is not an error — the article is
+        // still filed, just as a draft, and the reasons come back in the response so the
+        // run summary can show why.
+        $gateFailures = [];
+        if (($payload['status'] ?? 'draft') === 'published') {
+            $gateFailures = $this->publishGateFailures($data, $wordCount, $similar, $automation);
+            if ($gateFailures === []) {
+                $data['status']       = 'published';
+                $data['published_at'] = date('Y-m-d H:i:s');
+            }
+        }
+
         $newsId = $newsModel->insert($data, true);
 
         if (! $newsId) {
@@ -219,7 +241,67 @@ class NewsController extends BaseController
             'status'             => $data['status'],
             'skipped_tags'       => $skippedTags,
             'possible_duplicate' => $similar ? ['id' => $similar['id'], 'title' => $similar['title'], 'score' => $similar['score']] : null,
+            'publish_gates'      => $gateFailures,   // empty = published (when asked for)
         ], 201);
+    }
+
+    /**
+     * Why this article may not be auto-published. Empty array = it may.
+     *
+     * These are the failure modes actually seen in this pipeline: articles generated from
+     * a headline with no body behind it, wholly invented copy from a failed page fetch,
+     * the same event arriving from two outlets, and half-finished AI output. An article
+     * that trips any of them is still created — as a draft, for a human to look at.
+     *
+     * @param array{id:int,title:string,score:float}|null $similar
+     *
+     * @return list<string>
+     */
+    private function publishGateFailures(array $data, int $wordCount, ?array $similar, \Config\Automation $automation): array
+    {
+        $failures = [];
+
+        if (! $automation->autoPublish) {
+            $failures[] = 'auto-publish is off on this site (automation.autoPublish)';
+        }
+
+        if ($wordCount < $automation->autoPublishMinWords) {
+            $failures[] = sprintf('body is %d words, minimum is %d', $wordCount, $automation->autoPublishMinWords);
+        }
+
+        if ($similar !== null) {
+            $failures[] = sprintf('possible duplicate of #%d (%d%%)', $similar['id'], (int) round($similar['score'] * 100));
+        }
+
+        if (empty($data['subtitle']) && empty($data['lead_text'])) {
+            $failures[] = 'no subtitle and no key points — incomplete article';
+        }
+
+        if (empty($data['source_url'])) {
+            $failures[] = 'no source_url to attribute the story to';
+        }
+
+        // A model can write a correct article and head it with a fabricated headline about
+        // something else — this reached the live site once. If the headline shares almost no
+        // words with its own body, the article is filed for a human instead of published.
+        $bodyForCheck = trim(($data['subtitle'] ?? '') . ' ' . ($data['lead_text'] ?? '') . ' ' . ($data['content'] ?? ''));
+        if ($bodyForCheck !== '') {
+            $grounded = \App\Libraries\TitleSimilarity::groundedness((string) ($data['title'] ?? ''), $bodyForCheck);
+            if ($grounded < \App\Libraries\TitleSimilarity::GROUNDED_MIN) {
+                $failures[] = sprintf('headline does not match the article (%d%% of its words appear in the body)', (int) round($grounded * 100));
+            }
+        }
+
+        // Rewrites of English wires sometimes leave a clause untranslated. Publishing that
+        // under the masthead is worse than holding it, so it stays a draft for an editor.
+        $language = \App\Libraries\BanglaText::problems(
+            trim(($data['title'] ?? '') . ' ' . ($data['subtitle'] ?? '') . ' ' . ($data['lead_text'] ?? '') . ' ' . ($data['content'] ?? ''))
+        );
+        foreach ($language as $problem) {
+            $failures[] = 'not clean Bangla: ' . $problem;
+        }
+
+        return $failures;
     }
 
     private function json(array $data, int $status = 200)

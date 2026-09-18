@@ -54,16 +54,18 @@ final class AutomationApiTest extends CIUnitTestCase
         $this->assertArrayHasKey('category_id', $json['fields']);
     }
 
-    public function testCreateNeverAcceptsAPublishedStatus(): void
+    public function testCreateRejectsAnyStatusOtherThanDraftOrPublished(): void
     {
-        // The API may only ever create drafts; asking for "published" is a hard error, not a downgrade.
+        // "published" is allowed through validation but only honoured when the server's
+        // automation.autoPublish is on and every gate passes (see PublishGateTest);
+        // anything else is still a hard error rather than a silent downgrade.
         $result = $this->withHeaders(['Authorization' => 'Bearer ' . self::KEY, 'Content-Type' => 'application/json'])
             ->withBodyFormat('json')
             ->post('api/v1/news', [
                 'title'       => 'একটি পরীক্ষামূলক শিরোনাম',
                 'content'     => str_repeat('পরীক্ষামূলক অনুচ্ছেদ। ', 10),
                 'category_id' => 1,
-                'status'      => 'published',
+                'status'      => 'archived',
             ]);
 
         $result->assertStatus(422);

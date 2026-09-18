@@ -5,6 +5,14 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(logo\.png|favicon\.ico|robots\.txt|test_image_preview\.html|test_modal_closing\.html|test_bootstrap_modal\.html|test_2line_text\.html|test_photo_card_js\.html|test_ckeditor_upload\.html)$ public/$1 [L]
 
+# Stylesheets and icons also live in public/. On this deployment the document root is the repo
+# root (see CLAUDE.md, "Two document roots"), so /assets/... and /favicon-32x32.png have to be
+# mapped into public/ the same way logo.png is above — otherwise they fall through to the
+# CodeIgniter router below and come back as a 404, which is what left the live site unstyled.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(assets/.*|favicon-16x16\.png|favicon-32x32\.png|apple-touch-icon\.png)$ public/$1 [L]
+
 # Allow access to uploaded files
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

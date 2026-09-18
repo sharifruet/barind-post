@@ -192,7 +192,9 @@ If Composer is not available:
 - [ ] Database credentials are secure
 - [ ] File permissions are correct
 - [ ] HTTPS is enabled (with `app.baseURL = 'https://…'` and `CI_ENVIRONMENT = production` in `.env`, the app redirects all HTTP requests to HTTPS)
-- [ ] `CI_ENVIRONMENT = production` is set in the server `.env` (uncomment the line). Without it the app still runs in production mode by default, but set it explicitly: `development` shows stack traces and the debug toolbar to visitors.
+- [ ] **`CI_ENVIRONMENT = production` is set in the server `.env`** — on 2026-09-18 the live site was running in `development`: the debug toolbar was being injected into every page (`/?debugbar`) and 404s returned JSON stack traces with framework class names. Check with `curl -s https://www.barindpost.com/ | grep -c debugbar` (must be 0)
+- [ ] `public/assets/` and the icon files uploaded — the live site serves them at `/public/assets/...` (docroot = repo root); `asset_url()` builds the right URL, but the files still have to be on the server. Check with `curl -sI https://www.barindpost.com/public/assets/css/theme.css` (200, `text/css`)
+- [ ] (superseded) `CI_ENVIRONMENT = production` in the server `.env` (uncomment the line). Without it the app still runs in production mode by default, but set it explicitly: `development` shows stack traces and the debug toolbar to visitors.
 - [ ] `https://<site>/news-sitemap.xml` submitted in Google Search Console (Google News sitemap, last 48 h of articles)
 - [ ] Error reporting is disabled in production
 - [ ] Logging is configured appropriately

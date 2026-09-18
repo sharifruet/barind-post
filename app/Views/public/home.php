@@ -35,7 +35,22 @@ $customScripts = '<script type="application/ld+json">'
 // rows so its height tracks the lead story instead of towering over it, and the
 // strip only appears when there are enough stories left to fill it properly.
 $featured     = array_slice($featuredNews ?? [], 0, 8);
-$leadStory    = array_shift($featured);
+
+// The lead slot is the one place a photo really carries the page, and automation
+// drafts arrive without one. Promote the newest story that has an image into it;
+// if none of the featured set has a photo, the text-first lead takes over instead.
+$leadIndex = null;
+foreach ($featured as $i => $candidate) {
+    if (! empty($candidate['image_url'])) {
+        $leadIndex = $i;
+        break;
+    }
+}
+$leadStory = $leadIndex === null ? array_shift($featured) : $featured[$leadIndex];
+if ($leadIndex !== null) {
+    array_splice($featured, $leadIndex, 1);
+}
+
 $sideStories  = array_slice($featured, 0, 3);
 $stripStories = array_slice($featured, 3, 4);
 

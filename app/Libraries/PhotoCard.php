@@ -112,7 +112,7 @@ class PhotoCard
             $imageUrl = $news['image_url'];
             
             // Debug: Log the image URL
-            error_log("Photo Card Debug: Image URL = " . $imageUrl);
+            log_message('debug', "Photo Card Debug: Image URL = " . $imageUrl);
             
             // Handle both local files and external URLs
             if (strpos($imageUrl, 'http') === 0) {
@@ -120,10 +120,10 @@ class PhotoCard
                 $imageData = @file_get_contents($imageUrl);
                 if ($imageData === false) {
                     // Skip if external image can't be loaded
-                    error_log("Photo Card Debug: Failed to load external image: " . $imageUrl);
+                    log_message('error', "Photo Card Debug: Failed to load external image: " . $imageUrl);
                     $imageData = null;
                 } else {
-                    error_log("Photo Card Debug: External image loaded successfully");
+                    log_message('debug', "Photo Card Debug: External image loaded successfully");
                 }
             } else {
                 // Local file - try multiple possible paths
@@ -135,29 +135,29 @@ class PhotoCard
                 
                 $imageData = null;
                 foreach ($possiblePaths as $newsImagePath) {
-                    error_log("Photo Card Debug: Trying path = " . $newsImagePath);
+                    log_message('debug', "Photo Card Debug: Trying path = " . $newsImagePath);
                     if (file_exists($newsImagePath)) {
                         $imageData = file_get_contents($newsImagePath);
-                        error_log("Photo Card Debug: Local image loaded successfully from: " . $newsImagePath);
+                        log_message('debug', "Photo Card Debug: Local image loaded successfully from: " . $newsImagePath);
                         break;
                     }
                 }
                 
                 if ($imageData === null) {
-                    error_log("Photo Card Debug: Local image file not found in any path");
+                    log_message('error', "Photo Card Debug: Local image file not found in any path");
                 }
             }
             
             if ($imageData !== null && $imageData !== false) {
-                error_log("Photo Card Debug: Image data loaded, attempting to create image resource");
+                log_message('debug', "Photo Card Debug: Image data loaded, attempting to create image resource");
                 $newsImage = imagecreatefromstring($imageData);
                 if ($newsImage === false) {
                     // Skip if image can't be created
-                    error_log("Photo Card Debug: Failed to create image resource from string");
+                    log_message('error', "Photo Card Debug: Failed to create image resource from string");
                 } else {
                     $newsImageWidth = imagesx($newsImage);
                     $newsImageHeight = imagesy($newsImage);
-                    error_log("Photo Card Debug: Image created successfully - Width: $newsImageWidth, Height: $newsImageHeight");
+                    log_message('debug', "Photo Card Debug: Image created successfully - Width: $newsImageWidth, Height: $newsImageHeight");
                     
                     // Scale news image based on template
                     if ($template === 'header_footer') {
@@ -172,7 +172,7 @@ class PhotoCard
                         imagecopyresampled($scaledNewsImage, $newsImage, 0, 0, 0, 0, $newsImageNewWidth, $newsImageNewHeight, $newsImageWidth, $newsImageHeight);
                         
                         // Position news image
-                        error_log("Photo Card Debug: Drawing image at X: $newsImageX, Y: $newsImageY, Width: $newsImageNewWidth, Height: $newsImageNewHeight");
+                        log_message('debug', "Photo Card Debug: Drawing image at X: $newsImageX, Y: $newsImageY, Width: $newsImageNewWidth, Height: $newsImageNewHeight");
                         imagecopy($image, $scaledNewsImage, $newsImageX, $newsImageY, 0, 0, $newsImageNewWidth, $newsImageNewHeight);
                     } else {
                         // For other templates, use original logic
@@ -238,9 +238,9 @@ class PhotoCard
         $title = $news['title'];
         
         // Debug: Log the title being processed
-        error_log("Photo card title: " . $title);
-        error_log("Title length: " . strlen($title));
-        error_log("Title mb_strlen: " . mb_strlen($title, 'UTF-8'));
+        log_message('debug', "Photo card title: " . $title);
+        log_message('debug', "Title length: " . strlen($title));
+        log_message('debug', "Title mb_strlen: " . mb_strlen($title, 'UTF-8'));
         
         // Ensure proper UTF-8 encoding for Bengali text
         $title = mb_convert_encoding($title, 'UTF-8', 'UTF-8');

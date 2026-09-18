@@ -35,6 +35,25 @@ class Automation extends BaseConfig
      */
     public array $allowedIps = [];
 
+    /**
+     * May the pipeline publish, or only ever file drafts?
+     *
+     * Off by default, and deliberately a *server* setting: whether AI-written copy
+     * appears under the masthead is the site owner's decision, not something a
+     * workflow can grant itself by sending `"status": "published"`. Even when it is
+     * on, an article is only published if it passes every gate in
+     * `Api\NewsController::publishGateFailures()`; anything else is filed as a draft
+     * for the Incoming queue. Set via `automation.autoPublish` in .env.
+     */
+    public bool $autoPublish = false;
+
+    /**
+     * Minimum body length (words) for auto-publishing. Shorter pieces are still
+     * created, just as drafts — a very short article usually means thin extraction.
+     * Set via `automation.autoPublishMinWords` in .env.
+     */
+    public int $autoPublishMinWords = 120;
+
     public function __construct()
     {
         parent::__construct();
@@ -46,5 +65,12 @@ class Automation extends BaseConfig
 
         $allowedIps = (string) env('automation.allowedIps', '');
         $this->allowedIps = array_values(array_filter(array_map('trim', explode(',', $allowedIps))));
+
+        $this->autoPublish = filter_var(env('automation.autoPublish', false), FILTER_VALIDATE_BOOL);
+
+        $minWords = env('automation.autoPublishMinWords');
+        if ($minWords !== null && $minWords !== '') {
+            $this->autoPublishMinWords = max(0, (int) $minWords);
+        }
     }
 }

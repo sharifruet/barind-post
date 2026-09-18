@@ -20,6 +20,21 @@ services:
       - "5678:5678"
     env_file:
       - .env.n8n
+    environment:
+      # Where the pipelines create drafts. Every workflow builds its API URLs from this
+      # one value ({{ $env.BARIND_API_BASE }}), so retargeting is this line plus a
+      # `docker compose -f docker-compose.n8n.yml up -d`:
+      #   https://www.barindpost.com  → the live site (needs automation.apiKey +
+      #                                 automation.authorId in the production .env, and the
+      #                                 n8n credential holding that same key)
+      #   http://app                  → the local Docker app from docker-compose.yml
+      # Override without editing this file: BARIND_API_BASE=http://app docker compose ... up -d
+      BARIND_API_BASE: ${BARIND_API_BASE:-https://www.barindpost.com}
+      # Recent n8n blocks $env in expressions by default, which is what the URLs above use.
+      # Re-enabling it does not widen the trust boundary here: anyone who can edit a workflow
+      # can already use (and therefore exfiltrate) any stored credential. Keep n8n's own login
+      # as the real boundary.
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
     volumes:
       - n8n_data:/home/node/.n8n
     networks:

@@ -225,3 +225,50 @@ if (!function_exists('get_image_url')) {
         return $baseURL . '/' . $imageUrl;
     }
 } 
+if (! function_exists('asset_file_variant')) {
+    /**
+     * Locate a public file that may live at either `<base>/<path>` or `<base>/public/<path>`.
+     *
+     * The two deployments do not agree on where the document root is:
+     *   - Docker serves <repo>/public, so FCPATH is <repo>/public/ and the file is FCPATH.$path
+     *   - the cPanel deployment serves the repo root through the tracked root index.php,
+     *     so FCPATH is <repo>/ and the very same file is FCPATH.'public/'.$path
+     * Anything that hardcodes one of the two 404s in the other environment (this is exactly
+     * how the revamped stylesheets ended up missing in production).
+     *
+     * @return array{0:string,1:int}|null [path relative to the document root, mtime], or null
+     */
+    function asset_file_variant(string $basePath, string $path): ?array
+    {
+        $path     = ltrim($path, '/');
+        $basePath = rtrim($basePath, '/\\') . DIRECTORY_SEPARATOR;
+
+        foreach ([$path, 'public/' . $path] as $candidate) {
+            $file = $basePath . $candidate;
+            if (is_file($file)) {
+                return [$candidate, (int) @filemtime($file)];
+            }
+        }
+
+        return null;
+    }
+}
+
+if (! function_exists('asset_url')) {
+    /**
+     * URL for a file shipped in public/ (stylesheets, icons), with a cache-busting
+     * ?v=<mtime>. Resolves the document-root difference described in
+     * asset_file_variant(); falls back to the plain path when the file is missing.
+     */
+    function asset_url(string $path): string
+    {
+        $found = asset_file_variant(FCPATH, $path);
+        if ($found === null) {
+            return base_url(ltrim($path, '/'));
+        }
+
+        [$relative, $mtime] = $found;
+
+        return base_url($relative) . ($mtime > 0 ? '?v=' . $mtime : '');
+    }
+}

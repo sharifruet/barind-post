@@ -27,8 +27,25 @@ $url      = '/news/' . rawurlencode($news['slug'] ?? '');
 $hasImage = $showImage && ! empty($news['image_url']) && $size !== 'text';
 $excerpt  = $showLead ? story_excerpt($news, $size === 'lead' ? 32 : 20) : '';
 $kicker   = $showKicker && ! empty($news['kicker']) ? $news['kicker'] : '';
+
+// Text-first card: a story with no photo is not a photo card with a hole in it — it
+// earns the space typographically and by showing more of the reporting. Only the sizes
+// that have room for it; compact/row/text already hide their summary line.
+$isTextFirst = ! $hasImage && in_array($size, ['lead', 'feature', 'medium'], true);
+$points      = [];
+if ($isTextFirst && $showLead) {
+    $points = key_points($news['lead_text'] ?? null);
+    if (empty($news['subtitle'])) {
+        // No standfirst, so the points are the summary — story_excerpt() already joined
+        // them into $excerpt, which would print them twice.
+        $excerpt = $points === [] ? $excerpt : '';
+        $points  = array_slice($points, 0, $size === 'lead' ? 4 : 3);
+    } else {
+        $points = array_slice($points, 0, $size === 'lead' ? 3 : 2);
+    }
+}
 ?>
-<article class="story story--<?= esc($size, 'attr') ?>">
+<article class="story story--<?= esc($size, 'attr') ?><?= $isTextFirst ? ' story--text-first' : '' ?>">
     <?php if ($hasImage): ?>
         <a class="story__media" href="<?= esc($url, 'attr') ?>" tabindex="-1" aria-hidden="true">
             <img src="<?= esc(get_image_url($news['image_url']), 'attr') ?>"
@@ -48,6 +65,14 @@ $kicker   = $showKicker && ! empty($news['kicker']) ? $news['kicker'] : '';
 
         <?php if ($excerpt !== ''): ?>
             <p class="story__lead"><?= esc($excerpt, 'raw') ?></p>
+        <?php endif; ?>
+
+        <?php if ($points !== []): ?>
+            <ul class="story__points">
+                <?php foreach ($points as $point): ?>
+                    <li><?= esc($point) ?></li>
+                <?php endforeach; ?>
+            </ul>
         <?php endif; ?>
 
         <?php if ($showDate && ! empty($news['published_at'])): ?>
