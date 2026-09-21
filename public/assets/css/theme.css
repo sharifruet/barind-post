@@ -736,7 +736,13 @@ input:focus-visible {
     font-size: 1.16rem;
     line-height: 1.85;
     color: var(--ink);
+    text-align: left;
 }
+
+/* Left-align the body, overriding any text-align:justify a CKEditor-authored
+   article may carry inline. Justified Bangla stretches the inter-word spacing
+   unevenly and reads worse than a natural ragged-right edge. */
+.prose p, .prose li { text-align: left; }
 
 .prose p { margin: 0 0 1.35rem; }
 
