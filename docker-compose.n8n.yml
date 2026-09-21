@@ -40,6 +40,19 @@ services:
     networks:
       - barindpost
 
+  # Renders a "text card" PNG (title + subtitle + key points) for image-less
+  # news, so those articles have a picture on cards, the article page and social
+  # shares. Uses @napi-rs/canvas (Skia), which shapes Bangla correctly — GD on
+  # the PHP server does not. No AI: it only lays out text the pipeline already
+  # produced. The workflows reach it at http://card-renderer:3000/render.
+  card-renderer:
+    build: ./card-renderer
+    image: barindpost-card-renderer:latest
+    container_name: barindpost_card_renderer
+    restart: unless-stopped
+    networks:
+      - barindpost
+
 volumes:
   n8n_data:
 

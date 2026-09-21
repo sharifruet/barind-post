@@ -52,6 +52,86 @@ class NewsController extends BaseController
         return $this->json($news);
     }
 
+    /**
+     * Attach a generated "text card" PNG to an image-less article.
+     *
+     * The pipeline renders the card (title + subtitle + key points) in a
+     * headless browser so Bangla shapes correctly — GD on this server cannot —
+     * then POSTs the PNG here as base64. We store it exactly like a manual
+     * upload (public/uploads/news + an images row) and set it as image_url,
+     * but only when the article has no image yet, so a real photo an editor
+     * added is never clobbered. This is our own generated art, which is why it
+     * is allowed where a hotlinked source image is not.
+     */
+    public function attachCard($id)
+    {
+        $newsModel = new NewsModel();
+        $news      = $newsModel->find((int) $id);
+        if (! $news) {
+            return $this->json(['error' => 'News not found'], 404);
+        }
+
+        $payload = $this->request->getJSON(true);
+        if (! is_array($payload) || empty($payload['image_base64'])) {
+            return $this->json(['error' => 'image_base64 is required'], 422);
+        }
+
+        $b64 = preg_replace('~^data:image/\w+;base64,~', '', (string) $payload['image_base64']);
+        $raw = base64_decode($b64, true);
+        if ($raw === false || strlen($raw) < 100) {
+            return $this->json(['error' => 'image_base64 is not valid base64'], 422);
+        }
+        if (strlen($raw) > 5 * 1024 * 1024) {
+            return $this->json(['error' => 'image exceeds 5MB'], 422);
+        }
+        $info = @getimagesizefromstring($raw);
+        if ($info === false || ($info['mime'] ?? '') !== 'image/png') {
+            return $this->json(['error' => 'image must be a PNG'], 422);
+        }
+
+        // Mirror ImageUpload::upload's storage exactly so the two-document-root
+        // path handling stays identical to manually uploaded images.
+        $uploadPath = FCPATH . 'public/uploads/news/';
+        if (! is_dir($uploadPath)) {
+            @mkdir($uploadPath, 0775, true);
+        }
+        $filename     = 'card-' . (int) $id . '-' . substr(md5($raw), 0, 10) . '.png';
+        $relativePath = 'public/uploads/news/' . $filename;
+        if (file_put_contents($uploadPath . $filename, $raw) === false) {
+            return $this->json(['error' => 'could not store image'], 500);
+        }
+
+        // Idempotent: the filename is the content hash, and images.image_path is
+        // unique, so a retry with the same PNG reuses the existing row.
+        $imageModel = new \App\Models\ImageModel();
+        $existing   = $imageModel->where('image_path', $relativePath)->first();
+        $imageId    = $existing['id'] ?? $imageModel->insert([
+            'image_name'        => 'card-' . (int) $id,
+            'image_path'        => $relativePath,
+            'original_filename' => $filename,
+            'file_size'         => strlen($raw),
+            'mime_type'         => 'image/png',
+            'width'             => $info[0] ?? null,
+            'height'            => $info[1] ?? null,
+            'caption'           => null,
+            'alt_text'          => mb_substr((string) $news['title'], 0, 240),
+            'uploaded_by'       => config('Automation')->authorId ?: 1,
+        ]);
+
+        $applied = false;
+        if (empty($news['image_url']) || ! empty($payload['overwrite'])) {
+            $newsModel->update((int) $id, ['image_url' => $relativePath]);   // afterUpdate purges the public cache
+            $applied = true;
+        }
+
+        return $this->json([
+            'success'   => true,
+            'image_url' => $relativePath,
+            'image_id'  => $imageId,
+            'applied'   => $applied,
+        ]);
+    }
+
     public function categories()
     {
         $categories = (new CategoryModel())
