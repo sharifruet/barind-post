@@ -1,9 +1,8 @@
 FROM node:20-bookworm-slim
-RUN apt-get update && apt-get install -y --no-install-recommends fonts-noto-core \
-    && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-COPY package.json ./
+COPY package.json package-lock.json* ./
 RUN npm install --omit=dev
-COPY server.js ./
+COPY server.js logo.png ./
+COPY fonts ./fonts
 EXPOSE 3000
 CMD ["node", "server.js"]

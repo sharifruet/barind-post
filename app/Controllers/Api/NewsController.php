@@ -53,83 +53,71 @@ class NewsController extends BaseController
     }
 
     /**
-     * Attach a generated "text card" PNG to an image-less article.
-     *
-     * The pipeline renders the card (title + subtitle + key points) in a
-     * headless browser so Bangla shapes correctly — GD on this server cannot —
-     * then POSTs the PNG here as base64. We store it exactly like a manual
-     * upload (public/uploads/news + an images row) and set it as image_url,
-     * but only when the article has no image yet, so a real photo an editor
-     * added is never clobbered. This is our own generated art, which is why it
-     * is allowed where a hotlinked source image is not.
+     * Recent published articles with the fields the Facebook pipeline needs to
+     * build a share card: title, subtitle, key points, section and a
+     * Bangla-formatted date. Read-only; the card itself is rendered and posted
+     * outside the site, so nothing here writes an image or touches the article.
      */
-    public function attachCard($id)
+    public function recent()
     {
-        $newsModel = new NewsModel();
-        $news      = $newsModel->find((int) $id);
-        if (! $news) {
-            return $this->json(['error' => 'News not found'], 404);
+        $limit = (int) ($this->request->getGet('limit') ?? 20);
+        $limit = max(1, min(50, $limit));
+
+        $db   = \Config\Database::connect();
+        $rows = $db->table('news')
+            ->select('id, slug, title, subtitle, lead_text, category_id, published_at, image_url')
+            ->where('status', 'published')
+            ->orderBy('published_at', 'DESC')
+            ->limit($limit)
+            ->get()
+            ->getResultArray();
+
+        $cats = [];
+        foreach ((new CategoryModel())->select('id, name')->findAll() as $c) {
+            $cats[(int) $c['id']] = $c['name'];
         }
 
-        $payload = $this->request->getJSON(true);
-        if (! is_array($payload) || empty($payload['image_base64'])) {
-            return $this->json(['error' => 'image_base64 is required'], 422);
+        $base = rtrim(base_url(), '/');
+        $out  = [];
+        foreach ($rows as $r) {
+            $points = array_values(array_filter(
+                array_map('trim', explode("\n", (string) ($r['lead_text'] ?? ''))),
+                static fn ($p) => $p !== ''
+            ));
+            $out[] = [
+                'id'           => (int) $r['id'],
+                'slug'         => $r['slug'],
+                'url'          => $base . '/news/' . $r['slug'],
+                'section'      => $cats[(int) $r['category_id']] ?? null,
+                'title'        => $r['title'],
+                'subtitle'     => $r['subtitle'] ?: null,
+                'key_points'   => $points,
+                'date'         => $this->banglaDate($r['published_at'] ?? null),
+                'has_image'    => ! empty($r['image_url']),
+                'published_at' => $r['published_at'] ?? null,
+            ];
         }
 
-        $b64 = preg_replace('~^data:image/\w+;base64,~', '', (string) $payload['image_base64']);
-        $raw = base64_decode($b64, true);
-        if ($raw === false || strlen($raw) < 100) {
-            return $this->json(['error' => 'image_base64 is not valid base64'], 422);
-        }
-        if (strlen($raw) > 5 * 1024 * 1024) {
-            return $this->json(['error' => 'image exceeds 5MB'], 422);
-        }
-        $info = @getimagesizefromstring($raw);
-        if ($info === false || ($info['mime'] ?? '') !== 'image/png') {
-            return $this->json(['error' => 'image must be a PNG'], 422);
-        }
+        return $this->json(['articles' => $out]);
+    }
 
-        // Mirror ImageUpload::upload's storage exactly so the two-document-root
-        // path handling stays identical to manually uploaded images.
-        $uploadPath = FCPATH . 'public/uploads/news/';
-        if (! is_dir($uploadPath)) {
-            @mkdir($uploadPath, 0775, true);
+    /** "2026-09-22 11:16:18" -> "২২ সেপ্টেম্বর ২০২৬" for the card. */
+    private function banglaDate(?string $iso): ?string
+    {
+        if (empty($iso)) {
+            return null;
         }
-        $filename     = 'card-' . (int) $id . '-' . substr(md5($raw), 0, 10) . '.png';
-        $relativePath = 'public/uploads/news/' . $filename;
-        if (file_put_contents($uploadPath . $filename, $raw) === false) {
-            return $this->json(['error' => 'could not store image'], 500);
+        $ts = strtotime($iso);
+        if ($ts === false) {
+            return null;
         }
-
-        // Idempotent: the filename is the content hash, and images.image_path is
-        // unique, so a retry with the same PNG reuses the existing row.
-        $imageModel = new \App\Models\ImageModel();
-        $existing   = $imageModel->where('image_path', $relativePath)->first();
-        $imageId    = $existing['id'] ?? $imageModel->insert([
-            'image_name'        => 'card-' . (int) $id,
-            'image_path'        => $relativePath,
-            'original_filename' => $filename,
-            'file_size'         => strlen($raw),
-            'mime_type'         => 'image/png',
-            'width'             => $info[0] ?? null,
-            'height'            => $info[1] ?? null,
-            'caption'           => null,
-            'alt_text'          => mb_substr((string) $news['title'], 0, 240),
-            'uploaded_by'       => config('Automation')->authorId ?: 1,
-        ]);
-
-        $applied = false;
-        if (empty($news['image_url']) || ! empty($payload['overwrite'])) {
-            $newsModel->update((int) $id, ['image_url' => $relativePath]);   // afterUpdate purges the public cache
-            $applied = true;
-        }
-
-        return $this->json([
-            'success'   => true,
-            'image_url' => $relativePath,
-            'image_id'  => $imageId,
-            'applied'   => $applied,
-        ]);
+        $months = [1 => 'জানুয়ারি', 2 => 'ফেব্রুয়ারি', 3 => 'মার্চ', 4 => 'এপ্রিল', 5 => 'মে', 6 => 'জুন',
+                   7 => 'জুলাই', 8 => 'আগস্ট', 9 => 'সেপ্টেম্বর', 10 => 'অক্টোবর', 11 => 'নভেম্বর', 12 => 'ডিসেম্বর'];
+        $en = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        $bn = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+        $day  = str_replace($en, $bn, (string) (int) date('j', $ts));
+        $year = str_replace($en, $bn, date('Y', $ts));
+        return $day . ' ' . $months[(int) date('n', $ts)] . ' ' . $year;
     }
 
     public function categories()

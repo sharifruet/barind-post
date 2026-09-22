@@ -35,6 +35,12 @@ services:
       # can already use (and therefore exfiltrate) any stored credential. Keep n8n's own login
       # as the real boundary.
       N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+      # Facebook page publishing (n8n-workflows/facebook-pipeline.json). Put the real
+      # values in .env.n8n, never here: a Facebook Page ID and a long-lived Page access
+      # token with pages_manage_posts. The "Publish to Facebook" workflow reads them as
+      # $env at run time. Empty by default so the pipeline simply can't post until set.
+      BARIND_FB_PAGE_ID: ${BARIND_FB_PAGE_ID:-}
+      BARIND_FB_PAGE_TOKEN: ${BARIND_FB_PAGE_TOKEN:-}
     volumes:
       - n8n_data:/home/node/.n8n
     networks:

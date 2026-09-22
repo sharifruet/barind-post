@@ -1,0 +1,233 @@
+{
+  "name": "Barind Post - Publish to Facebook",
+  "nodes": [
+    {
+      "id": "a9022309-a23c-406e-a878-af41dd45cfae",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "1a79695d-885e-4477-bb5a-297c6ef2b9ed",
+      "name": "Every 30 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        260,
+        480
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a7217490-b0c5-404d-8fa1-1fa4776f88f6",
+      "name": "Fetch Recent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        520,
+        380
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.BARIND_API_BASE }}/api/v1/news/recent?limit=25",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "6XzilIGFAsuNaMBG",
+          "name": "Barind Post Automation API"
+        }
+      }
+    },
+    {
+      "id": "4e5759e7-785b-423c-9942-0762fe5403c6",
+      "name": "Select To Post",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        760,
+        380
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Pick recent published articles not yet posted to Facebook, oldest-first, capped.\n// Dedup uses the workflow's own static data (max posted news id) — no schema change.\nconst data = $getWorkflowStaticData('global');\nlet lastId = Number(data.lastPostedId || 0);\nconst MAX_PER_RUN = 3;\nconst articles = (($input.first() || {}).json || {}).articles || [];\n\n// First ever run: seed to the newest id and post nothing, so we never backfill old news.\nif (!lastId) {\n  const maxId = articles.reduce((m, a) => Math.max(m, Number(a.id) || 0), 0);\n  data.lastPostedId = maxId;\n  return [];\n}\n\nconst fresh = articles\n  .filter(a => Number(a.id) > lastId)\n  .sort((a, b) => Number(a.id) - Number(b.id))\n  .slice(0, MAX_PER_RUN)\n  .map(a => {\n    const caption = [a.title, a.subtitle, 'বিস্তারিত: ' + a.url].filter(Boolean).join('\\n\\n');\n    return { json: { ...a, news_id: a.id, caption } };\n  });\nreturn fresh;"
+      }
+    },
+    {
+      "id": "5fa1495c-a7a3-4755-925a-5c98a11cb709",
+      "name": "Render Card",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1000,
+        380
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://card-renderer:3000/render?format=png",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ section: $json.section, title: $json.title, subtitle: $json.subtitle, points: $json.key_points, date: $json.date, url: $json.url }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          },
+          "timeout": 20000
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "eb0ed23d-7bea-41bc-86c6-3a4c13f22a23",
+      "name": "Post to Facebook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1240,
+        380
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v21.0/{{ $env.BARIND_FB_PAGE_ID }}/photos",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "={{ $env.BARIND_FB_PAGE_TOKEN }}"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "source",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "caption",
+              "value": "={{ $(\"Select To Post\").item.json.caption }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "df042263-1147-49c5-9316-ea7e84cafa2d",
+      "name": "Mark Posted",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1480,
+        380
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Advance the 'last posted' marker to the highest id that Facebook accepted.\nconst data = $getWorkflowStaticData('global');\nconst src = $('Select To Post').all();\nconst results = $input.all();\nlet maxId = Number(data.lastPostedId || 0);\nlet posted = 0;\nfor (let i = 0; i < results.length; i++) {\n  const r = results[i].json || {};\n  const ok = r.id || r.post_id;                     // Graph API returns {id} on success\n  const s = (src[i] || {}).json || {};\n  if (ok && Number(s.news_id) > maxId) maxId = Number(s.news_id);\n  if (ok) posted++;\n}\ndata.lastPostedId = maxId;\nreturn [{ json: { posted, total: results.length, lastPostedId: maxId } }];"
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Recent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every 30 min": {
+      "main": [
+        [
+          {
+            "node": "Fetch Recent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Recent": {
+      "main": [
+        [
+          {
+            "node": "Select To Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select To Post": {
+      "main": [
+        [
+          {
+            "node": "Render Card",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render Card": {
+      "main": [
+        [
+          {
+            "node": "Post to Facebook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post to Facebook": {
+      "main": [
+        [
+          {
+            "node": "Mark Posted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}

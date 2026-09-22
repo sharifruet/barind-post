@@ -191,7 +191,7 @@ $routes->group('api/v1', ['filter' => 'apikey'], static function ($routes) {
     $routes->get('news/exists', 'Api\NewsController::exists');
     $routes->get('news/(:num)', 'Api\NewsController::show/$1');
     $routes->post('news', 'Api\NewsController::create');
-    $routes->post('news/(:num)/card', 'Api\NewsController::attachCard/$1'); // generated text-card PNG for image-less articles
+    $routes->get('news/recent', 'Api\NewsController::recent'); // recent published articles + card fields for the Facebook pipeline
     $routes->get('categories', 'Api\NewsController::categories');
     $routes->get('tags', 'Api\NewsController::tags');
     $routes->post('automation/runs', 'Api\AutomationController::createRun'); // n8n run summaries / error reports

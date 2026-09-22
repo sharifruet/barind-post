@@ -1,2 +1,2 @@
 { "name": "card-renderer", "version": "1.0.0", "private": true,
-  "dependencies": { "express": "^4.19.2", "@napi-rs/canvas": "^0.1.65" } }
+  "dependencies": { "express": "^4.19.2", "@napi-rs/canvas": "^0.1.65", "qrcode": "^1.5.4" } }
