@@ -180,6 +180,10 @@ class NewsController extends BaseController
             'source_title'   => 'permit_empty|string|max_length[500]',   // headline as the source published it (dedup across outlets)
             'dateline'       => 'permit_empty|string|max_length[255]',
             'tags'           => 'permit_empty|is_array',
+            // Importance 0-5 from the AI; the server features an article at or above
+            // automation.featuredMinImportance. `featured` may also be sent directly.
+            'importance'     => 'permit_empty|integer|greater_than_equal_to[0]|less_than_equal_to[5]',
+            'featured'       => 'permit_empty|in_list[0,1,true,false]',
             // "published" is a *request*, not a command: it is honoured only when the server
             // has automation.autoPublish on and the article clears every publish gate below.
             // Anything else is still rejected outright rather than silently downgraded.
@@ -209,6 +213,16 @@ class NewsController extends BaseController
             if (isset($payload[$field]) && is_string($payload[$field])) {
                 $payload[$field] = \App\Libraries\BanglaText::fixEscapedNewlines($payload[$field]);
             }
+        }
+
+        // Feature the genuinely important stories. Prefer an explicit `featured`,
+        // otherwise derive it from the AI importance score against the server threshold.
+        if (isset($payload['featured'])) {
+            $featured = filter_var($payload['featured'], FILTER_VALIDATE_BOOLEAN);
+        } elseif (isset($payload['importance']) && $payload['importance'] !== '') {
+            $featured = (int) $payload['importance'] >= $automation->featuredMinImportance;
+        } else {
+            $featured = false;
         }
 
         $title   = trim($payload['title']);
@@ -255,7 +269,7 @@ class NewsController extends BaseController
             'author_id'      => (int) $automation->authorId,
             'category_id'    => (int) $payload['category_id'],
             'status'         => 'draft',
-            'featured'       => false,
+            'featured'       => $featured,
             'slug'           => generate_unique_code(),
             'image_url'      => $payload['image_url'] ?? null,
             'image_caption'  => $payload['image_caption'] ?? null,

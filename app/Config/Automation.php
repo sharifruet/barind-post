@@ -54,6 +54,14 @@ class Automation extends BaseConfig
      */
     public int $autoPublishMinWords = 120;
 
+    /**
+     * Auto-feature articles whose AI importance score (0-5) is at least this.
+     * Featured articles surface in the home-page lead/rail, so keep it high
+     * (default 4) — only major stories, a handful per run at most.
+     * Set via `automation.featuredMinImportance` in .env; 6+ effectively off.
+     */
+    public int $featuredMinImportance = 4;
+
     public function __construct()
     {
         parent::__construct();
@@ -71,6 +79,11 @@ class Automation extends BaseConfig
         $minWords = env('automation.autoPublishMinWords');
         if ($minWords !== null && $minWords !== '') {
             $this->autoPublishMinWords = max(0, (int) $minWords);
+        }
+
+        $featuredMin = env('automation.featuredMinImportance');
+        if ($featuredMin !== null && $featuredMin !== '') {
+            $this->featuredMinImportance = max(0, (int) $featuredMin);
         }
     }
 }
