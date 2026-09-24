@@ -101,14 +101,20 @@ class NewsModel extends Model
      */
     public function getViewCounts($newsIds)
     {
-        $db = \Config\Database::connect();
-        $viewCounts = [];
-        
-        foreach ($newsIds as $newsId) {
-            $count = $db->table('news_views')
-                       ->where('news_id', $newsId)
-                       ->countAllResults();
-            $viewCounts[$newsId] = $count;
+        $viewCounts = array_fill_keys($newsIds, 0);
+        if ($newsIds === []) {
+            return $viewCounts;
+        }
+
+        $rows = \Config\Database::connect()->table('news_views')
+                  ->select('news_id, COUNT(*) AS views')
+                  ->whereIn('news_id', $newsIds)
+                  ->groupBy('news_id')
+                  ->get()
+                  ->getResultArray();
+
+        foreach ($rows as $row) {
+            $viewCounts[$row['news_id']] = (int) $row['views'];
         }
         
         return $viewCounts;
@@ -454,25 +460,45 @@ class NewsModel extends Model
     }
 
     /**
-     * Get news list with kicker info for admin based on user role
+     * Get news list with kicker info for admin based on user role.
+     * Newest first; $limit/$offset page through it (the admin list shows 100 per page).
      */
-    public function getNewsListForAdmin($userRole, $userId = null)
+    public function getNewsListForAdmin($userRole, $userId = null, $limit = null, $offset = 0)
     {
-        $db = \Config\Database::connect();
-        
         if ($userRole === 'reporter') {
             // Reporters can only see their own news
-            return $db->table('news n')
-                     ->select('n.*, k.text as kicker, k.color as kicker_color')
-                     ->join('kickers k', 'n.kicker_id = k.id', 'left')
-                     ->where('n.author_id', $userId)
-                     ->orderBy('n.created_at', 'DESC')
-                     ->get()
-                     ->getResultArray();
-        } else {
-            // Editors, sub-editors, and admins can see all news
-            return $this->findAllWithKicker();
+            return $this->getNewsByAuthorWithKicker($userId, $limit, $offset);
         }
+
+        // Editors, sub-editors, and admins can see all news
+        return $this->findAllWithKicker($limit, $offset);
+    }
+
+    /**
+     * Article counts by status for the admin list header — over everything the
+     * user may see, not just the current page.
+     *
+     * @return array{all:int,published:int,draft:int,archived:int}
+     */
+    public function countNewsForAdmin($userRole, $userId = null): array
+    {
+        $builder = \Config\Database::connect()->table('news')
+                     ->select('status, COUNT(*) AS n')
+                     ->groupBy('status');
+
+        if ($userRole === 'reporter') {
+            $builder->where('author_id', $userId);
+        }
+
+        $counts = ['all' => 0, 'published' => 0, 'draft' => 0, 'archived' => 0];
+        foreach ($builder->get()->getResultArray() as $row) {
+            $counts['all'] += (int) $row['n'];
+            if (isset($counts[$row['status']])) {
+                $counts[$row['status']] = (int) $row['n'];
+            }
+        }
+
+        return $counts;
     }
 
     /**

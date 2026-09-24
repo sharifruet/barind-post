@@ -16,6 +16,9 @@ use Exception;
  */
 class AdminNews extends BaseAdminController
 {
+    /** Rows per page on /admin/news. */
+    private const LIST_PER_PAGE = 100;
+
     public function newsList()
     {
         $newsModel = new NewsModel();
@@ -24,9 +27,14 @@ class AdminNews extends BaseAdminController
         // Get current user's role and ID
         $userRole = session('user_role');
         $userId = session('user_id');
+
+        // Status totals over everything this user may see; they also size the pager.
+        $counts     = $newsModel->countNewsForAdmin($userRole, $userId);
+        $totalPages = max(1, (int) ceil($counts['all'] / self::LIST_PER_PAGE));
+        $page       = min(max(1, (int) $this->request->getGet('page')), $totalPages);
         
-        // Get news with kicker info based on user role
-        $news = $newsModel->getNewsListForAdmin($userRole, $userId);
+        // Get news with kicker info based on user role — newest first, one page at a time
+        $news = $newsModel->getNewsListForAdmin($userRole, $userId, self::LIST_PER_PAGE, ($page - 1) * self::LIST_PER_PAGE);
         
         $categories = $categoryModel->findAll();
         
@@ -38,8 +46,7 @@ class AdminNews extends BaseAdminController
             $userMap[$user['id']] = $user['name'];
         }
         
-        // Get view counts for each news article
-        $newsModel = new \App\Models\NewsModel();
+        // Get view counts for each news article on this page
         $newsIds = array_column($news, 'id');
         $viewCounts = $newsModel->getViewCounts($newsIds);
         
@@ -48,8 +55,23 @@ class AdminNews extends BaseAdminController
             'categories' => $categories,
             'userRole' => $userRole,
             'userMap' => $userMap,
-            'viewCounts' => $viewCounts
+            'viewCounts' => $viewCounts,
+            'counts' => $counts,
+            'page' => $page,
+            'totalPages' => $totalPages,
+            'perPage' => self::LIST_PER_PAGE,
         ]);
+    }
+
+    /**
+     * Back to the list page an action was fired from: the row-action forms on
+     * /admin/news post their page number so a delete on page 3 lands on page 3.
+     */
+    private function redirectToList()
+    {
+        $page = (int) $this->request->getPost('page');
+
+        return redirect()->to('/admin/news' . ($page > 1 ? '?page=' . $page : ''));
     }
 
     public function newsCreate()
@@ -302,13 +324,13 @@ class AdminNews extends BaseAdminController
         // Check if news exists
         if (!$news) {
             session()->setFlashdata('error', 'News article not found.');
-            return redirect()->to('/admin/news');
+            return $this->redirectToList();
         }
         
         // Role-based access control for deleting
         if ($userRole === 'reporter' && $news['author_id'] != $userId) {
             session()->setFlashdata('error', 'You can only delete your own news articles.');
-            return redirect()->to('/admin/news');
+            return $this->redirectToList();
         }
         
         $newsModel->delete($id);
@@ -316,7 +338,7 @@ class AdminNews extends BaseAdminController
         $db->table('news_tags')->where('news_id', $id)->delete();
         
         session()->setFlashdata('success', 'News article deleted successfully.');
-        return redirect()->to('/admin/news');
+        return $this->redirectToList();
     }
 
     public function toggleFeatured($id)
@@ -333,7 +355,7 @@ class AdminNews extends BaseAdminController
         
         if (!$news) {
             session()->setFlashdata('error', 'News article not found.');
-            return redirect()->to('/admin/news');
+            return $this->redirectToList();
         }
         
         // Toggle the featured status
@@ -343,7 +365,7 @@ class AdminNews extends BaseAdminController
         $status = $newFeaturedStatus ? 'featured' : 'unfeatured';
         session()->setFlashdata('success', "News article {$status} successfully.");
         
-        return redirect()->to('/admin/news');
+        return $this->redirectToList();
     }
 
     public function toggleBreakingNews($id)
@@ -360,7 +382,7 @@ class AdminNews extends BaseAdminController
         
         if (!$news) {
             session()->setFlashdata('error', 'News article not found.');
-            return redirect()->to('/admin/news');
+            return $this->redirectToList();
         }
         
         // Toggle breaking news by setting/removing "ব্রেকিং" kicker
@@ -397,7 +419,7 @@ class AdminNews extends BaseAdminController
         $newsModel->update($id, $updateData);
         session()->setFlashdata('success', "News article {$status} successfully.");
         
-        return redirect()->to('/admin/news');
+        return $this->redirectToList();
     }
 
     /**

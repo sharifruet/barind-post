@@ -9,12 +9,8 @@ foreach ($categories as $c) {
     $categoryNames[$c['id']] = $c['name'];
 }
 
-$counts = ['all' => count($news), 'published' => 0, 'draft' => 0, 'archived' => 0];
-foreach ($news as $n) {
-    if (isset($counts[$n['status']])) {
-        $counts[$n['status']]++;
-    }
-}
+// Row-action forms carry the page so their redirect lands back here (AdminNews::redirectToList).
+$pageField = '<input type="hidden" name="page" value="' . (int) $page . '">';
 ?>
 
 <?= $this->extend('admin/layout') ?>
@@ -59,7 +55,7 @@ foreach ($news as $n) {
 <div class="panel">
     <div class="panel__head">
         <div class="panel__title">Articles</div>
-        <input type="search" class="form-control form-control-sm" id="newsFilter" placeholder="Filter by title, kicker or category…" style="max-width: 320px;" autocomplete="off">
+        <input type="search" class="form-control form-control-sm" id="newsFilter" placeholder="Filter this page by title, kicker or category…" style="max-width: 320px;" autocomplete="off">
     </div>
 
     <?php if (empty($news)): ?>
@@ -126,20 +122,20 @@ foreach ($news as $n) {
                                 <?php endif; ?>
                                 <a class="btn-icon" href="/admin/news/edit/<?= esc($item['id']) ?>" title="Edit"><i class="fas fa-pen"></i></a>
                                 <?php if ($isAdmin): ?>
-                                    <form method="post" action="/admin/news/toggle-featured/<?= esc($item['id']) ?>"><?= csrf_field() ?>
+                                    <form method="post" action="/admin/news/toggle-featured/<?= esc($item['id']) ?>"><?= csrf_field() ?><?= $pageField ?>
                                         <button type="submit" class="btn-icon" title="<?= $item['featured'] ? 'Remove from featured' : 'Mark as featured' ?>"
                                                 onclick="return confirm('<?= $item['featured'] ? 'Remove this article from featured?' : 'Feature this article?' ?>')">
                                             <i class="<?= $item['featured'] ? 'fas' : 'far' ?> fa-star"></i>
                                         </button>
                                     </form>
-                                    <form method="post" action="/admin/news/toggle-breaking/<?= esc($item['id']) ?>"><?= csrf_field() ?>
+                                    <form method="post" action="/admin/news/toggle-breaking/<?= esc($item['id']) ?>"><?= csrf_field() ?><?= $pageField ?>
                                         <button type="submit" class="btn-icon" title="<?= $isBreaking ? 'Remove breaking kicker' : 'Mark as breaking' ?>"
                                                 onclick="return confirm('<?= $isBreaking ? 'Remove the breaking kicker?' : 'Add the breaking kicker?' ?>')">
                                             <i class="fas fa-bolt<?= $isBreaking ? ' text-danger' : '' ?>"></i>
                                         </button>
                                     </form>
                                 <?php endif; ?>
-                                <form method="post" action="/admin/news/delete/<?= esc($item['id']) ?>"><?= csrf_field() ?>
+                                <form method="post" action="/admin/news/delete/<?= esc($item['id']) ?>"><?= csrf_field() ?><?= $pageField ?>
                                     <button type="submit" class="btn-icon btn-icon--danger" title="Delete" onclick="return confirm('Delete this article? This cannot be undone.')"><i class="fas fa-trash"></i></button>
                                 </form>
                             </div>
@@ -149,6 +145,46 @@ foreach ($news as $n) {
                 </tbody>
             </table>
         </div>
+
+        <?php if ($totalPages > 1): ?>
+            <?php
+            $from = ($page - 1) * $perPage + 1;
+            $to   = $from + count($news) - 1;
+            // First, last and a window around the current page; anything skipped becomes "…"
+            $links = array_filter(range(1, $totalPages), fn ($p) => $p === 1 || $p === $totalPages || abs($p - $page) <= 2);
+            $pageUrl = fn ($p) => '/admin/news' . ($p > 1 ? '?page=' . $p : '');
+            ?>
+            <nav class="pager" aria-label="Article pages">
+                <div class="pager__summary">Showing <?= number_format($from) ?>–<?= number_format($to) ?> of <?= number_format($counts['all']) ?></div>
+                <ul class="pager__pages">
+                    <li>
+                        <?php if ($page > 1): ?>
+                            <a class="pager__link" href="<?= $pageUrl($page - 1) ?>" rel="prev"><i class="fas fa-chevron-left"></i><span class="d-none d-sm-inline ms-1">Newer</span></a>
+                        <?php else: ?>
+                            <span class="pager__link is-disabled"><i class="fas fa-chevron-left"></i><span class="d-none d-sm-inline ms-1">Newer</span></span>
+                        <?php endif; ?>
+                    </li>
+                    <?php $prev = null; foreach ($links as $p): ?>
+                        <?php if ($prev !== null && $p - $prev > 1): ?><li class="pager__gap">…</li><?php endif; ?>
+                        <li>
+                            <?php if ($p === $page): ?>
+                                <span class="pager__link is-current" aria-current="page"><?= $p ?></span>
+                            <?php else: ?>
+                                <a class="pager__link" href="<?= $pageUrl($p) ?>"><?= $p ?></a>
+                            <?php endif; ?>
+                        </li>
+                        <?php $prev = $p; ?>
+                    <?php endforeach; ?>
+                    <li>
+                        <?php if ($page < $totalPages): ?>
+                            <a class="pager__link" href="<?= $pageUrl($page + 1) ?>" rel="next"><span class="d-none d-sm-inline me-1">Older</span><i class="fas fa-chevron-right"></i></a>
+                        <?php else: ?>
+                            <span class="pager__link is-disabled"><span class="d-none d-sm-inline me-1">Older</span><i class="fas fa-chevron-right"></i></span>
+                        <?php endif; ?>
+                    </li>
+                </ul>
+            </nav>
+        <?php endif; ?>
     <?php endif; ?>
 </div>
 

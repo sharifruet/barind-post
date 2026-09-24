@@ -35,6 +35,27 @@ services:
       # can already use (and therefore exfiltrate) any stored credential. Keep n8n's own login
       # as the real boundary.
       N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+      # The collect pipeline holds many fetched HTML pages in memory at once;
+      # the default ~2GB Node heap OOM-crashes "Extract Text + Image". The VM has ~7.7GB.
+      NODE_OPTIONS: "--max-old-space-size=4096"
+      # n8n 2.x runs Code nodes in a separate task-runner process with its OWN heap
+      # and task timeout. The collect crashes there ("Extract Text + Image" / "Curate
+      # Foreign"), so raise both. NODE_OPTIONS above only covers the main process.
+      N8N_RUNNERS_MAX_OLD_SPACE_SIZE: "4096"
+      N8N_RUNNERS_TASK_TIMEOUT: "3600"
+      # Stop hoarding execution data (the 2GB+ DB): keep only errors, and auto-prune.
+      # Success runs store every fetched HTML page — huge and useless to keep.
+      EXECUTIONS_DATA_SAVE_ON_SUCCESS: "none"
+      EXECUTIONS_DATA_SAVE_ON_ERROR: "all"
+      EXECUTIONS_DATA_SAVE_ON_PROGRESS: "false"
+      EXECUTIONS_DATA_SAVE_MANUAL_EXECUTIONS: "false"
+      EXECUTIONS_DATA_PRUNE: "true"
+      EXECUTIONS_DATA_MAX_AGE: "48"
+      EXECUTIONS_DATA_PRUNE_MAX_COUNT: "200"
+      # Kill any single execution that runs longer than this (seconds) so a hung
+      # collect run can never pile up and block the schedule. A full collect is ~15-20 min.
+      EXECUTIONS_TIMEOUT: "3600"
+      EXECUTIONS_TIMEOUT_MAX: "3900"
       # Facebook page publishing (n8n-workflows/facebook-pipeline.json). Put the real
       # values in .env.n8n, never here: a Facebook Page ID and a long-lived Page access
       # token with pages_manage_posts. The "Publish to Facebook" workflow reads them as

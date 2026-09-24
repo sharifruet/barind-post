@@ -627,6 +627,25 @@ textarea.form-control { line-height: 1.6; }
 .tile__text { font-size: 0.82rem; color: var(--ink-3); margin: 0; }
 .tile__go { font-size: 0.78rem; font-weight: 600; color: var(--accent); margin-top: 0.7rem; display: inline-block; }
 
+/* Pager under long tables (news list): summary on the left, page links on the right */
+.pager {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;
+    padding: 0.75rem 1.1rem;
+    border-top: 1px solid var(--rule);
+}
+.pager__summary { font-size: 0.8rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.pager__pages { display: flex; align-items: center; gap: 0.3rem; list-style: none; margin: 0; padding: 0; }
+.pager__link {
+    min-width: 30px; height: 30px; padding: 0 0.55rem;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--rule); background: var(--panel); color: var(--ink-3);
+    border-radius: var(--radius); font-size: 0.8rem; font-variant-numeric: tabular-nums; text-decoration: none;
+}
+a.pager__link:hover { background: var(--ink); border-color: var(--ink); color: #fff; }
+.pager__link.is-current { background: var(--accent); border-color: var(--accent); color: #fff; }
+.pager__link.is-disabled { color: var(--ink-4); background: var(--canvas); }
+.pager__gap { color: var(--ink-4); font-size: 0.8rem; padding: 0 0.2rem; }
+
 .stat { background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius); padding: 0.95rem 1.1rem; }
 .stat__label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-4); }
 .stat__value { font-size: 1.6rem; font-weight: 700; line-height: 1.15; margin-top: 0.15rem; font-variant-numeric: tabular-nums; }
