@@ -47,7 +47,7 @@ $activeSlug = $category['slug'] ?? null;
             <a class="masthead__brand" href="/">
                 <img class="masthead__logo" src="<?= base_url('public/logo.png') ?>" alt="বারিন্দ পোস্ট">
                 <span>
-                    <span class="masthead__name">বারিন্দ পোস্ট<span class="masthead__flag">পরীক্ষামূলক</span></span>
+                    <span class="masthead__name">বারিন্দ পোস্ট</span>
                     <span class="masthead__tagline">গোদাগাড়ী · রাজশাহী</span>
                 </span>
             </a>

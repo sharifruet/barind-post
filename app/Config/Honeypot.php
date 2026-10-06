@@ -14,7 +14,7 @@ class Honeypot extends BaseConfig
     /**
      * Honeypot Label Content
      */
-    public string $label = 'Fill This Field';
+    public string $label = '';
 
     /**
      * Honeypot Field Name
@@ -23,8 +23,11 @@ class Honeypot extends BaseConfig
 
     /**
      * Honeypot HTML Template
+     *
+     * No label: the framework default ("Fill This Field") sits in the page source
+     * of every form and reads as leftover template text to crawlers/reviewers.
      */
-    public string $template = '<label>{label}</label><input type="text" name="{name}" value="">';
+    public string $template = '<input type="text" name="{name}" value="" tabindex="-1" autocomplete="off" aria-hidden="true">';
 
     /**
      * Honeypot container

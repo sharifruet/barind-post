@@ -146,20 +146,6 @@ input:focus-visible {
     margin-top: 0.4rem;
 }
 
-.masthead__flag {
-    display: inline-block;
-    font-family: var(--sans);
-    font-size: 0.66rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    color: #fff;
-    background: var(--accent);
-    padding: 0.12rem 0.5rem;
-    margin-left: 0.5rem;
-    vertical-align: middle;
-    border-radius: 2px;
-}
-
 /* Search */
 .masthead__search { flex-shrink: 0; }
 
