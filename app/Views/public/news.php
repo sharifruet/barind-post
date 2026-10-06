@@ -179,7 +179,7 @@ $railList = array_slice($railStories, 4, 8);
                 <div class="rail-module">
                     <div class="rail-head">বিভাগ</div>
                     <div class="chips">
-                        <?php foreach ($categories as $cat): ?>
+                        <?php foreach (menu_categories($categories) as $cat): ?>
                             <a class="chip" href="/section/<?= esc($cat['slug']) ?>"><?= esc($cat['name'], 'raw') ?></a>
                         <?php endforeach; ?>
                     </div>

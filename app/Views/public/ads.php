@@ -1,5 +1,6 @@
 <?php
 $title = 'বিজ্ঞাপন - বারিন্দ পোস্ট';
+$publisher = config('SiteInfo');
 ?>
 
 <?= $this->extend('public/layout') ?>
@@ -15,33 +16,7 @@ $title = 'বিজ্ঞাপন - বারিন্দ পোস্ট';
                 <div class="card-body">
                     <div class="mb-4">
                         <h2 class="h4 text-danger mb-3">আমাদের সম্পর্কে</h2>
-                        <p>বারিন্দ পোস্ট রাজশাহী অঞ্চল থেকে পরিচালিত একটি শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল। আমাদের দৈনিক হাজার হাজার পাঠক রয়েছে যারা বিশ্বাসযোগ্য ও সময়োপযোগী সংবাদ খুঁজছেন। আপনার ব্র্যান্ড আমাদের পাঠকদের কাছে পৌঁছানোর জন্য আমাদের বিজ্ঞাপন সুবিধা ব্যবহার করুন।</p>
-                    </div>
-
-                    <div class="mb-4">
-                        <h2 class="h4 text-danger mb-3">আমাদের পাঠক</h2>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <div class="card border-danger">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-users text-danger fa-2x mb-2"></i>
-                                        <h5 class="card-title">দৈনিক ভিজিটর</h5>
-                                        <p class="card-text h4 text-danger">১০,০০০+</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <!--
-                            <div class="col-md-6 mb-3">
-                                <div class="card border-danger">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-map-marker-alt text-danger fa-2x mb-2"></i>
-                                        <h5 class="card-title">প্রধান এলাকা</h5>
-                                        <p class="card-text">রাজশাহী, চাঁপাইনবাবগঞ্জ, নাটোর</p>
-                                    </div>
-                                </div>
-                            </div>
-                            -->
-                        </div>
+                        <p>বারিন্দ পোস্ট গোদাগাড়ী, রাজশাহী থেকে প্রকাশিত বরেন্দ্র অঞ্চলের একটি অনলাইন সংবাদমাধ্যম, যার পাঠকেরা স্থানীয় ও বিশ্বাসযোগ্য সংবাদ খোঁজেন। আপনার ব্র্যান্ড আমাদের পাঠকদের কাছে পৌঁছানোর জন্য আমাদের বিজ্ঞাপন সুবিধা ব্যবহার করুন।</p>
                     </div>
 
                     <div class="mb-4">
@@ -209,10 +184,10 @@ $title = 'বিজ্ঞাপন - বারিন্দ পোস্ট';
                                 <div class="card">
                                     <div class="card-body">
                                         <h6 class="text-danger">বিজ্ঞাপন বিভাগ</h6>
-                                        <p class="mb-1"><strong>ইমেইল:</strong> অফিস: info@barindpost.com<br>বার্তা বিভাগ: news@barindpost.com</p>
-                                        <!--
-                                        <p class="mb-1"><strong>ফোন:</strong> +880-XXX-XXXXXXX</p>
-                                        -->
+                                        <p class="mb-1"><strong>ইমেইল:</strong> <?= esc($publisher->email) ?></p>
+                                        <?php if ($publisher->phone !== ''): ?>
+                                            <p class="mb-1"><strong>ফোন:</strong> <?= esc($publisher->phone) ?></p>
+                                        <?php endif; ?>
                                         <p class="mb-1"><strong>কর্মসময়:</strong> সকাল ৯টা - সন্ধ্যা ৬টা</p>
                                     </div>
                                 </div>
@@ -225,10 +200,12 @@ $title = 'বিজ্ঞাপন - বারিন্দ পোস্ট';
                                             <i class="fas fa-envelope me-2"></i>
                                             যোগাযোগ ফর্ম
                                         </a>
-                                        <a href="https://wa.me/880XXXXXXXXX" class="btn btn-success btn-sm ms-2">
+                                        <?php if ($publisher->whatsapp !== ''): ?>
+                                        <a href="https://wa.me/<?= esc(preg_replace('/\D/', '', $publisher->whatsapp), 'attr') ?>" target="_blank" rel="noopener" class="btn btn-success btn-sm ms-2">
                                             <i class="fab fa-whatsapp me-2"></i>
                                             WhatsApp
                                         </a>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>

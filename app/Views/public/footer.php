@@ -1,5 +1,6 @@
 <?php
-$footerCategories = array_slice($categories ?? [], 0, 8);
+$footerCategories = array_slice(menu_categories($categories ?? []), 0, 8);
+$publisher        = config('SiteInfo');
 ?>
 <footer class="site-footer">
     <div class="container">
@@ -10,10 +11,26 @@ $footerCategories = array_slice($categories ?? [], 0, 8);
                     মহিশালবাড়ী, গোদাগাড়ী, রাজশাহী থেকে প্রকাশিত একটি অনলাইন সংবাদমাধ্যম।
                     বরেন্দ্র অঞ্চলের খবর, রাজনীতি, অর্থনীতি, খেলাধুলা ও জীবনযাত্রার সর্বশেষ সংবাদ।
                 </p>
+                <address class="site-footer__blurb">
+                    <?php if ($publisher->editorName !== ''): ?>
+                        <?= $publisher->publisherName === '' ? 'সম্পাদক ও প্রকাশক' : 'সম্পাদক' ?>: <?= esc($publisher->editorName) ?><br>
+                    <?php endif; ?>
+                    <?php if ($publisher->publisherName !== ''): ?>
+                        প্রকাশক: <?= esc($publisher->publisherName) ?><br>
+                    <?php endif; ?>
+                    কার্যালয়: <?= esc($publisher->address) ?><br>
+                    <?php if ($publisher->phone !== ''): ?>
+                        ফোন: <a href="tel:<?= esc(preg_replace('/[^0-9+]/', '', $publisher->phone), 'attr') ?>"><?= esc($publisher->phone) ?></a><br>
+                    <?php endif; ?>
+                    ইমেইল: <a href="mailto:<?= esc($publisher->email, 'attr') ?>"><?= esc($publisher->email) ?></a>
+                    <?php if ($publisher->registration !== ''): ?>
+                        <br><?= esc($publisher->registration) ?>
+                    <?php endif; ?>
+                </address>
                 <div class="site-footer__social">
-                    <a href="https://facebook.com/barindpost" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                    <a href="https://x.com/BarindPost" target="_blank" rel="noopener" aria-label="X"><i class="fa-brands fa-x-twitter"></i></a>
-                    <a href="https://instagram.com/barindpost" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <?php foreach ($publisher->socialLinks() as $social): ?>
+                        <a href="<?= esc($social['url'], 'attr') ?>" target="_blank" rel="noopener" aria-label="<?= esc($social['label'], 'attr') ?>"><i class="<?= esc($social['icon'], 'attr') ?>"></i></a>
+                    <?php endforeach; ?>
                     <a href="/rss" aria-label="RSS"><i class="fas fa-rss"></i></a>
                 </div>
             </div>
@@ -53,7 +70,9 @@ $footerCategories = array_slice($categories ?? [], 0, 8);
 
         <div class="site-footer__bottom">
             <span>&copy; <?= esc(bn_number(date('Y'))) ?> বারিন্দ পোস্ট। সর্বস্বত্ব সংরক্ষিত।</span>
-            <span>সম্পাদক ও প্রকাশক — বারিন্দ পোস্ট</span>
+            <?php if ($publisher->editorName !== ''): ?>
+                <span><?= $publisher->publisherName === '' ? 'সম্পাদক ও প্রকাশক' : 'সম্পাদক' ?> — <?= esc($publisher->editorName) ?></span>
+            <?php endif; ?>
         </div>
     </div>
 </footer>

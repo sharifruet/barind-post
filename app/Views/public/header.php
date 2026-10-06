@@ -16,7 +16,7 @@ try {
 
 $navCategories     = [];
 $specialCategories = [];
-foreach (($categories ?? []) as $cat) {
+foreach (menu_categories($categories ?? []) as $cat) {
     if (! empty($cat['isSpecial'])) {
         $specialCategories[] = $cat;
     } else {
@@ -32,9 +32,9 @@ $activeSlug = $category['slug'] ?? null;
         <div class="topbar__inner">
             <span class="topbar__date"><?= esc(format_bangla_date(date('Y-m-d'), true), 'raw') ?></span>
             <div class="topbar__social">
-                <a href="https://facebook.com/barindpost" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                <a href="https://x.com/BarindPost" target="_blank" rel="noopener" aria-label="X"><i class="fa-brands fa-x-twitter"></i></a>
-                <a href="https://instagram.com/barindpost" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                <?php foreach (config('SiteInfo')->socialLinks() as $social): ?>
+                    <a href="<?= esc($social['url'], 'attr') ?>" target="_blank" rel="noopener" aria-label="<?= esc($social['label'], 'attr') ?>"><i class="<?= esc($social['icon'], 'attr') ?>"></i></a>
+                <?php endforeach; ?>
                 <a href="/rss" aria-label="RSS"><i class="fas fa-rss"></i></a>
             </div>
         </div>

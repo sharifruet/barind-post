@@ -88,12 +88,14 @@ class PublicSite extends Controller
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
         $news = $newsModel->getNewsByCategory($category['id'], 20);
-        
+
         // Set meta tags for the section
         $data = [
             'category' => $category,
             'news' => $news,
             'categories' => $categories,
+            // Thin sections are left out of the menus and the sitemap; keep them out of the index too.
+            'robots' => category_has_enough_content($category) ? 'index, follow' : 'noindex, follow',
             'title' => $category['name'] . ' - বারিন্দ পোস্ট',
             'meta_description' => $category['name'] . ' বিভাগের সর্বশেষ সংবাদ। বারিন্দ পোস্টে প্রকাশিত ' . $category['name'] . ' সম্পর্কিত সব খবর জানুন।',
             'meta_keywords' => 'বারিন্দ পোস্ট, ' . $category['name'] . ', রাজশাহী সংবাদ, বাংলাদেশ সংবাদ',
@@ -643,12 +645,12 @@ class PublicSite extends Controller
             return $this->response->setJSON(['success' => false, 'message' => 'Invalid request method']);
         }
 
-        // Get form data
-        $name = $this->request->getPost('name');
-        $email = $this->request->getPost('email');
-        $phone = $this->request->getPost('phone');
-        $subject = $this->request->getPost('subject');
-        $message = $this->request->getPost('message');
+        // Get form data (trimmed to the contacts column sizes)
+        $name = mb_substr(trim((string) $this->request->getPost('name')), 0, 100);
+        $email = mb_substr(trim((string) $this->request->getPost('email')), 0, 100);
+        $phone = mb_substr(trim((string) $this->request->getPost('phone')), 0, 20);
+        $subject = mb_substr(trim((string) $this->request->getPost('subject')), 0, 100);
+        $message = trim((string) $this->request->getPost('message'));
         $newsletter = $this->request->getPost('newsletter') ? 1 : 0;
 
         // Validate required fields
@@ -686,7 +688,9 @@ class PublicSite extends Controller
                 'message' => 'আপনার বার্তা সফলভাবে পাঠানো হয়েছে। আমরা শীঘ্রই আপনার সাথে যোগাযোগ করব।'
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            log_message('error', 'Contact form save failed: ' . $e->getMessage());
+
             return $this->response->setJSON([
                 'success' => false, 
                 'message' => 'দুঃখিত, একটি সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।'
@@ -711,82 +715,64 @@ class PublicSite extends Controller
         return view('public/about', ['categories' => $categories]);
     }
 
+    /**
+     * Full XML sitemap (robots.txt points here): home, the static pages,
+     * every section with enough content to be in the menu, and every
+     * published article. Cached like the other public pages and purged on
+     * every news change. Submit https://<site>/sitemap.xml in Search Console
+     * alongside /news-sitemap.xml.
+     */
     public function sitemap()
     {
-        $newsModel = new NewsModel();
-        $categoryModel = new CategoryModel();
-        
-        // Get all published news
-        $news = $newsModel->getAllPublishedNews();
-        
-        // Get all categories
-        $categories = $categoryModel->findAll();
-        
-        $this->response->setContentType('application/xml');
-        
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
-        
-        // Homepage
-        $xml .= '  <url>' . "\n";
-        $xml .= '    <loc>' . base_url() . '</loc>' . "\n";
-        $xml .= '    <lastmod>' . date('Y-m-d') . '</lastmod>' . "\n";
-        $xml .= '    <changefreq>daily</changefreq>' . "\n";
-        $xml .= '    <priority>1.0</priority>' . "\n";
-        $xml .= '  </url>' . "\n";
-        
-        // Static pages
-        $staticPages = ['about', 'privacy', 'terms', 'contact', 'ads', 'rss-info'];
-        foreach ($staticPages as $page) {
-            $xml .= '  <url>' . "\n";
-            $xml .= '    <loc>' . base_url($page) . '</loc>' . "\n";
-            $xml .= '    <lastmod>' . date('Y-m-d') . '</lastmod>' . "\n";
-            $xml .= '    <changefreq>monthly</changefreq>' . "\n";
-            $xml .= '    <priority>0.5</priority>' . "\n";
-            $xml .= '  </url>' . "\n";
+        $this->cachePage(60);
+
+        $entry = static function (string $path, ?string $lastmod = null): string {
+            return "  <url>\n"
+                 . '    <loc>' . htmlspecialchars(base_url($path), ENT_XML1 | ENT_QUOTES, 'UTF-8') . "</loc>\n"
+                 . ($lastmod ? '    <lastmod>' . date('c', strtotime($lastmod)) . "</lastmod>\n" : '')
+                 . "  </url>\n";
+        };
+
+        $articles = (new NewsModel())
+            ->select('slug, published_at, updated_at')
+            ->where('status', 'published')
+            ->orderBy('published_at', 'DESC')
+            ->findAll(45000); // one sitemap file holds at most 50,000 URLs
+
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
+             . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n"
+             . $entry('', $articles[0]['published_at'] ?? null);
+
+        foreach (['barind-post', 'contact', 'privacy', 'terms', 'ads'] as $page) {
+            $xml .= $entry($page);
         }
-        
-        // RSS feeds
-        $xml .= '  <url>' . "\n";
-        $xml .= '    <loc>' . base_url('rss') . '</loc>' . "\n";
-        $xml .= '    <lastmod>' . date('Y-m-d') . '</lastmod>' . "\n";
-        $xml .= '    <changefreq>hourly</changefreq>' . "\n";
-        $xml .= '    <priority>0.8</priority>' . "\n";
-        $xml .= '  </url>' . "\n";
-        
-        // Category pages
-        foreach ($categories as $category) {
-            $xml .= '  <url>' . "\n";
-            $xml .= '    <loc>' . base_url('section/' . $category['slug']) . '</loc>' . "\n";
-            $xml .= '    <lastmod>' . date('Y-m-d') . '</lastmod>' . "\n";
-            $xml .= '    <changefreq>daily</changefreq>' . "\n";
-            $xml .= '    <priority>0.8</priority>' . "\n";
-            $xml .= '  </url>' . "\n";
-            
-            // Category RSS feeds
-            $xml .= '  <url>' . "\n";
-            $xml .= '    <loc>' . base_url('rss/category/' . $category['slug']) . '</loc>' . "\n";
-            $xml .= '    <lastmod>' . date('Y-m-d') . '</lastmod>' . "\n";
-            $xml .= '    <changefreq>hourly</changefreq>' . "\n";
-            $xml .= '    <priority>0.7</priority>' . "\n";
-            $xml .= '  </url>' . "\n";
+        foreach (menu_categories((new CategoryModel())->findAll()) as $category) {
+            $xml .= $entry('section/' . rawurlencode($category['slug']));
         }
-        
-        // News articles
-        foreach ($news as $article) {
-            $xml .= '  <url>' . "\n";
-            $xml .= '    <loc>' . base_url('news/' . $article['slug']) . '</loc>' . "\n";
-            $xml .= '    <lastmod>' . date('Y-m-d', strtotime($article['updated_at'] ?? $article['published_at'])) . '</lastmod>' . "\n";
-            $xml .= '    <changefreq>weekly</changefreq>' . "\n";
-            $xml .= '    <priority>0.7</priority>' . "\n";
-            $xml .= '  </url>' . "\n";
+        foreach ($articles as $article) {
+            $xml .= $entry('news/' . rawurlencode($article['slug']), $article['updated_at'] ?: $article['published_at']);
         }
-        
         $xml .= '</urlset>';
-        
-        return $this->response->setBody($xml);
+
+        return $this->response->setContentType('application/xml', 'UTF-8')->setBody($xml);
     }
-    
+
+    /**
+     * ads.txt for AdSense, built from GOOGLE_ADSENSE_ID (ca-pub-… or pub-…)
+     * so the publisher ID lives in one place. 404 until it is configured.
+     */
+    public function adsTxt()
+    {
+        $client = trim((string) ($_ENV['GOOGLE_ADSENSE_ID'] ?? getenv('GOOGLE_ADSENSE_ID') ?: ''));
+        if (! preg_match('/^(?:ca-)?(pub-\d+)$/', $client, $m)) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        return $this->response
+            ->setContentType('text/plain', 'UTF-8')
+            ->setBody("google.com, {$m[1]}, DIRECT, f08c47fec0942fa0\n");
+    }
+
     /**
      * Track news view in the database
      */

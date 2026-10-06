@@ -1,5 +1,6 @@
 <?php
 $title = 'ব্যবহারের শর্তাবলী - বারিন্দ পোস্ট';
+$publisher = config('SiteInfo');
 ?>
 
 <?= $this->extend('public/layout') ?>
@@ -101,14 +102,19 @@ $title = 'ব্যবহারের শর্তাবলী - বারিন
                         <h2 class="h4 text-danger mb-3">১০. যোগাযোগ</h2>
                         <p>ব্যবহারের শর্তাবলী সম্পর্কে কোন প্রশ্ন থাকলে আমাদের সাথে যোগাযোগ করুন:</p>
                         <ul>
-                                                            <li><strong>ইমেইল:</strong> অফিস: info@barindpost.com<br>বার্তা বিভাগ: news@barindpost.com</li>
-                           <!-- <li><strong>ফোন:</strong> +880-XXX-XXXXXXX</li> -->
-                                                          <li><strong>ঠিকানা:</strong> অস্থায়ী কার্যালয়<br>মহিশালবাড়ী, গোদাগাড়ী, রাজশাহী, বাংলাদেশ</li>
+                            <?php if ($publisher->editorName !== ''): ?>
+                                <li><strong><?= $publisher->publisherName === '' ? 'সম্পাদক ও প্রকাশক' : 'সম্পাদক' ?>:</strong> <?= esc($publisher->editorName) ?></li>
+                            <?php endif; ?>
+                            <li><strong>ইমেইল:</strong> সম্পাদক: <?= esc($publisher->email) ?><br>বার্তা বিভাগ: <?= esc($publisher->newsEmail) ?></li>
+                            <?php if ($publisher->phone !== ''): ?>
+                                <li><strong>ফোন:</strong> <?= esc($publisher->phone) ?></li>
+                            <?php endif; ?>
+                            <li><strong>ঠিকানা:</strong> <?= esc($publisher->address) ?></li>
                         </ul>
                     </div>
 
                     <div class="alert alert-info">
-                        <strong>সর্বশেষ আপডেট:</strong> <?= date('d F, Y') ?>
+                        <strong>সর্বশেষ আপডেট:</strong> <?= esc($publisher->policyUpdated) ?>
                     </div>
                 </div>
             </div>

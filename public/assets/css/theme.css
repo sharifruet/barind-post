@@ -938,6 +938,9 @@ input:focus-visible {
 }
 
 .site-footer__blurb { color: var(--ink-3); line-height: 1.7; max-width: 30rem; }
+address.site-footer__blurb { font-style: normal; font-size: 0.9rem; }
+address.site-footer__blurb a { color: var(--ink-2); }
+address.site-footer__blurb a:hover { color: var(--accent); }
 
 .site-footer__head {
     font-size: 0.74rem;

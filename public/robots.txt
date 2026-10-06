@@ -21,6 +21,7 @@ Allow: /robots.txt
 
 # Sitemap location
 Sitemap: https://barindpost.com/sitemap.xml
+Sitemap: https://barindpost.com/news-sitemap.xml
 
 # Crawl delay (optional - be respectful)
 Crawl-delay: 1

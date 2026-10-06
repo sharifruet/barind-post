@@ -1,5 +1,6 @@
 <?php
 $title = 'আমাদের সম্পর্কে - বারিন্দ পোস্ট';
+$publisher = config('SiteInfo');
 ?>
 
 <?= $this->extend('public/layout') ?>
@@ -14,7 +15,7 @@ $title = 'আমাদের সম্পর্কে - বারিন্দ �
                 </div>
                 <div class="card-body">
                     <div class="mb-4">
-                        <p>বারিন্দ পোস্ট (barindpost.com) রাজশাহী অঞ্চলের একটি শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল। ২০২৪ সালে প্রতিষ্ঠিত এই পোর্টালের মূল লক্ষ্য হল বরেন্দ্র অঞ্চলের মানুষের কাছে বিশ্বাসযোগ্য, সময়োপযোগী ও নিরপেক্ষ সংবাদ পৌঁছে দেওয়া।</p>
+                        <p>বারিন্দ পোস্ট (barindpost.com) গোদাগাড়ী, রাজশাহী থেকে প্রকাশিত বরেন্দ্র অঞ্চলের একটি অনলাইন সংবাদমাধ্যম। ২০২৪ সালে প্রতিষ্ঠিত এই পোর্টালের মূল লক্ষ্য হল বরেন্দ্র অঞ্চলের মানুষের কাছে বিশ্বাসযোগ্য, সময়োপযোগী ও নিরপেক্ষ সংবাদ পৌঁছে দেওয়া।</p>
                         <p>আমরা বিশ্বাস করি যে সঠিক তথ্য মানুষের জীবন পরিবর্তন করতে পারে। তাই আমরা সর্বদা সত্যতা যাচাই করে, নিরপেক্ষ দৃষ্টিভঙ্গি নিয়ে সংবাদ প্রকাশ করি।</p>
                     </div>
 
@@ -220,10 +221,21 @@ $title = 'আমাদের সম্পর্কে - বারিন্দ �
                             <div class="col-md-6 mb-3">
                                 <div class="card">
                                     <div class="card-body">
-                                        <h6 class="text-danger">অফিস</h6>
-                                        <p class="mb-1"><strong>ঠিকানা:</strong> অস্থায়ী কার্যালয়<br>মহিশালবাড়ী, গোদাগাড়ী, রাজশাহী, বাংলাদেশ</p>
-                                        <p class="mb-1"><strong>ইমেইল:</strong> অফিস: info@barindpost.com<br>বার্তা বিভাগ: news@barindpost.com</p>
-                                        <p class="mb-1"><strong>কর্মসময়:</strong> সকাল ৯টা - সন্ধ্যা ৬টা</p>
+                                        <h6 class="text-danger">প্রকাশনা তথ্য</h6>
+                                        <?php if ($publisher->editorName !== ''): ?>
+                                            <p class="mb-1"><strong><?= $publisher->publisherName === '' ? 'সম্পাদক ও প্রকাশক' : 'সম্পাদক' ?>:</strong> <?= esc($publisher->editorName) ?></p>
+                                        <?php endif; ?>
+                                        <?php if ($publisher->publisherName !== ''): ?>
+                                            <p class="mb-1"><strong>প্রকাশক:</strong> <?= esc($publisher->publisherName) ?></p>
+                                        <?php endif; ?>
+                                        <p class="mb-1"><strong>ঠিকানা:</strong> <?= esc($publisher->address) ?></p>
+                                        <?php if ($publisher->phone !== ''): ?>
+                                            <p class="mb-1"><strong>ফোন:</strong> <?= esc($publisher->phone) ?></p>
+                                        <?php endif; ?>
+                                        <p class="mb-1"><strong>ইমেইল:</strong> সম্পাদক: <?= esc($publisher->email) ?><br>বার্তা বিভাগ: <?= esc($publisher->newsEmail) ?></p>
+                                        <?php if ($publisher->registration !== ''): ?>
+                                            <p class="mb-1"><?= esc($publisher->registration) ?></p>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
@@ -231,16 +243,12 @@ $title = 'আমাদের সম্পর্কে - বারিন্দ �
                                 <div class="card">
                                     <div class="card-body">
                                         <h6 class="text-danger">সামাজিক যোগাযোগ</h6>
-                                        <div class="d-flex gap-2">
-                                            <a href="https://facebook.com/barindpost" target="_blank" class="btn btn-outline-danger btn-sm">
-                                                <i class="fab fa-facebook"></i> Facebook
-                                            </a>
-                                            <a href="https://instagram.com/barindpost" target="_blank" class="btn btn-outline-danger btn-sm">
-                                                <i class="fab fa-instagram"></i> Instagram
-                                            </a>
-                                            <a href="https://x.com/BarindPost" target="_blank" class="btn btn-outline-info btn-sm">
-                                                <i class="fa-brands fa-x-twitter"></i> X
-                                            </a>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <?php foreach ($publisher->socialLinks() as $social): ?>
+                                                <a href="<?= esc($social['url'], 'attr') ?>" target="_blank" rel="noopener" class="btn btn-outline-danger btn-sm">
+                                                    <i class="<?= esc($social['icon'], 'attr') ?>"></i> <?= esc($social['label']) ?>
+                                                </a>
+                                            <?php endforeach; ?>
                                         </div>
                                     </div>
                                 </div>

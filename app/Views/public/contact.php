@@ -1,5 +1,6 @@
 <?php
 $title = 'যোগাযোগ - বারিন্দ পোস্ট';
+$publisher = config('SiteInfo');
 ?>
 
 <?= $this->extend('public/layout') ?>
@@ -16,60 +17,51 @@ $title = 'যোগাযোগ - বারিন্দ পোস্ট';
                     <div class="row">
                         <div class="col-md-6 mb-4">
                             <h3 class="h5 text-danger mb-3">আমাদের সাথে যোগাযোগ</h3>
+                            <?php if ($publisher->editorName !== ''): ?>
+                            <div class="mb-3">
+                                <i class="fas fa-user-tie text-danger me-2"></i>
+                                <strong><?= $publisher->publisherName === '' ? 'সম্পাদক ও প্রকাশক' : 'সম্পাদক' ?>:</strong><br>
+                                <?= esc($publisher->editorName) ?>
+                                <?php if ($publisher->publisherName !== ''): ?>
+                                    <br><strong>প্রকাশক:</strong> <?= esc($publisher->publisherName) ?>
+                                <?php endif; ?>
+                            </div>
+                            <?php endif; ?>
                             <div class="mb-3">
                                 <i class="fas fa-map-marker-alt text-danger me-2"></i>
                                 <strong>ঠিকানা:</strong><br>
-                                অস্থায়ী কার্যালয়<br>
-                                মহিশালবাড়ী, গোদাগাড়ী, রাজশাহী, বাংলাদেশ
+                                <?= esc($publisher->address) ?>
                             </div>
-                            <!--
+                            <?php if ($publisher->phone !== ''): ?>
                             <div class="mb-3">
-                                <i class="fas fa-phone text-primary me-2"></i>
+                                <i class="fas fa-phone text-danger me-2"></i>
                                 <strong>ফোন:</strong><br>
-                                +880-XXX-XXXXXXX
+                                <a href="tel:<?= esc(preg_replace('/[^0-9+]/', '', $publisher->phone), 'attr') ?>"><?= esc($publisher->phone) ?></a>
                             </div>
-                            -->
+                            <?php endif; ?>
                             <div class="mb-3">
                                 <i class="fas fa-envelope text-danger me-2"></i>
                                 <strong>ইমেইল:</strong><br>
-                                অফিস: info@barindpost.com<br>
-                                বার্তা বিভাগ: news@barindpost.com
+                                সম্পাদক: <a href="mailto:<?= esc($publisher->email, 'attr') ?>"><?= esc($publisher->email) ?></a><br>
+                                বার্তা বিভাগ: <a href="mailto:<?= esc($publisher->newsEmail, 'attr') ?>"><?= esc($publisher->newsEmail) ?></a>
                             </div>
-                            <!--
+                            <?php if ($publisher->registration !== ''): ?>
                             <div class="mb-3">
-                                <i class="fas fa-clock text-primary me-2"></i>
-                                <strong>কর্মসময়:</strong><br>
-                                সকাল ৯টা - সন্ধ্যা ৬টা<br>
-                                (শুক্রবার বন্ধ)
+                                <i class="fas fa-id-card text-danger me-2"></i>
+                                <?= esc($publisher->registration) ?>
                             </div>
-                            -->
+                            <?php endif; ?>
                         </div>
                         <div class="col-md-6 mb-4">
                             <h3 class="h5 text-danger mb-3">সামাজিক যোগাযোগ</h3>
+                            <?php foreach ($publisher->socialLinks() as $social): ?>
                             <div class="mb-2">
-                                <a href="https://facebook.com/barindpost" target="_blank" class="text-decoration-none">
-                                    <i class="fab fa-facebook text-danger me-2"></i>
-                                    Facebook
+                                <a href="<?= esc($social['url'], 'attr') ?>" target="_blank" rel="noopener" class="text-decoration-none">
+                                    <i class="<?= esc($social['icon'], 'attr') ?> text-danger me-2"></i>
+                                    <?= esc($social['label']) ?>
                                 </a>
                             </div>
-                            <div class="mb-2">
-                                <a href="https://instagram.com/barindpost" target="_blank" class="text-decoration-none">
-                                    <i class="fab fa-instagram text-danger me-2"></i>
-                                    Instagram
-                                </a>
-                            </div>
-                            <div class="mb-2">
-                                <a href="https://x.com/BarindPost" target="_blank" class="text-decoration-none">
-                                    <i class="fa-brands fa-x-twitter text-danger me-2"></i>
-                                    X (Twitter)
-                                </a>
-                            </div>
-                            <div class="mb-2">
-                                <a href="https://barindpost.com" target="_blank" class="text-decoration-none">
-                                    <i class="fas fa-globe text-danger me-2"></i>
-                                    ওয়েবসাইট
-                                </a>
-                            </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
 
@@ -135,14 +127,12 @@ $title = 'যোগাযোগ - বারিন্দ পোস্ট';
                             <div class="col-md-6 mb-3">
                                 <h6 class="text-danger">বিজ্ঞাপন বিভাগ</h6>
                                 <p class="small mb-1">বিজ্ঞাপন দিতে চাইলে</p>
-                                <p class="small mb-1"><strong>ইমেইল:</strong> info@barindpost.com</p>
-                               <!-- <p class="small mb-1"><strong>ফোন:</strong> +880-XXX-XXXXXXX</p> -->
+                                <p class="small mb-1"><strong>ইমেইল:</strong> <?= esc($publisher->email) ?></p>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <h6 class="text-danger">সম্পাদকীয় বিভাগ</h6>
                                 <p class="small mb-1">সংবাদ পাঠাতে চাইলে</p>
-                                <p class="small mb-1"><strong>ইমেইল:</strong> news@barindpost.com</p>
-                               <!-- <p class="small mb-1"><strong>ফোন:</strong> +880-XXX-XXXXXXX</p> -->
+                                <p class="small mb-1"><strong>ইমেইল:</strong> <?= esc($publisher->newsEmail) ?></p>
                             </div>
                         </div>
                     </div>

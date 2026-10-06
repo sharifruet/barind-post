@@ -107,6 +107,10 @@ $routes->post('/contact', 'PublicSite::submitContact');
 $routes->get('/ads', 'PublicSite::ads');
 $routes->get('/barind-post', 'PublicSite::about');
 
+// Full sitemap (referenced by robots.txt) and AdSense ads.txt
+$routes->get('/sitemap.xml', 'PublicSite::sitemap');
+$routes->get('/ads.txt', 'PublicSite::adsTxt');
+
 // Google News sitemap (last 48 h of published articles)
 $routes->get('/news-sitemap.xml', 'PublicSite::newsSitemap');
 
@@ -125,7 +129,6 @@ $routes->get('/admin/prayer-times/delete/(:num)/(:num)', 'AdminPrayerTimes::dele
 $routes->get('/prayer-time/(:num)', 'PrayerTimes::index/$1');
 $routes->get('/prayer-time/(:num)/(:num)', 'PrayerTimes::fetchCityYear/$1/$2');
 $routes->get('/prayer-time/city/(:num)/(:any)', 'PrayerTimes::getCityDate/$1/$2');
-$routes->get('/prayer-time/debug-api', 'PrayerTimes::debugApi');
 
 // Public Prayer Times AJAX Routes
 $routes->get('/prayer-time/today', 'PrayerTimes::getToday');

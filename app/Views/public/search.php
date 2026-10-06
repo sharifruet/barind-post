@@ -35,14 +35,14 @@ $title = ($query ? $query . ' — ' : '') . 'অনুসন্ধান - ব�
             <i class="fas fa-magnifying-glass d-block"></i>
             <p class="mb-3">কোনো ফলাফল পাওয়া যায়নি। অন্য শব্দ দিয়ে চেষ্টা করুন অথবা বিভাগ থেকে পড়ুন।</p>
             <div class="chips justify-content-center">
-                <?php foreach (($categories ?? []) as $cat): ?>
+                <?php foreach (menu_categories($categories ?? []) as $cat): ?>
                     <a class="chip" href="/section/<?= esc($cat['slug']) ?>"><?= esc($cat['name'], 'raw') ?></a>
                 <?php endforeach; ?>
             </div>
         </div>
     <?php else: ?>
         <div class="chips">
-            <?php foreach (($categories ?? []) as $cat): ?>
+            <?php foreach (menu_categories($categories ?? []) as $cat): ?>
                 <a class="chip" href="/section/<?= esc($cat['slug']) ?>"><?= esc($cat['name'], 'raw') ?></a>
             <?php endforeach; ?>
         </div>

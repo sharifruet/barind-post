@@ -34,11 +34,11 @@
     </script>
 
     <!-- SEO Meta Tags -->
-    <title><?= isset($title) ? esc($title) : 'বারিন্দ পোস্ট - গোদাগাড়ী, রাজশাহীর থেকে পরিচালিত শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল' ?></title>
-    <meta name="description" content="<?= isset($meta_description) ? esc($meta_description) : 'বারিন্দ পোস্ট গোদাগাড়ী, রাজশাহীর থেকে পরিচালিত একটি শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল। সর্বশেষ সংবাদ, রাজনীতি, আন্তর্জাতিক, খেলাধুলা, শিক্ষা, স্বাস্থ্য ও বিজ্ঞান-প্রযুক্তি সংবাদ জানুন।' ?>">
+    <title><?= isset($title) ? esc($title) : 'বারিন্দ পোস্ট - গোদাগাড়ী, রাজশাহী থেকে প্রকাশিত বরেন্দ্র অঞ্চলের সংবাদ' ?></title>
+    <meta name="description" content="<?= isset($meta_description) ? esc($meta_description) : 'বারিন্দ পোস্ট গোদাগাড়ী, রাজশাহী থেকে প্রকাশিত বরেন্দ্র অঞ্চলের একটি অনলাইন সংবাদমাধ্যম। সর্বশেষ সংবাদ, রাজনীতি, আন্তর্জাতিক, খেলাধুলা, শিক্ষা, স্বাস্থ্য ও বিজ্ঞান-প্রযুক্তি সংবাদ জানুন।' ?>">
     <meta name="keywords" content="<?= isset($meta_keywords) ? esc($meta_keywords) : 'বারিন্দ পোস্ট, রাজশাহী সংবাদ, বাংলাদেশ সংবাদ, অনলাইন নিউজ, বাংলা সংবাদ' ?>">
     <meta name="author" content="বারিন্দ পোস্ট">
-    <meta name="robots" content="index, follow">
+    <meta name="robots" content="<?= esc($robots ?? 'index, follow', 'attr') ?>">
     <meta name="language" content="bn">
     <meta name="revisit-after" content="1 days">
     <meta name="distribution" content="global">
@@ -48,8 +48,8 @@
     <link rel="canonical" href="<?= current_url() ?>">
     
     <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="<?= isset($og_title) ? esc($og_title) : (isset($title) ? esc($title) : 'বারিন্দ পোস্ট - গোদাগাড়ী, রাজশাহীর থেকে পরিচালিত শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল') ?>">
-    <meta property="og:description" content="<?= isset($og_description) ? esc($og_description) : (isset($meta_description) ? esc($meta_description) : 'বারিন্দ পোস্ট গোদাগাড়ী, রাজশাহীর থেকে পরিচালিত একটি শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল।') ?>">
+    <meta property="og:title" content="<?= isset($og_title) ? esc($og_title) : (isset($title) ? esc($title) : 'বারিন্দ পোস্ট - গোদাগাড়ী, রাজশাহী থেকে প্রকাশিত বরেন্দ্র অঞ্চলের সংবাদ') ?>">
+    <meta property="og:description" content="<?= isset($og_description) ? esc($og_description) : (isset($meta_description) ? esc($meta_description) : 'বারিন্দ পোস্ট গোদাগাড়ী, রাজশাহী থেকে প্রকাশিত বরেন্দ্র অঞ্চলের একটি অনলাইন সংবাদমাধ্যম।') ?>">
     <meta property="og:type" content="<?= isset($og_type) ? esc($og_type) : 'website' ?>">
     <meta property="og:url" content="<?= current_url() ?>">
     <meta property="og:site_name" content="বারিন্দ পোস্ট">
@@ -62,8 +62,8 @@
     
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="<?= isset($twitter_card) ? esc($twitter_card) : 'summary_large_image' ?>">
-    <meta name="twitter:title" content="<?= isset($twitter_title) ? esc($twitter_title) : (isset($title) ? esc($title) : 'বারিন্দ পোস্ট - গোদাগাড়ী, রাজশাহীর থেকে পরিচালিত শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল') ?>">
-    <meta name="twitter:description" content="<?= isset($twitter_description) ? esc($twitter_description) : (isset($meta_description) ? esc($meta_description) : 'বারিন্দ পোস্ট গোদাগাড়ী, রাজশাহীর থেকে পরিচালিত একটি শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল।') ?>">
+    <meta name="twitter:title" content="<?= isset($twitter_title) ? esc($twitter_title) : (isset($title) ? esc($title) : 'বারিন্দ পোস্ট - গোদাগাড়ী, রাজশাহী থেকে প্রকাশিত বরেন্দ্র অঞ্চলের সংবাদ') ?>">
+    <meta name="twitter:description" content="<?= isset($twitter_description) ? esc($twitter_description) : (isset($meta_description) ? esc($meta_description) : 'বারিন্দ পোস্ট গোদাগাড়ী, রাজশাহী থেকে প্রকাশিত বরেন্দ্র অঞ্চলের একটি অনলাইন সংবাদমাধ্যম।') ?>">
     <?php if (isset($og_image)): ?>
     <meta name="twitter:image" content="<?= esc($og_image) ?>">
     <?php endif; ?>
@@ -102,7 +102,7 @@
     
     <!-- Google AdSense -->
     <?php if (isset($_ENV['GOOGLE_ADSENSE_ID']) && !empty($_ENV['GOOGLE_ADSENSE_ID'])): ?>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=<?= $_ENV['GOOGLE_ADSENSE_ID'] ?>" crossorigin="anonymous"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=<?= esc($_ENV['GOOGLE_ADSENSE_ID'], 'attr') ?>" crossorigin="anonymous"></script>
     <?php endif; ?>
     
     <!-- Preconnect to external domains -->
@@ -131,23 +131,20 @@
         "name": "বারিন্দ পোস্ট",
         "url": "<?= base_url() ?>",
         "logo": "<?= base_url('public/logo.png') ?>",
-        "description": "রাজশাহী অঞ্চলের একটি শীর্ষস্থানীয় অনলাইন সংবাদ পোর্টাল",
+        "description": "গোদাগাড়ী, রাজশাহী থেকে প্রকাশিত বরেন্দ্র অঞ্চলের অনলাইন সংবাদমাধ্যম",
         "foundingDate": "2024",
         "address": {
             "@type": "PostalAddress",
             "addressLocality": "মহিশালবাড়ী, গোদাগাড়ী, রাজশাহী",
             "addressCountry": "BD"
         },
-        "contactPoint": {
-            "@type": "ContactPoint",
-            "contactType": "customer service",
-            "email": "info@barindpost.com"
-        },
-        "sameAs": [
-            "https://facebook.com/barindpost",
-            "https://instagram.com/barindpost",
-            "https://x.com/BarindPost"
-        ]
+        "contactPoint": <?= json_encode(array_filter([
+            '@type'       => 'ContactPoint',
+            'contactType' => 'customer service',
+            'email'       => config('SiteInfo')->email,
+            'telephone'   => config('SiteInfo')->phone,
+        ]), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>,
+        "sameAs": <?= json_encode(array_column(config('SiteInfo')->socialLinks(), 'url'), JSON_UNESCAPED_SLASHES) ?>
     }
     </script>
     
