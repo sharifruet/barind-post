@@ -758,22 +758,6 @@ class PublicSite extends Controller
     }
 
     /**
-     * ads.txt for AdSense, built from GOOGLE_ADSENSE_ID (ca-pub-… or pub-…)
-     * so the publisher ID lives in one place. 404 until it is configured.
-     */
-    public function adsTxt()
-    {
-        $client = trim((string) ($_ENV['GOOGLE_ADSENSE_ID'] ?? getenv('GOOGLE_ADSENSE_ID') ?: ''));
-        if (! preg_match('/^(?:ca-)?(pub-\d+)$/', $client, $m)) {
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
-        }
-
-        return $this->response
-            ->setContentType('text/plain', 'UTF-8')
-            ->setBody("google.com, {$m[1]}, DIRECT, f08c47fec0942fa0\n");
-    }
-
-    /**
      * Track news view in the database
      */
     private function trackNewsView($newsId)

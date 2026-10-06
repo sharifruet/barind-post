@@ -107,9 +107,8 @@ $routes->post('/contact', 'PublicSite::submitContact');
 $routes->get('/ads', 'PublicSite::ads');
 $routes->get('/barind-post', 'PublicSite::about');
 
-// Full sitemap (referenced by robots.txt) and AdSense ads.txt
+// Full sitemap (referenced by robots.txt)
 $routes->get('/sitemap.xml', 'PublicSite::sitemap');
-$routes->get('/ads.txt', 'PublicSite::adsTxt');
 
 // Google News sitemap (last 48 h of published articles)
 $routes->get('/news-sitemap.xml', 'PublicSite::newsSitemap');

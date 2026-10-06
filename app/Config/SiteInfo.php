@@ -29,7 +29,7 @@ class SiteInfo extends BaseConfig
 
     public string $address = 'মহিশালবাড়ী, গোদাগাড়ী, রাজশাহী, বাংলাদেশ';
     public string $phone   = '+8809658768158';
-    public string $whatsapp = '8809658768158';
+    public string $whatsapp = '';
 
     public string $email     = 'editor@barindpost.com';
     public string $newsEmail = 'news@barindpost.com';
