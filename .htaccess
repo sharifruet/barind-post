@@ -61,7 +61,7 @@ RewriteRule ^(.*)$ index.php/$1 [L]
 
 # Prevent access to system and app directories
 <IfModule mod_rewrite.c>
-    RewriteRule ^(app|system|writable|tests)/ - [F,L]
+    RewriteRule ^(app|system|writable|tests|mcp-server)/ - [F,L]
 </IfModule>
 
 # Enable compression

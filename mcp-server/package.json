@@ -1,0 +1,23 @@
+{
+  "name": "barind-post-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local MCP server that pushes news to Barind Post through the api/v1 automation API",
+  "type": "module",
+  "bin": {
+    "barind-post-mcp": "./index.js"
+  },
+  "engines": {
+    "node": ">=20.12"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "start:http": "node index.js --http",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "express": "5.3.0",
+    "zod": "4.6.7"
+  }
+}

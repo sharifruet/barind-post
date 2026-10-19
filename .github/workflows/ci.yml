@@ -36,3 +36,23 @@ jobs:
         env:
           CI_ENVIRONMENT: testing
         run: vendor/bin/phpunit --no-coverage --exclude-group needs-db
+
+  mcp-server:
+    name: MCP server (Node)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mcp-server
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: mcp-server/package-lock.json
+
+      - run: npm ci
+      - run: npm audit --omit=dev
+      - run: npm test

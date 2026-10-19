@@ -101,6 +101,13 @@ creates `status: draft` (never publishes) and dedupes on `source_url`/`content_h
 See `N8N_NEWS_AUTOMATION_PLAN.md` for the full design, current status, and open
 decisions; `docker-compose.n8n.yml` runs n8n itself as a separate local stack.
 
+`mcp-server/` (Node, `@modelcontextprotocol/sdk`) is a second client of the same API: a local MCP
+server (stdio, or Streamable HTTP on loopback with `--http`) so agents and other tools can push
+news. It holds only the API URL + key and maps tools 1:1 onto `api/v1`, so every rule above
+(drafts by default, publish gates, dedup) applies unchanged. If you change the `create` payload or
+add an endpoint, update its tools in `mcp-server/src/server.js`. Tests: `cd mcp-server && npm test`
+(offline, fake API; also run in CI). See `mcp-server/README.md`.
+
 ## Notable non-standard bits
 
 - Image uploads for news go through `ImageUpload::upload` (AJAX, stores metadata in the `images` table) rather than CI4's native upload flow embedded in the news form; images are reusable across articles and selected via a modal (see `IMAGE_UPLOAD_FEATURES.md`).
