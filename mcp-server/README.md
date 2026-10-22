@@ -1,16 +1,52 @@
-# Barind Post MCP server
+# Barind Post MCP
 
-A local [MCP](https://modelcontextprotocol.io) server that lets agents and other tools push news to the
-live site. It is a thin client over the site's `/api/v1` automation API (`app/Controllers/Api/NewsController.php`),
-which is the same API the n8n pipelines use. It never touches the database. Validation, dedup (`source_url`, content hash),
-the auto-publish switch and every publish gate stay on the server, so an MCP client cannot do
-anything n8n can't.
+Agents and other tools push news to the live site over [MCP](https://modelcontextprotocol.io). There are two
+ways in, with the same six tools. Both end in the site's `App\Libraries\NewsIntake`, the same code the n8n
+pipelines use through `/api/v1`. Validation, dedup (`source_url`, content hash), the auto-publish switch
+and every publish gate stay on the server, so an MCP client can't do anything n8n can't.
 
 ```
-agent / app ──MCP──▶ mcp-server (this machine) ──HTTPS + Bearer key──▶ barindpost.com/api/v1
+remote agent / app ──MCP over HTTPS + Bearer key──────────────────────────▶ barindpost.com/mcp  ─┐
+local agent ──MCP stdio──▶ mcp-server (this folder) ──HTTPS + Bearer key──▶ barindpost.com/api/v1 ┴▶ NewsIntake
 ```
 
-## Setup
+## Option 1: the site's own endpoint, `https://www.barindpost.com/mcp`
+
+Nothing to install. Any MCP client that supports **Streamable HTTP** with a custom header can connect.
+It sends `Authorization: Bearer <automation.apiKey>`, the same key as `/api/v1`. If `automation.allowedIps`
+is set on the server, it applies here too.
+
+Claude Code:
+
+```bash
+claude mcp add --transport http barind-post https://www.barindpost.com/mcp \
+  --header "Authorization: Bearer <automation.apiKey>"
+```
+
+Most other clients (Cursor, VS Code, the MCP SDKs, n8n's *MCP Client Tool* node with Bearer auth) take this:
+
+```json
+{
+  "mcpServers": {
+    "barind-post": {
+      "type": "http",
+      "url": "https://www.barindpost.com/mcp",
+      "headers": { "Authorization": "Bearer <automation.apiKey>" }
+    }
+  }
+}
+```
+
+The endpoint is stateless and answers in plain JSON, with no event stream and no sessions, so it runs on the
+shared cPanel hosting like any other page. It has no OAuth, so clients that can only connect with OAuth
+(claude.ai custom connectors, for example) can't use it.
+
+## Option 2: this local server (stdio)
+
+For clients that can only start a local process. It is a thin client over `/api/v1` and never touches
+the database.
+
+### Setup
 
 Requires Node ≥ 20.12.
 
@@ -24,7 +60,7 @@ npm test                  # offline, uses a fake API
 The production `.env` must have `automation.apiKey` and `automation.authorId` set, or every call fails
 closed with 401/500. If `automation.allowedIps` is set, this machine's public IP must be in it.
 
-## Running it
+### Running it
 
 **stdio** is for clients that start the server themselves. For Claude Code:
 
@@ -56,7 +92,7 @@ By default it listens only on loopback and rejects foreign `Host` headers. To ex
 on a non-loopback address without a token, because anyone who can reach the port can post to the
 live site. Clients then send `Authorization: Bearer <MCP_HTTP_TOKEN>`.
 
-## Tools
+## Tools (both options)
 
 | Tool | API call | Notes |
 |---|---|---|

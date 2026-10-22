@@ -1,6 +1,6 @@
 <?php
 
-use App\Controllers\Api\NewsController;
+use App\Libraries\NewsIntake;
 use CodeIgniter\Test\CIUnitTestCase;
 
 /**
@@ -24,10 +24,7 @@ final class PublishGateTest extends CIUnitTestCase
         $automation->autoPublish        = $autoPublish;
         $automation->autoPublishMinWords = $minWords;
 
-        $method = (new ReflectionClass(NewsController::class))->getMethod('publishGateFailures');
-        $method->setAccessible(true);
-
-        return $method->invoke(new NewsController(), $data, $wordCount, $similar, $automation);
+        return (new NewsIntake())->publishGateFailures($data, $wordCount, $similar, $automation);
     }
 
     private function goodArticle(): array
@@ -124,6 +121,23 @@ final class PublishGateTest extends CIUnitTestCase
             'lead_text'  => "দুই সদস্য গ্রেফতার\n৯৪ লাখ টাকা আত্মসাতের অভিযোগ",
             'content'    => 'কিশোরগঞ্জ সদর থানা এলাকায় সংঘবদ্ধ অনলাইন প্রতারক চক্রের দুই সদস্যকে গ্রেফতার করেছে সিআইডি। তদন্ত চলমান।',
             'source_url' => 'https://dailynayadiganta.com/post/crime/1054344',
+        ];
+
+        $this->assertSame([], $this->gates($article, 250, null));
+    }
+
+    public function testHtmlMarkupIsNotMistakenForEnglish(): void
+    {
+        // Tag names (strong, em, li, blockquote…) once counted as untranslated Latin words,
+        // so any article with a list or bold text was held back as "not clean Bangla".
+        $article = [
+            'title'      => 'গোদাগাড়ীতে ডেঙ্গু রোগী বাড়ছে, উপজেলা স্বাস্থ্য কমপ্লেক্সে ভর্তি',
+            'subtitle'   => 'উপজেলা স্বাস্থ্য কমপ্লেক্সে ডেঙ্গু রোগী বাড়ছে বলে জানিয়েছেন চিকিৎসকেরা।',
+            'lead_text'  => "গোদাগাড়ীতে ডেঙ্গু রোগী বাড়ছে\nস্বাস্থ্য কমপ্লেক্সে ভর্তি বাড়ছে",
+            'content'    => '<p><strong>গোদাগাড়ী উপজেলা</strong> স্বাস্থ্য কমপ্লেক্সে <em>ডেঙ্গু</em> রোগী বাড়ছে।</p>'
+                . '<h2>করণীয়</h2><ul><li>জমে থাকা পানি সরান।</li><li>জ্বর হলে চিকিৎসকের পরামর্শ নিন।</li></ul>'
+                . '<blockquote><p>সচেতন থাকুন।</p></blockquote><ol><li>মশারি ব্যবহার করুন।</li></ol>',
+            'source_url' => 'https://example.test/godagari-dengue',
         ];
 
         $this->assertSame([], $this->gates($article, 250, null));

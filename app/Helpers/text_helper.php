@@ -209,3 +209,25 @@ if (! function_exists('render_article_body')) {
         }, $html);
     }
 }
+
+if (! function_exists('bangla_date')) {
+    /**
+     * "2026-09-22 11:16:18" → "২২ সেপ্টেম্বর ২০২৬" (null when the value is empty or unparsable).
+     * Used by the Facebook card API, the admin Photo Cards page and the GD share card.
+     */
+    function bangla_date(?string $iso): ?string
+    {
+        if ($iso === null || trim($iso) === '') {
+            return null;
+        }
+        $ts = strtotime($iso);
+        if ($ts === false) {
+            return null;
+        }
+        $months = [1 => 'জানুয়ারি', 2 => 'ফেব্রুয়ারি', 3 => 'মার্চ', 4 => 'এপ্রিল', 5 => 'মে', 6 => 'জুন',
+            7 => 'জুলাই', 8 => 'আগস্ট', 9 => 'সেপ্টেম্বর', 10 => 'অক্টোবর', 11 => 'নভেম্বর', 12 => 'ডিসেম্বর'];
+        $digits = static fn (string $n): string => str_replace(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'], $n);
+
+        return $digits((string) (int) date('j', $ts)) . ' ' . $months[(int) date('n', $ts)] . ' ' . $digits(date('Y', $ts));
+    }
+}

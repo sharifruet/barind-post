@@ -79,10 +79,10 @@ class Filters extends BaseFilters
             // Spam trap: the `after` half injects a hidden field into every POST form,
             // this half rejects submissions that filled it (bots do, people can't).
             'honeypot',
-            // CSRF on every state-changing request. Excluded: the automation API
-            // (Bearer-token auth, called by n8n, no browser session) and the
+            // CSRF on every state-changing request. Excluded: the automation API and
+            // the MCP endpoint (Bearer-token auth, no browser session) and the
             // article view-count beacon (navigator.sendBeacon cannot send headers).
-            'csrf' => ['except' => ['api/v1/*', 'news/view/*']],
+            'csrf' => ['except' => ['api/v1/*', 'mcp', 'news/view/*']],
             // 'invalidchars',
         ],
         'after' => [

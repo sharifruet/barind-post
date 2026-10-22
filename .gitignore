@@ -131,3 +131,7 @@ _modules/*
 
 # Open Graph headline cards rendered on demand (PublicSite::ogImage)
 writable/og/
+
+# Social cards saved by admin → Photo Cards (og-{id}.png is an article's share image)
+public/uploads/photo_cards/*
+!public/uploads/photo_cards/index.html

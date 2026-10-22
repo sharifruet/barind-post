@@ -158,3 +158,36 @@ ALTER TABLE news_views ADD INDEX idx_news_views_viewed_at           (viewed_at);
 ```
 Code note: `DATE(viewed_at) = ?` cannot use an index — compare `viewed_at` against a range instead
 (`Admin::dashboard` was changed accordingly).
+
+## 2026-09-18-000003 — automation run reports + cross-source duplicate flags
+Required by every article create (`POST /api/v1/news` and the MCP `create_news` tool): the duplicate
+check selects `news.source_title`, so without these columns every create fails with a database
+error before anything is saved. (Production already had them; this section was simply missing
+from this file until 2026-10-22.)
+
+Check first (phpMyAdmin → SQL):
+```sql
+SHOW COLUMNS FROM news WHERE Field IN ('source_title', 'possible_duplicate_of', 'duplicate_score');
+SHOW TABLES LIKE 'automation_runs';
+```
+Then run only the statements for what is missing:
+```sql
+ALTER TABLE news ADD COLUMN source_title VARCHAR(500) NULL AFTER source_url;
+ALTER TABLE news ADD COLUMN possible_duplicate_of INT UNSIGNED NULL AFTER content_hash;
+ALTER TABLE news ADD COLUMN duplicate_score TINYINT UNSIGNED NULL AFTER possible_duplicate_of;
+
+CREATE TABLE IF NOT EXISTS automation_runs (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    workflow VARCHAR(120) NOT NULL,
+    status ENUM('success','error') NOT NULL DEFAULT 'success',
+    created_count INT UNSIGNED NOT NULL DEFAULT 0,
+    duplicate_count INT UNSIGNED NOT NULL DEFAULT 0,
+    error_count INT UNSIGNED NOT NULL DEFAULT 0,
+    summary JSON NULL,
+    message TEXT NULL,
+    execution_id VARCHAR(64) NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_automation_runs_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```

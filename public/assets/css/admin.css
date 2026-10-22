@@ -659,3 +659,33 @@ a.pager__link:hover { background: var(--ink); border-color: var(--ink); color: #
 .hr-rule { border: 0; border-top: 1px solid var(--rule); margin: 1.1rem 0; }
 .empty { text-align: center; padding: 2.6rem 1rem; color: var(--ink-3); }
 .empty i { font-size: 1.6rem; color: var(--ink-4); display: block; margin-bottom: 0.5rem; }
+
+/* --------------------------------------------------------------------------
+   Photo Cards (admin/photo_card_generator.php + assets/js/photo-card-admin.js)
+   -------------------------------------------------------------------------- */
+
+.pc { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 1.4rem; align-items: start; }
+@media (max-width: 1100px) { .pc { grid-template-columns: 1fr; } }
+.pc__panel { background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius); padding: 1rem 1.1rem; }
+.pc__panel + .pc__panel { margin-top: 1rem; }
+.pc__panel h2 { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-4); margin: 0 0 0.7rem; }
+.pc__choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+.pc__choice {
+    text-align: left; background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius);
+    padding: 0.55rem 0.6rem; font-size: 0.82rem; line-height: 1.3; cursor: pointer; color: inherit;
+}
+.pc__choice small { display: block; color: var(--ink-4); font-size: 0.7rem; margin-top: 0.15rem; }
+.pc__choice.is-selected { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.pc__pills { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.pc__pill {
+    border: 1px solid var(--rule); border-radius: 999px; padding: 0.3rem 0.75rem;
+    font-size: 0.8rem; cursor: pointer; background: var(--panel); color: inherit;
+}
+.pc__pill.is-selected { background: var(--ink); color: #fff; border-color: var(--ink); }
+.pc__pill:disabled { opacity: 0.45; cursor: not-allowed; }
+.pc__stage { background: #d9d8d0; border: 1px solid var(--rule); border-radius: var(--radius); padding: 1.2rem; display: flex; justify-content: center; }
+.pc__stage canvas { max-width: 100%; max-height: 74vh; width: auto; height: auto; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28); }
+.pc__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.9rem; }
+.pc__note { margin: 0.7rem 0 0; font-size: 0.85rem; color: var(--ink-3); }
+.pc__note.is-error { color: var(--accent); }
+.pc__result { margin-top: 0.6rem; font-size: 0.85rem; word-break: break-all; }

@@ -88,4 +88,24 @@ final class AutomationApiTest extends CIUnitTestCase
         $json = json_decode($result->getJSON(), true);
         $this->assertArrayHasKey('tags', $json['fields']);
     }
+
+    public function testJsonBooleansAreAcceptedForFeatured(): void
+    {
+        // The MCP create_news tool declares `featured` as a boolean; a JSON true once failed
+        // the in_list[0,1,true,false] rule. The short title keeps this request database-free.
+        foreach ([true, false] as $featured) {
+            $result = $this->withHeaders(['Authorization' => 'Bearer ' . self::KEY, 'Content-Type' => 'application/json'])
+                ->withBodyFormat('json')
+                ->post('api/v1/news', [
+                    'title'       => 'ab',
+                    'content'     => str_repeat('পরীক্ষামূলক অনুচ্ছেদ। ', 10),
+                    'category_id' => 1,
+                    'featured'    => $featured,
+                ]);
+
+            $json = json_decode($result->getJSON(), true);
+            $this->assertArrayHasKey('title', $json['fields']);
+            $this->assertArrayNotHasKey('featured', $json['fields']);
+        }
+    }
 }

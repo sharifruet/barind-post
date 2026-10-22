@@ -55,3 +55,30 @@ if (! function_exists('menu_categories')) {
         return array_values(array_filter($categories, 'category_has_enough_content'));
     }
 }
+
+if (! function_exists('photo_card_share_path')) {
+    /** Where admin → Photo Cards stores an article's chosen share image (served by /og/{id}.png). */
+    function photo_card_share_path(int $newsId): string
+    {
+        return ROOTPATH . 'public/uploads/photo_cards/og-' . $newsId . '.png';
+    }
+}
+
+if (! function_exists('og_image_url')) {
+    /**
+     * Social share image for an article: its photo; otherwise /og/{id}.png, which serves the
+     * editor's saved card when there is one and a generated brand card when there is not.
+     * The saved card's mtime is appended so Facebook sees a new URL after it is replaced.
+     */
+    function og_image_url(array $news): string
+    {
+        if (! empty($news['image_url'])) {
+            return get_image_url($news['image_url']);
+        }
+        $id     = (int) ($news['id'] ?? 0);
+        $stored = photo_card_share_path($id);
+        $url    = base_url('og/' . $id . '.png');
+
+        return is_file($stored) ? $url . '?v=' . filemtime($stored) : $url;
+    }
+}

@@ -121,6 +121,17 @@ test('a bad key gets a hint about automation.apiKey', async () => {
   assert.match(result.content[0].text, /automation\.apiKey/);
 });
 
+test('a missing article and a missing endpoint get different 404 hints', async () => {
+  const client = await connect();
+  nextResponse = { status: 404, json: { error: 'Not found' } };
+  const article404 = await client.callTool({ name: 'get_news', arguments: { id: 5 } });
+  assert.match(article404.content[0].text, /^No article with that id/);
+
+  nextResponse = { status: 404, json: '' }; // what the live site sends for a route it doesn't have
+  const route404 = await client.callTool({ name: 'list_recent_news', arguments: {} });
+  assert.match(route404.content[0].text, /^The site has no such endpoint/);
+});
+
 test('a redirect is surfaced instead of followed (it would turn the POST into a GET)', async () => {
   nextResponse = { status: 301, headers: { Location: 'https://www.example.com/api/v1/news' } };
   const client = await connect();

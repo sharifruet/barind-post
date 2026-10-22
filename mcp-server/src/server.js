@@ -30,9 +30,12 @@ function apiFailure({ status, data }) {
     0: 'The site could not be reached.',
     401: 'The API key was rejected: BARIND_API_KEY must equal automation.apiKey in the server .env.',
     403: 'This machine\'s IP is not in automation.allowedIps on the server.',
-    404: 'Not found (or BARIND_API_URL does not point at the site\'s /api/v1).',
     422: 'Validation failed; fix the listed fields and call again.',
   };
+  // The API's own 404 carries {"error": "Not found"}; a route the site doesn't have answers with an empty body.
+  hints[404] = data?.error
+    ? 'No article with that id.'
+    : 'The site has no such endpoint: the live code is older than this MCP server, or BARIND_API_URL is not the site\'s /api/v1.';
   const hint = hints[status] ?? (status >= 500 ? `Server error (HTTP ${status}).` : `HTTP ${status}.`);
   return reply(hint, { http_status: status, ...(data && typeof data === 'object' ? data : { body: data }) }, true);
 }

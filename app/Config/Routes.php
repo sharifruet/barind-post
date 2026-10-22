@@ -31,7 +31,7 @@ $routes->post('/admin/news/toggle-breaking/(:num)', 'AdminNews::toggleBreakingNe
 
 // Photo Card Generation Routes (Admin only) - Front-end JavaScript based
 $routes->get('/admin/photo-card-generator', 'AdminPhotoCards::photoCardGenerator', ['filter' => 'role:admin']);
-$routes->post('/admin/photo-card-generator/generate', 'AdminPhotoCards::generatePhotoCard', ['filter' => 'role:admin']);
+$routes->post('/admin/photo-card-generator/save', 'AdminPhotoCards::save', ['filter' => 'role:admin']); // stores a browser-rendered card; share_image=1 makes it the article's og:image
 
 // Add route for listing news images
 $routes->get('/admin/news/search', 'AdminNews::newsSearch');
@@ -198,6 +198,11 @@ $routes->group('api/v1', ['filter' => 'apikey'], static function ($routes) {
     $routes->get('tags', 'Api\NewsController::tags');
     $routes->post('automation/runs', 'Api\AutomationController::createRun'); // n8n run summaries / error reports
 });
+
+// MCP endpoint for AI agents (App\Libraries\McpNewsServer): same key and same NewsIntake as api/v1.
+$routes->post('mcp', 'Mcp::handle', ['filter' => 'apikey']);
+$routes->get('mcp', 'Mcp::methodNotAllowed', ['filter' => 'apikey']);
+$routes->delete('mcp', 'Mcp::methodNotAllowed', ['filter' => 'apikey']);
 
 // Open Graph card for articles without a photo (GD-rendered headline card, cached in writable/og)
 $routes->get('/og/(:num)\.png', 'PublicSite::ogImage/$1');

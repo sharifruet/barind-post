@@ -354,11 +354,11 @@ class PublicSite extends Controller
             'og_title' => $news['title'],
             'og_description' => seo_description($news, ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।'),
             'og_type' => 'article',
-            'og_image' => !empty($news['image_url']) ? get_image_url($news['image_url']) : base_url('og/' . (int) $news['id'] . '.png'),
+            'og_image' => og_image_url($news),
             'twitter_card' => 'summary_large_image',
             'twitter_title' => $news['title'],
             'twitter_description' => seo_description($news, ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।'),
-            'twitter_image' => !empty($news['image_url']) ? get_image_url($news['image_url']) : base_url('og/' . (int) $news['id'] . '.png')
+            'twitter_image' => og_image_url($news)
         ];
         
         return view('public/news', $data);
@@ -559,11 +559,11 @@ class PublicSite extends Controller
             'og_title' => $news['title'],
             'og_description' => seo_description($news, ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।'),
             'og_type' => 'article',
-            'og_image' => !empty($news['image_url']) ? get_image_url($news['image_url']) : base_url('og/' . (int) $news['id'] . '.png'),
+            'og_image' => og_image_url($news),
             'twitter_card' => 'summary_large_image',
             'twitter_title' => $news['title'],
             'twitter_description' => seo_description($news, ' - বারিন্দ পোস্টে প্রকাশিত সর্বশেষ সংবাদ।'),
-            'twitter_image' => !empty($news['image_url']) ? get_image_url($news['image_url']) : base_url('og/' . (int) $news['id'] . '.png')
+            'twitter_image' => og_image_url($news)
         ];
         
         return view('public/news', $data);
@@ -778,6 +778,16 @@ class PublicSite extends Controller
         $news = (new \App\Models\NewsModel())->find((int) $id);
         if (! $news || $news['status'] !== 'published') {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        // A card the editor saved in admin → Photo Cards beats the generated one.
+        $stored = photo_card_share_path((int) $id);
+        if (is_file($stored)) {
+            return $this->response
+                ->setHeader('Content-Type', 'image/png')
+                ->removeHeader('Cache-Control')
+                ->setHeader('Cache-Control', 'public, max-age=86400')
+                ->setBody((string) file_get_contents($stored));
         }
 
         $dir = WRITEPATH . 'og/';
