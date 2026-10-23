@@ -689,3 +689,5 @@ a.pager__link:hover { background: var(--ink); border-color: var(--ink); color: #
 .pc__note { margin: 0.7rem 0 0; font-size: 0.85rem; color: var(--ink-3); }
 .pc__note.is-error { color: var(--accent); }
 .pc__result { margin-top: 0.6rem; font-size: 0.85rem; word-break: break-all; }
+.pc__fb { margin-top: 1rem; }
+.pc__fb-link { word-break: break-all; }

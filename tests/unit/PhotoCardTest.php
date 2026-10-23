@@ -67,17 +67,19 @@ final class PhotoCardTest extends CIUnitTestCase
         $this->assertNull(bangla_date('nonsense'));
     }
 
-    public function testShareImagePrefersThePhotoThenTheSavedCardThenTheGeneratedOne(): void
+    public function testShareImagePrefersTheSavedCardThenThePhotoThenTheGeneratedOne(): void
     {
         $this->assertSame(get_image_url('public/uploads/news/a.webp'), og_image_url(['id' => 5, 'image_url' => 'public/uploads/news/a.webp']));
         $this->assertSame(base_url('og/5.png'), og_image_url(['id' => 5, 'image_url' => null]));
 
-        // A saved card changes the URL (cache-busting for Facebook's scraper).
+        // A saved card wins even over the photo, and changes the URL (cache-busting for Facebook's scraper).
         $id   = 999999990 + random_int(0, 9);
         $path = photo_card_share_path($id);
         try {
             file_put_contents($path, 'x');
-            $this->assertSame(base_url("og/{$id}.png") . '?v=' . filemtime($path), og_image_url(['id' => $id]));
+            $expected = base_url("og/{$id}.png") . '?v=' . filemtime($path);
+            $this->assertSame($expected, og_image_url(['id' => $id]));
+            $this->assertSame($expected, og_image_url(['id' => $id, 'image_url' => 'public/uploads/news/a.webp']));
         } finally {
             @unlink($path);
         }

@@ -32,6 +32,7 @@ $routes->post('/admin/news/toggle-breaking/(:num)', 'AdminNews::toggleBreakingNe
 // Photo Card Generation Routes (Admin only) - Front-end JavaScript based
 $routes->get('/admin/photo-card-generator', 'AdminPhotoCards::photoCardGenerator', ['filter' => 'role:admin']);
 $routes->post('/admin/photo-card-generator/save', 'AdminPhotoCards::save', ['filter' => 'role:admin']); // stores a browser-rendered card; share_image=1 makes it the article's og:image
+$routes->post('/admin/photo-card-generator/facebook', 'AdminPhotoCards::postToFacebook', ['filter' => 'role:admin']); // posts the card to the Facebook Page with message + article link
 
 // Add route for listing news images
 $routes->get('/admin/news/search', 'AdminNews::newsSearch');

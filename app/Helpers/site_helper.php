@@ -66,19 +66,22 @@ if (! function_exists('photo_card_share_path')) {
 
 if (! function_exists('og_image_url')) {
     /**
-     * Social share image for an article: its photo; otherwise /og/{id}.png, which serves the
-     * editor's saved card when there is one and a generated brand card when there is not.
-     * The saved card's mtime is appended so Facebook sees a new URL after it is replaced.
+     * Social share image for an article: the card an editor saved as its share image in
+     * admin → Photo Cards (an explicit choice, so it beats the photo); otherwise its photo;
+     * otherwise /og/{id}.png's generated brand card. The saved card's mtime is appended so
+     * Facebook sees a new URL after it is replaced.
      */
     function og_image_url(array $news): string
     {
+        $id     = (int) ($news['id'] ?? 0);
+        $stored = photo_card_share_path($id);
+        if ($id > 0 && is_file($stored)) {
+            return base_url('og/' . $id . '.png') . '?v=' . filemtime($stored);
+        }
         if (! empty($news['image_url'])) {
             return get_image_url($news['image_url']);
         }
-        $id     = (int) ($news['id'] ?? 0);
-        $stored = photo_card_share_path($id);
-        $url    = base_url('og/' . $id . '.png');
 
-        return is_file($stored) ? $url . '?v=' . filemtime($stored) : $url;
+        return base_url('og/' . $id . '.png');
     }
 }

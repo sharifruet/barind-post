@@ -36,6 +36,22 @@ final class PhotoCardAdminTest extends CIUnitTestCase
         $this->withSession($session)->get('admin/photo-card-generator/save');
     }
 
+    public function testACardCannotBePostedToFacebookWithoutTheCsrfToken(): void
+    {
+        $session = ['logged_in' => true, 'user_id' => 1, 'user_name' => 'A', 'user_role' => 'admin'];
+
+        $this->expectException(SecurityException::class);
+        $this->withSession($session)->post('admin/photo-card-generator/facebook', ['news_id' => 1, 'message' => 'x']);
+    }
+
+    public function testTheFacebookEndpointIsPostOnly(): void
+    {
+        $session = ['logged_in' => true, 'user_id' => 1, 'user_name' => 'A', 'user_role' => 'admin'];
+
+        $this->expectException(PageNotFoundException::class);
+        $this->withSession($session)->get('admin/photo-card-generator/facebook');
+    }
+
     public function testTheOldGdEndpointIsGone(): void
     {
         $session = ['logged_in' => true, 'user_id' => 1, 'user_name' => 'A', 'user_role' => 'admin'];

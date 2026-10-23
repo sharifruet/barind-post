@@ -2,7 +2,7 @@
  * Admin → Photo Cards page: wires the controls to the renderer (photo-card.js),
  * keeps a live preview on the canvas, and exports or saves the finished card.
  * Expects a <script type="application/json" id="pc-config"> with
- * { articles, brand: {name, url, handle, logo}, saveUrl } and the fonts
+ * { articles, brand: {name, url, handle, logo}, saveUrl, facebook: {url, configured, page} } and the fonts
  * CardSerif / CardSans declared with @font-face on the page.
  */
 import { renderCard, FORMATS, TEMPLATES, banglaDate } from './photo-card.js';
@@ -121,6 +121,13 @@ async function useArticle(id) {
     $('pcShareImage').checked = false;
     $('pcArticleLink').hidden = !a;
     if (a) $('pcArticleLink').href = a.url;
+    $('pcFbMessage').value = a ? facebookMessage(a) : '';
+    $('pcFbLink').textContent = a ? a.url : '—';
+    $('pcFbResult').hidden = true;
+    $('pcFbPost').disabled = !cfg.facebook.configured || !a || a.status !== 'published';
+    $('pcFbPost').title = a && a.status !== 'published' ? 'Publish the article first' : '';
+    $('pcFbShare').disabled = !a || a.status !== 'published';
+    $('pcFbShare').title = $('pcFbPost').title;
 
     articlePhoto = null;
     photoMessage = '';
@@ -212,6 +219,88 @@ async function save() {
     }
 }
 
+/* ---------------------------------------------------------------- facebook */
+
+// Standfirst, then the key points (news.lead_text) as bullets. The server appends the link.
+const facebookMessage = (a) => [a.subtitle, a.points.map((p) => `• ${p}`).join('\n')].filter(Boolean).join('\n\n');
+
+async function postToFacebook() {
+    const a = cfg.articles.find((x) => x.id === state.articleId);
+    if (!a) return;
+    if (!confirm('Post this card to the Barind Post Facebook page now? It will be public immediately.')) return;
+    const btn = $('pcFbPost');
+    btn.disabled = true;
+    note('Posting to Facebook…');
+    try {
+        const blob = await toBlob('image/png');
+        const body = new FormData();
+        body.append('image', blob, filename('png'));
+        body.append('news_id', a.id);
+        body.append('message', $('pcFbMessage').value);
+        const res = await fetch(cfg.facebook.url, { method: 'POST', body, headers: { Accept: 'application/json' } });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+        $('pcFbResult').href = data.post_url;
+        $('pcFbResult').hidden = false;
+        note('Posted to Facebook.');
+    } catch (e) {
+        note(`Facebook post failed: ${e.message}`, true);
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+// Facebook's Share dialog lets the editor pick their own timeline, a group or a Page they
+// manage — the only way to reach those, since the Graph API cannot post to profiles or
+// groups. It shares a link, so the card becomes the article's og:image first (the server
+// also asks Facebook to re-scrape), and the message goes to the clipboard to paste.
+async function shareViaDialog() {
+    const a = cfg.articles.find((x) => x.id === state.articleId);
+    if (!a) return;
+    // Opened now, inside the click, so the popup blocker allows it; pointed at Facebook below.
+    const popup = window.open('', 'barindpost-fb-share', 'width=640,height=640');
+    const btn = $('pcFbShare');
+    btn.disabled = true;
+    note('Saving the card as the share image…');
+    try {
+        const blob = await toBlob('image/png');
+        const body = new FormData();
+        body.append('image', blob, filename('png'));
+        body.append('news_id', a.id);
+        body.append('format', state.format);
+        body.append('template', state.template);
+        body.append('share_image', '1');
+        const res = await fetch(cfg.saveUrl, { method: 'POST', body, headers: { Accept: 'application/json' } });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+        $('pcShareImage').checked = true;
+
+        let copied = true;
+        try {
+            await navigator.clipboard.writeText(`${$('pcFbMessage').value.trim()}\n\nবিস্তারিত: ${a.url}`.trim());
+        } catch {
+            copied = false;
+        }
+
+        const share = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(a.url)}`;
+        if (popup && !popup.closed) {
+            popup.opener = null;   // Facebook's page gets no handle on the admin page
+            popup.location.href = share;
+        }
+        else window.open(share, '_blank', 'noopener');
+
+        note([
+            copied ? 'Message copied — paste it into the Share dialog.' : 'Could not copy the message; copy it from the box above.',
+            data.rescraped ? '' : 'If the preview still shows an old picture, re-scrape the link in Facebook\'s Sharing Debugger.',
+        ].filter(Boolean).join(' '));
+    } catch (e) {
+        if (popup && !popup.closed) popup.close();
+        note(`Share failed: ${e.message}`, true);
+    } finally {
+        btn.disabled = false;
+    }
+}
+
 /* ---------------------------------------------------------------- boot */
 
 async function boot() {
@@ -287,6 +376,8 @@ async function boot() {
     $('pcDownloadPng').addEventListener('click', () => download('image/png', 'png'));
     $('pcDownloadJpg').addEventListener('click', () => download('image/jpeg', 'jpg', 0.92));
     $('pcSave').addEventListener('click', save);
+    $('pcFbPost').addEventListener('click', postToFacebook);
+    $('pcFbShare').addEventListener('click', shareViaDialog);
     $('pcCopyUrl').addEventListener('click', async () => {
         try {
             await navigator.clipboard.writeText($('pcResultUrl').href);

@@ -111,10 +111,30 @@
             <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="pcCopyUrl"><i class="fas fa-copy me-1"></i>Copy URL</button>
             <span class="badge text-bg-success ms-2" id="pcShareDone" hidden>share image</span>
         </div>
+
+        <section class="pc__panel pc__fb">
+            <h2><i class="fab fa-facebook-f me-1"></i>Post to Facebook</h2>
+            <label class="form-label small mb-1" for="pcFbMessage">Message <span class="text-muted">(starts as the article's standfirst and key points)</span></label>
+            <textarea class="form-control bengali-input" id="pcFbMessage" rows="5"></textarea>
+            <p class="small text-muted mt-1 mb-2">The article link is added on its own line at the end: <span class="pc__fb-link" id="pcFbLink"></span></p>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <button type="button" class="btn btn-sm btn-primary" id="pcFbPost"<?= $facebook['configured'] ? '' : ' disabled' ?>><i class="fab fa-facebook-f me-1"></i>Post card to the Facebook page</button>
+                <a class="small" id="pcFbResult" href="#" target="_blank" rel="noopener" hidden>View post <i class="fas fa-external-link-alt fa-xs"></i></a>
+            </div>
+            <?php if (! $facebook['configured']): ?>
+            <p class="small text-muted mt-2 mb-0">Not set up yet: add <code>facebook.pageId</code> and <code>facebook.pageToken</code> (a Page access token with <code>pages_manage_posts</code>) to the server's <code>.env</code>.</p>
+            <?php endif; ?>
+
+            <hr class="my-3">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <button type="button" class="btn btn-sm btn-outline-primary" id="pcFbShare"><i class="fas fa-share me-1"></i>Share to your timeline, a Page or a group</button>
+            </div>
+            <p class="small text-muted mt-2 mb-0">Saves this card as the article's share image, copies the message above (with the link) to your clipboard, and opens Facebook's Share dialog, where you choose your own timeline, a group, or a Page you manage. Paste the message there: Facebook does not let sites fill it in. The link preview shows the card at 1200×630, so the <em>Link share</em> format fits best.</p>
+        </section>
     </div>
 </div>
 
-<script type="application/json" id="pc-config"><?= json_encode(['articles' => $articles, 'brand' => $brand, 'saveUrl' => $saveUrl], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP) ?></script>
+<script type="application/json" id="pc-config"><?= json_encode(['articles' => $articles, 'brand' => $brand, 'saveUrl' => $saveUrl, 'facebook' => $facebook], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP) ?></script>
 <script type="module" src="<?= asset_url('assets/js/photo-card-admin.js') ?>"></script>
 
 <?= $this->endSection() ?>

@@ -70,6 +70,15 @@ database.default.DBCollat = utf8mb4_unicode_ci
 # automation.autoPublishMinWords = 120
 
 #--------------------------------------------------------------------
+# FACEBOOK PAGE — "Post card to the Facebook page" in admin → Photo Cards
+#--------------------------------------------------------------------
+# The button stays disabled until both are set. The token is a long-lived Page access
+# token with pages_manage_posts (the same Page the n8n pipeline posts to). Never commit it.
+
+# facebook.pageId =
+# facebook.pageToken =
+
+#--------------------------------------------------------------------
 # ENCRYPTION
 #--------------------------------------------------------------------
 
