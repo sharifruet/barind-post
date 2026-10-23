@@ -22,9 +22,9 @@
 <div class="pc">
     <div>
         <section class="pc__panel">
-            <h2>Article</h2>
-            <input type="search" class="form-control form-control-sm mb-2 bengali-input" id="pcSearch" placeholder="Search headlines…" autocomplete="off">
-            <select class="form-select bengali-input" id="pcArticle" size="6"></select>
+            <h2>Article <span class="pc__count" id="pcArticleCount"></span></h2>
+            <div class="pc__list bengali-input" id="pcArticles" role="listbox" aria-label="Latest articles"></div>
+            <nav class="pc__pager" id="pcPager" aria-label="Article pages"></nav>
             <div class="d-flex justify-content-between align-items-center mt-2">
                 <a id="pcArticleLink" class="small" href="#" target="_blank" rel="noopener" hidden>Open article <i class="fas fa-external-link-alt fa-xs"></i></a>
                 <button type="button" class="btn btn-sm btn-outline-secondary" id="pcReset"><i class="fas fa-undo me-1"></i>Reset text</button>

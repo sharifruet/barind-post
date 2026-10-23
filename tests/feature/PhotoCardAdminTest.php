@@ -1,5 +1,6 @@
 <?php
 
+use App\Controllers\AdminPhotoCards;
 use CodeIgniter\Exceptions\PageNotFoundException;
 use CodeIgniter\Security\Exceptions\SecurityException;
 use CodeIgniter\Test\CIUnitTestCase;
@@ -50,6 +51,22 @@ final class PhotoCardAdminTest extends CIUnitTestCase
 
         $this->expectException(PageNotFoundException::class);
         $this->withSession($session)->get('admin/photo-card-generator/facebook');
+    }
+
+    public function testTheArticlePickerFeedIsAdminOnly(): void
+    {
+        $this->withHeaders(['Accept' => 'application/json'])->get('admin/photo-card-generator/articles?page=2')->assertStatus(401);
+
+        $editor = ['logged_in' => true, 'user_id' => 1, 'user_name' => 'E', 'user_role' => 'editor'];
+        $this->withSession($editor)->withHeaders(['Accept' => 'application/json'])->get('admin/photo-card-generator/articles')->assertStatus(403);
+    }
+
+    public function testThePickerAlwaysHasAtLeastOnePage(): void
+    {
+        $this->assertSame(1, AdminPhotoCards::pageCount(0));
+        $this->assertSame(1, AdminPhotoCards::pageCount(AdminPhotoCards::PER_PAGE));
+        $this->assertSame(2, AdminPhotoCards::pageCount(AdminPhotoCards::PER_PAGE + 1));
+        $this->assertSame(16, AdminPhotoCards::pageCount(151));
     }
 
     public function testTheOldGdEndpointIsGone(): void

@@ -2,7 +2,8 @@
  * Admin → Photo Cards page: wires the controls to the renderer (photo-card.js),
  * keeps a live preview on the canvas, and exports or saves the finished card.
  * Expects a <script type="application/json" id="pc-config"> with
- * { articles, brand: {name, url, handle, logo}, saveUrl, facebook: {url, configured, page} } and the fonts
+ * { articles: {items, page, pages, total, url}, brand: {name, url, handle, logo}, saveUrl,
+ *   facebook: {url, configured, page} } and the fonts
  * CardSerif / CardSans declared with @font-face on the page.
  */
 import { renderCard, FORMATS, TEMPLATES, banglaDate } from './photo-card.js';
@@ -19,6 +20,8 @@ const state = {
     photoSource: 'none', focalY: 0.5, darken: 0.5,
     breaking: false, showLogo: true, showSubtitle: true, showPoints: true, headlineScale: 1,
 };
+let article = null;          // the picked article (an item from the picker page)
+let listing = cfg.articles;  // the picker page on screen: {items, page, pages, total, url}
 let logo = null;
 let articlePhoto = null;
 let uploadPhoto = null;
@@ -107,9 +110,10 @@ function readFields() {
     draw();
 }
 
-async function useArticle(id) {
-    const a = cfg.articles.find((x) => x.id === Number(id));
+async function useArticle(a) {
+    article = a || null;
     state.articleId = a ? a.id : null;
+    markSelected();
     $('pcTitle').value = a ? a.title : '';
     $('pcKicker').value = a ? a.category : '';
     $('pcSubtitle').value = a ? a.subtitle : '';
@@ -151,17 +155,89 @@ async function useArticle(id) {
     readFields();
 }
 
-function filterArticles(query) {
-    const q = query.trim().toLowerCase();
-    let first = null;
-    for (const opt of $('pcArticle').options) {
-        const hit = !q || opt.textContent.toLowerCase().includes(q);
-        opt.hidden = !hit;
-        if (hit && first === null) first = opt;
+/* ---------------------------------------------------------------- article picker */
+
+function markSelected() {
+    for (const el of $('pcArticles').querySelectorAll('.pc__item')) {
+        const on = Number(el.dataset.id) === state.articleId;
+        el.classList.toggle('is-selected', on);
+        el.setAttribute('aria-selected', on ? 'true' : 'false');
     }
-    if (q && first && $('pcArticle').selectedOptions[0]?.hidden) {
-        $('pcArticle').value = first.value;
-        useArticle(first.value);
+}
+
+function renderArticles() {
+    const list = $('pcArticles');
+    list.replaceChildren();
+    for (const a of listing.items) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'pc__item';
+        b.dataset.id = a.id;
+        b.setAttribute('role', 'option');
+        b.innerHTML = '<span class="pc__item-title"></span><span class="pc__item-meta"></span>';
+        b.querySelector('.pc__item-title').textContent = a.title;
+        const meta = b.querySelector('.pc__item-meta');
+        if (a.status === 'draft') {
+            const d = document.createElement('span');
+            d.className = 'pc__item-draft';
+            d.textContent = 'Draft · ';
+            meta.appendChild(d);
+        }
+        meta.append([banglaDate(a.date), a.category].filter(Boolean).join(' · '));
+        b.addEventListener('click', () => useArticle(a));
+        list.appendChild(b);
+    }
+    if (!listing.items.length) {
+        list.innerHTML = '<p class="pc__empty mb-0">No articles yet.</p>';
+    }
+    $('pcArticleCount').textContent = listing.total ? `· ${listing.total} total` : '';
+    markSelected();
+    renderPager();
+}
+
+// Page numbers: first, last, and two either side of the current page, with gaps as "…".
+function renderPager() {
+    const nav = $('pcPager');
+    nav.replaceChildren();
+    const { page, pages } = listing;
+    nav.hidden = pages <= 1;
+    const button = (label, target, opts = {}) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = label;
+        b.disabled = !!opts.disabled;
+        if (opts.current) {
+            b.className = 'is-current';
+            b.setAttribute('aria-current', 'page');
+        }
+        if (opts.title) b.title = opts.title;
+        b.addEventListener('click', () => loadPage(target));
+        nav.appendChild(b);
+    };
+    button('‹', page - 1, { disabled: page <= 1, title: 'Newer' });
+    let last = 0;
+    for (let p = 1; p <= pages; p++) {
+        if (p !== 1 && p !== pages && Math.abs(p - page) > 2) continue;
+        if (p - last > 1) nav.appendChild(Object.assign(document.createElement('span'), { textContent: '…' }));
+        button(String(p), p, { current: p === page });
+        last = p;
+    }
+    button('›', page + 1, { disabled: page >= pages, title: 'Older' });
+}
+
+async function loadPage(n) {
+    const list = $('pcArticles');
+    list.classList.add('is-loading');
+    try {
+        const res = await fetch(`${listing.url}?page=${encodeURIComponent(n)}`, { headers: { Accept: 'application/json' } });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+        listing = { ...data, url: listing.url };
+        renderArticles();
+    } catch (e) {
+        note(`Could not load that page of articles: ${e.message}`, true);
+    } finally {
+        list.classList.remove('is-loading');
     }
 }
 
@@ -225,7 +301,7 @@ async function save() {
 const facebookMessage = (a) => [a.subtitle, a.points.map((p) => `• ${p}`).join('\n')].filter(Boolean).join('\n\n');
 
 async function postToFacebook() {
-    const a = cfg.articles.find((x) => x.id === state.articleId);
+    const a = article;
     if (!a) return;
     if (!confirm('Post this card to the Barind Post Facebook page now? It will be public immediately.')) return;
     const btn = $('pcFbPost');
@@ -255,7 +331,7 @@ async function postToFacebook() {
 // groups. It shares a link, so the card becomes the article's og:image first (the server
 // also asks Facebook to re-scrape), and the message goes to the clipboard to paste.
 async function shareViaDialog() {
-    const a = cfg.articles.find((x) => x.id === state.articleId);
+    const a = article;
     if (!a) return;
     // Opened now, inside the click, so the popup blocker allows it; pointed at Facebook below.
     const popup = window.open('', 'barindpost-fb-share', 'width=640,height=640');
@@ -304,13 +380,7 @@ async function shareViaDialog() {
 /* ---------------------------------------------------------------- boot */
 
 async function boot() {
-    const sel = $('pcArticle');
-    for (const a of cfg.articles) {
-        const opt = document.createElement('option');
-        opt.value = a.id;
-        opt.textContent = `${a.status === 'draft' ? '[draft] ' : ''}${a.title}`;
-        sel.appendChild(opt);
-    }
+    renderArticles();
 
     for (const [key, f] of Object.entries(FORMATS)) {
         const b = document.createElement('button');
@@ -357,9 +427,7 @@ async function boot() {
     for (const id of ['pcShowSubtitle', 'pcShowPoints', 'pcBreaking', 'pcShowLogo']) {
         $(id).addEventListener('change', readFields);
     }
-    sel.addEventListener('change', () => useArticle(sel.value));
-    $('pcSearch').addEventListener('input', (ev) => filterArticles(ev.target.value));
-    $('pcReset').addEventListener('click', () => useArticle(sel.value));
+    $('pcReset').addEventListener('click', () => useArticle(article));
     $('pcUpload').addEventListener('change', async (ev) => {
         const file = ev.target.files && ev.target.files[0];
         if (!file) return;
@@ -393,9 +461,8 @@ async function boot() {
         logo = null;
     }
     await loadFonts();
-    if (cfg.articles.length) {
-        sel.value = cfg.articles[0].id;
-        await useArticle(sel.value);
+    if (listing.items.length) {
+        await useArticle(listing.items[0]);
     } else {
         readFields();
     }

@@ -689,5 +689,29 @@ a.pager__link:hover { background: var(--ink); border-color: var(--ink); color: #
 .pc__note { margin: 0.7rem 0 0; font-size: 0.85rem; color: var(--ink-3); }
 .pc__note.is-error { color: var(--accent); }
 .pc__result { margin-top: 0.6rem; font-size: 0.85rem; word-break: break-all; }
+.pc__count { font-weight: 400; letter-spacing: 0; text-transform: none; }
+.pc__list { display: flex; flex-direction: column; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; }
+.pc__list.is-loading { opacity: 0.5; pointer-events: none; }
+.pc__item {
+    display: block; width: 100%; text-align: left; background: var(--panel); color: inherit;
+    border: 0; border-bottom: 1px solid var(--rule); padding: 0.45rem 0.65rem; cursor: pointer; line-height: 1.35;
+}
+.pc__item:last-child { border-bottom: 0; }
+.pc__item:hover { background: var(--paper, #f6f5f0); }
+.pc__item.is-selected { background: var(--ink); color: #fff; }
+.pc__item-title { font-size: 0.86rem; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.pc__item-meta { display: block; font-size: 0.7rem; color: var(--ink-4); margin-top: 0.15rem; }
+.pc__item.is-selected .pc__item-meta { color: rgba(255, 255, 255, 0.7); }
+.pc__item-draft { color: var(--accent); font-weight: 700; }
+.pc__item.is-selected .pc__item-draft { color: #ffb3bf; }
+.pc__empty { padding: 0.8rem; font-size: 0.85rem; color: var(--ink-3); }
+.pc__pager { display: flex; flex-wrap: wrap; gap: 0.25rem; justify-content: center; margin-top: 0.6rem; }
+.pc__pager button {
+    min-width: 2rem; border: 1px solid var(--rule); background: var(--panel); color: inherit;
+    border-radius: var(--radius); padding: 0.2rem 0.45rem; font-size: 0.78rem; cursor: pointer;
+}
+.pc__pager button.is-current { background: var(--ink); color: #fff; border-color: var(--ink); }
+.pc__pager button:disabled { opacity: 0.45; cursor: not-allowed; }
+.pc__pager span { align-self: center; font-size: 0.78rem; color: var(--ink-4); padding: 0 0.15rem; }
 .pc__fb { margin-top: 1rem; }
 .pc__fb-link { word-break: break-all; }

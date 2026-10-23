@@ -51,7 +51,9 @@ Bengali headlines, Noto Sans Bengali text). Site name, URL and social handle com
 
 ## Using it
 
-1. Pick the article (search box filters the list; drafts are marked). Text fields fill from the
+1. Pick the article from the list: the 10 newest (drafts are marked), with page numbers below
+   for older ones. Each page comes from `GET /admin/photo-card-generator/articles?page=N`
+   (`AdminPhotoCards::articles`, archived articles excluded). Text fields fill from the
    article and can be edited; *Reset text* restores them.
 2. Choose template, theme, format. For Photo/Quote cards pick the article photo, upload one, or
    none; adjust crop position and darkening.

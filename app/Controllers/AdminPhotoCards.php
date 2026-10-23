@@ -17,36 +17,17 @@ class AdminPhotoCards extends BaseAdminController
         'NotoSansBengali-Regular.ttf', 'NotoSansBengali-SemiBold.ttf', 'NotoSansBengali-Bold.ttf',
     ];
 
+    /** Articles per page in the picker. */
+    public const PER_PAGE = 10;
+
     public function photoCardGenerator()
     {
-        $rows = \Config\Database::connect()->table('news')
-            ->select('news.id, news.title, news.subtitle, news.lead_text, news.image_url, news.status, news.slug, news.published_at, news.created_at, categories.name AS category_name')
-            ->join('categories', 'categories.id = news.category_id', 'left')
-            ->where('news.status !=', 'archived')
-            ->orderBy('COALESCE(news.published_at, news.created_at)', 'DESC', false)
-            ->limit(150)
-            ->get()
-            ->getResultArray();
-
-        $articles = array_map(static fn (array $r): array => [
-            'id'       => (int) $r['id'],
-            'title'    => (string) $r['title'],
-            'subtitle' => (string) ($r['subtitle'] ?? ''),
-            'points'   => key_points($r['lead_text'] ?? null),
-            'category' => trim((string) ($r['category_name'] ?? '')),
-            'status'   => (string) $r['status'],
-            'date'     => (string) ($r['published_at'] ?: $r['created_at']),
-            // Site-root path; the page resolves it on its own origin so the canvas stays exportable.
-            'image'    => ! empty($r['image_url']) ? (preg_match('~^https?://~i', $r['image_url']) ? $r['image_url'] : '/' . ltrim($r['image_url'], '/')) : null,
-            'url'      => base_url('news/' . $r['slug']),
-        ], $rows);
-
         $site   = config('SiteInfo');
         $host   = (string) preg_replace('/^www\./', '', (string) parse_url(base_url(), PHP_URL_HOST));
         $handle = basename(rtrim((string) $site->facebook, '/'));
 
         return view('admin/photo_card_generator', [
-            'articles' => $articles,
+            'articles' => $this->articlePage(1) + ['url' => site_url('admin/photo-card-generator/articles')],
             'brand'    => [
                 'name'   => $site->siteName,
                 'url'    => $host !== '' ? $host : 'barindpost.com',
@@ -61,6 +42,59 @@ class AdminPhotoCards extends BaseAdminController
                 'page'       => (string) $site->facebook,
             ],
         ]);
+    }
+
+    /**
+     * GET ?page=N → {items, page, pages, total}: one page of the article picker, newest first.
+     */
+    public function articles()
+    {
+        return $this->response->setJSON($this->articlePage((int) ($this->request->getGet('page') ?? 1)));
+    }
+
+    /**
+     * Page $page (1-based, clamped to the last page) of non-archived articles, newest first,
+     * with the fields the card needs.
+     *
+     * @return array{items: list<array<string, mixed>>, page: int, pages: int, total: int}
+     */
+    private function articlePage(int $page): array
+    {
+        $db    = \Config\Database::connect();
+        $total = $db->table('news')->where('status !=', 'archived')->countAllResults();
+        $pages = self::pageCount($total);
+        $page  = min(max(1, $page), $pages);
+
+        $rows = $db->table('news')
+            ->select('news.id, news.title, news.subtitle, news.lead_text, news.image_url, news.status, news.slug, news.published_at, news.created_at, categories.name AS category_name')
+            ->join('categories', 'categories.id = news.category_id', 'left')
+            ->where('news.status !=', 'archived')
+            ->orderBy('COALESCE(news.published_at, news.created_at)', 'DESC', false)
+            ->orderBy('news.id', 'DESC')
+            ->limit(self::PER_PAGE, ($page - 1) * self::PER_PAGE)
+            ->get()
+            ->getResultArray();
+
+        $items = array_map(static fn (array $r): array => [
+            'id'       => (int) $r['id'],
+            'title'    => (string) $r['title'],
+            'subtitle' => (string) ($r['subtitle'] ?? ''),
+            'points'   => key_points($r['lead_text'] ?? null),
+            'category' => trim((string) ($r['category_name'] ?? '')),
+            'status'   => (string) $r['status'],
+            'date'     => (string) ($r['published_at'] ?: $r['created_at']),
+            // Site-root path; the page resolves it on its own origin so the canvas stays exportable.
+            'image'    => ! empty($r['image_url']) ? (preg_match('~^https?://~i', $r['image_url']) ? $r['image_url'] : '/' . ltrim($r['image_url'], '/')) : null,
+            'url'      => base_url('news/' . $r['slug']),
+        ], $rows);
+
+        return ['items' => $items, 'page' => $page, 'pages' => $pages, 'total' => $total];
+    }
+
+    /** Number of picker pages for $total articles; at least 1, so an empty list still has a page. */
+    public static function pageCount(int $total): int
+    {
+        return max(1, (int) ceil($total / self::PER_PAGE));
     }
 
     /**
